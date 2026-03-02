@@ -1,30 +1,72 @@
-import Button from "@/app/components/Button";
+"use client"
 
+import Button from "@/app/components/Button";
+import { login } from './actions';
+import { useActionState } from 'react';
+
+const initialState = {
+    error: '',
+}
 
 export default function LoginPage() {
+    const [state, formAction, isPending] = useActionState(login, initialState)
+
     return (
-        <section id='Login' className='flex justify-center items-center m-8'>
+        <section id='Login' className='flex justify-center items-center h-screen bg-gray-50 m-0'>
 
-            <div className='bg-white h-[556px] w-[440px] rounded-lg shadow-lg p-7'>
+            <div className='bg-white h-[580px] w-[440px] rounded-2xl shadow-xl p-8 border border-gray-100 flex flex-col justify-center'>
 
-                <p className='text-2xl font-bold text-center text-left m-1'>Dobrodošli nazad</p>
-                <p className='text-center m-1 text-left'>Unesite svoje podatke kako biste se ulogovali</p>
+                <h1 className='text-3xl font-bold text-gray-900 m-1'>Dobrodošli nazad</h1>
+                <p className='text-gray-500 m-1 mb-6'>Unesite svoje podatke kako biste se ulogovali</p>
 
-                <div className='mt-3 flex flex-col gap-2'>
-                    <label className='text-fcrna text-left m-1'>Email adresa</label>
-                    <input className='bg-[#F8FAFC] w-full p-4 rounded-lg border-2 border-[#CBD5E1]' type="text" placeholder='Unesite vas email' />
-                    <label className='text-fcrna text-left m-1'>Lozinka</label>
-                    <input className='bg-[#F8FAFC] w-full p-4 rounded-lg border-2 border-[#CBD5E1]' type="password" placeholder='Lozinka' />
-                    <a className='text-[#137FEC] text-right'>Zaboravili ste lozinku ?</a>
-                </div>
+                <form action={formAction} className='flex flex-col gap-4'>
+                    <div className="flex flex-col gap-1.5">
+                        <label className='font-medium text-gray-700 text-sm m-1'>Email adresa</label>
+                        <input
+                            name="email"
+                            className='bg-[#F8FAFC] w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:bg-white transition-all'
+                            type="email"
+                            placeholder='Unesite vaš email'
+                            required
+                        />
+                    </div>
 
-                <div className='flex flex-col gap-2 justify-center items-center w-full mt-8 rounded-2xl'>
-                    <Button className='w-full' backgroundColor="#137FEC">Prijavi se</Button>
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center m-1">
+                            <label className='font-medium text-gray-700 text-sm'>Lozinka</label>
+                            <a href="#" className='text-[#137FEC] text-sm hover:underline hover:text-blue-700'>Zaboravili ste lozinku?</a>
+                        </div>
+                        <input
+                            name="password"
+                            className='bg-[#F8FAFC] w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:bg-white transition-all'
+                            type="password"
+                            placeholder='Unesite lozinku'
+                            required
+                        />
+                    </div>
 
-                    <p className='text-[#64748B]'>Nemate nalog ? <span className='text-[#137FEC]'>Registrujte se</span> </p>
+                    {/* Prikaz eventualnih grešaka */}
+                    {state?.error && (
+                        <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg mt-2">
+                            {state.error}
+                        </p>
+                    )}
 
-                </div>
+                    <div className='flex flex-col gap-3 justify-center items-center w-full mt-6'>
+                        <Button
+                            className='w-full py-3 text-lg'
+                            backgroundColor="#137FEC"
+                            type="submit"
+                            disabled={isPending}
+                        >
+                            {isPending ? 'Prijava u toku...' : 'Prijavi se'}
+                        </Button>
 
+                        <p className='text-[#64748B] mt-2'>
+                            Nemate nalog? <a href="#" className='text-[#137FEC] font-medium hover:underline'>Registrujte se</a>
+                        </p>
+                    </div>
+                </form>
 
             </div>
 
