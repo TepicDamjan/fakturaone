@@ -1,17 +1,40 @@
 import DashboardHeader from "@/app/components/DashboardHeader";
 import FeatureDashboardCard from "@/app/components/FeatureCardDashboard";
+import Table, { Invoice } from "@/app/components/Table";
 
 export default function Dashboard() {
+    // Dummy podaci koji repliciraju dizajn dok ne povežemo bazu
+    const dummyInvoices: Invoice[] = [
+        { id: '#INV-001', clientInitials: 'AC', clientName: 'Acme Corp', date: '24. Okt 2023.', amount: '1.200 RSD', status: 'Plaćeno' },
+        { id: '#INV-002', clientInitials: 'GI', clientName: 'Globex Inc', date: '22. Okt 2023.', amount: '3.450 RSD', status: 'Na čekanju' },
+        { id: '#INV-003', clientInitials: 'SC', clientName: 'Soylent Corp', date: '20. Okt 2023.', amount: '850 RSD', status: 'Kasni' },
+        { id: '#INV-004', clientInitials: 'IN', clientName: 'Initech', date: '18. Okt 2023.', amount: '2.100 RSD', status: 'Plaćeno' },
+        { id: '#INV-005', clientInitials: 'UC', clientName: 'Umbrella Corp', date: '15. Okt 2023.', amount: '5.000 RSD', status: 'Nacrt' },
+    ];
+
     return (
         <>
             <DashboardHeader
                 title="Komandna tabla"
                 subtitle="Pregled vašeg poslovanja i najnovijih aktivnosti"
+                rightContent={
+                    <a href='/dashboard/fakture/novafakturaforma'>
+                        <button className="bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Kreiraj novu fakturu
+                        </button>
+                    </a>
+
+                }
             />
 
             {/* Glavni sadržaj */}
             <main className="flex-1 p-8 overflow-y-auto w-full">
+                {/* Kartice sa podatcima */}
                 <div className='flex flex-row justify-between items-center gap-6 w-full'>
+
                     <FeatureDashboardCard title="45.200 RSD" description="Ukupno fakturisano" icon={
                         <svg width="46" height="40" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="46" height="40" rx="8" fill="#EFF6FF" />
@@ -33,6 +56,20 @@ export default function Dashboard() {
 
                     } />
                 </div>
+
+                {/* Nedavne fakture */}
+
+                <div className='flex flex-col  mt-8 w-full'>
+
+                    <div className='flex flex-row justify-between items-center gap-6 mb-6'>
+                        <p className={"text-2xl font-semibold"}>Nedavne Fakture</p>
+                        <a href="#" className={"text-sm font-semibold text-blue-500 hover:text-blue-700 transition-colors"}>Pogledaj sve</a>
+                    </div>
+
+                    <Table invoices={dummyInvoices} />
+
+                </div>
+
             </main>
         </>
     )
