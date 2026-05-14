@@ -30,7 +30,10 @@ function formatDashboardDate(iso: string): string {
 
 function fakturaToInvoice(f: FakturaListItem): Invoice {
   return {
-    id: `#${f.broj}`,
+    id: f.id,
+    displayBroj: `#${f.broj}`,
+    broj: f.broj,
+    clientEmail: f.klijentEmail,
     clientInitials: initialsFromName(f.klijentNaziv || "?"),
     clientName: f.klijentNaziv || "—",
     date: formatDashboardDate(f.datumIzdavanja),

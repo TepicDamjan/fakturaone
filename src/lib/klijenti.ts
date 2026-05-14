@@ -3,6 +3,54 @@ import type { Database } from "@/types/database";
 
 export type Klijent = Database["public"]["Tables"]["klijenti"]["Row"];
 
+export type KlijentSaFakturisano = Klijent & {
+  ukupnoFakturisano: number;
+};
+
+type FakturaSaStavkamaRow = {
+  klijent_id: string | null;
+  pdv_procenat: number;
+  popust: number;
+  stavke_fakture: { kolicina: number; cena: number }[] | null;
+};
+
+export async function fetchKlijentiSaFakturisano(
+  supabase: SupabaseClient<Database>
+): Promise<KlijentSaFakturisano[]> {
+  const klijenti = await fetchKlijentiList(supabase);
+
+  const { data: fakture, error } = await supabase.from("fakture").select(`
+      klijent_id,
+      pdv_procenat,
+      popust,
+      stavke_fakture ( kolicina, cena )
+    `);
+
+  if (error) throw error;
+
+  const totals = new Map<string, number>();
+  const rows = (fakture ?? []) as FakturaSaStavkamaRow[];
+
+  for (const row of rows) {
+    const kid = row.klijent_id;
+    if (!kid) continue;
+    const stavke = row.stavke_fakture ?? [];
+    const osnovica = stavke.reduce(
+      (s, x) => s + Number(x.kolicina) * Number(x.cena),
+      0
+    );
+    const pdv = Number(row.pdv_procenat);
+    const popust = Number(row.popust);
+    const iznos = osnovica * (1 + pdv / 100) - popust;
+    totals.set(kid, (totals.get(kid) ?? 0) + iznos);
+  }
+
+  return klijenti.map((k) => ({
+    ...k,
+    ukupnoFakturisano: totals.get(k.id) ?? 0,
+  }));
+}
+
 export async function fetchKlijentiList(
   supabase: SupabaseClient<Database>
 ): Promise<Klijent[]> {

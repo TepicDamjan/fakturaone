@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   type FakturaListItem,
   type FakturaStatus,
   initialsFromName,
 } from "@/lib/fakture";
+import FakturaAkcijeMeni from "@/app/components/FakturaAkcijeMeni";
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
@@ -68,10 +70,25 @@ function withinPreset(iso: string, preset: DatePreset): boolean {
 }
 
 export default function FaktureLista({ fakture }: FaktureListaProps) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [datePreset, setDatePreset] = useState<DatePreset>("30");
   const [statusFilter, setStatusFilter] = useState<FakturaStatus | "all">("all");
   const [page, setPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      const wrap = document.querySelector(`[data-faktura-actions="${openMenuId}"]`);
+      const dropdown = document.querySelector(`[data-faktura-dropdown="${openMenuId}"]`);
+      if (wrap?.contains(t) || dropdown?.contains(t)) return;
+      setOpenMenuId(null);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [openMenuId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -236,12 +253,23 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
               <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-4 py-3.5 w-14" aria-label="Akcije" />
+              <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider text-right">
+                Akcije
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {slice.map((f) => (
-              <FakturaRow key={f.id} f={f} />
+              <FakturaRow
+                key={f.id}
+                f={f}
+                menuOpen={openMenuId === f.id}
+                onToggleMenu={() =>
+                  setOpenMenuId((cur) => (cur === f.id ? null : f.id))
+                }
+                onCloseMenu={() => setOpenMenuId(null)}
+                routerRefresh={() => router.refresh()}
+              />
             ))}
           </tbody>
         </table>
@@ -293,7 +321,19 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
   );
 }
 
-function FakturaRow({ f }: { f: FakturaListItem }) {
+function FakturaRow({
+  f,
+  menuOpen,
+  onToggleMenu,
+  onCloseMenu,
+  routerRefresh,
+}: {
+  f: FakturaListItem;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  onCloseMenu: () => void;
+  routerRefresh: () => void;
+}) {
   const initials = initialsFromName(f.klijentNaziv);
   const avatarBg = hashColor(f.klijentNaziv);
 
@@ -332,17 +372,15 @@ function FakturaRow({ f }: { f: FakturaListItem }) {
         </span>
       </td>
       <td className="px-2 py-4 text-right">
-        <button
-          type="button"
-          className="p-2 rounded-lg text-[#64748B] hover:bg-gray-100 hover:text-fcrna transition-colors"
-          aria-label="Akcije za fakturu"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <circle cx="12" cy="6" r="1.5" />
-            <circle cx="12" cy="12" r="1.5" />
-            <circle cx="12" cy="18" r="1.5" />
-          </svg>
-        </button>
+        <FakturaAkcijeMeni
+          fakturaId={f.id}
+          broj={f.broj}
+          klijentEmail={f.klijentEmail}
+          menuOpen={menuOpen}
+          onToggleMenu={onToggleMenu}
+          onCloseMenu={onCloseMenu}
+          routerRefresh={routerRefresh}
+        />
       </td>
     </tr>
   );

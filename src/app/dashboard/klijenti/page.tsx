@@ -1,14 +1,14 @@
 import Link from "next/link";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import KlijentiTabela from "@/app/components/KlijentiTabela";
-import { fetchKlijentiList, type Klijent } from "@/lib/klijenti";
+import { fetchKlijentiSaFakturisano, type KlijentSaFakturisano } from "@/lib/klijenti";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function Klijenti() {
     const supabase = await createClient();
-    let klijenti: Klijent[] = [];
+    let klijenti: KlijentSaFakturisano[] = [];
     try {
-        klijenti = await fetchKlijentiList(supabase);
+        klijenti = await fetchKlijentiSaFakturisano(supabase);
     } catch {
         klijenti = [];
     }

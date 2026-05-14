@@ -119,5 +119,62 @@ export async function sacuvajFakturu(
   }
 
   revalidatePath("/dashboard/fakture");
+  revalidatePath("/dashboard");
   return { ok: true, id: fakturaId };
+}
+
+export async function promeniStatusFakture(
+  fakturaId: string,
+  status: Database["public"]["Enums"]["faktura_status"]
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, error: "Morate biti ulogovani." };
+  }
+
+  const { error } = await supabase
+    .from("fakture")
+    .update({ status })
+    .eq("id", fakturaId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/fakture");
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/fakture/${fakturaId}/pregled`);
+  return { ok: true };
+}
+
+export async function obrisiFakturu(
+  fakturaId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, error: "Morate biti ulogovani." };
+  }
+
+  const { error } = await supabase
+    .from("fakture")
+    .delete()
+    .eq("id", fakturaId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/fakture");
+  revalidatePath("/dashboard");
+  return { ok: true };
 }
