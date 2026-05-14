@@ -5,10 +5,11 @@ interface FeatureCardProps {
     description: string;
     icon?: React.ReactNode;
     className?: string;
+    /** Ako nije prosleđeno, trend badge se ne prikazuje. */
     trend?: string;
 }
 
-export default function FeatureDashboardCard({ title, description, icon, className = '', trend = "+12%" }: FeatureCardProps) {
+export default function FeatureDashboardCard({ title, description, icon, className = '', trend }: FeatureCardProps) {
     return (
         <div className={`bg-white rounded-[24px] p-7 flex flex-col justify-between border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative overflow-hidden flex-1 ${className}`}>
             {/* Background shape */}
@@ -20,7 +21,7 @@ export default function FeatureDashboardCard({ title, description, icon, classNa
                     {icon}
                 </div>
 
-                {trend && (
+                {trend ? (
                     <div className="bg-[#ECFDF5] text-[#10B981] text-[13px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.25 4.08333L7.58333 8.75L5.25 6.41667L1.75 9.91667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -28,7 +29,7 @@ export default function FeatureDashboardCard({ title, description, icon, classNa
                         </svg>
                         {trend}
                     </div>
-                )}
+                ) : null}
             </div>
 
             {/* Bottom row */}

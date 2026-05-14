@@ -31,7 +31,10 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
 export default function DashboardSidebar() {
     const pathname = usePathname();
 
-    if (pathname === '/dashboard/fakture/novafakturaforma') {
+    if (
+        pathname === '/dashboard/fakture/novafakturaforma' ||
+        pathname === '/dashboard/fakture/pregled'
+    ) {
         return null;
     }
 

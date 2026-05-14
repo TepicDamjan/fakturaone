@@ -12,9 +12,27 @@ export interface Invoice {
 
 interface TableProps {
     invoices: Invoice[];
+    /** Tekst ispod tabele (npr. „Prikazano 1 do 5 od 12 rezultata”). */
+    footerSummary?: string;
 }
 
-export default function Table({ invoices }: TableProps) {
+function avatarClassFromInitials(initials: string): string {
+    const colors = [
+        "bg-blue-100 text-blue-600",
+        "bg-purple-100 text-purple-600",
+        "bg-pink-100 text-pink-600",
+        "bg-indigo-100 text-indigo-600",
+        "bg-emerald-100 text-emerald-600",
+        "bg-amber-100 text-amber-700",
+        "bg-cyan-100 text-cyan-700",
+        "bg-violet-100 text-violet-700",
+    ];
+    let h = 0;
+    for (let i = 0; i < initials.length; i++) h = initials.charCodeAt(i) + ((h << 5) - h);
+    return colors[Math.abs(h) % colors.length];
+}
+
+export default function Table({ invoices, footerSummary }: TableProps) {
     // Helper funkcija za boje statusa
     const getStatusStyles = (status: Invoice['status']) => {
         switch (status) {
@@ -31,16 +49,9 @@ export default function Table({ invoices }: TableProps) {
         }
     };
 
-    // Helper funkcija za boje avatara klijenata (čisto vizuelno za mock podatke)
+    // Boja avatara na osnovu inicijala (stabilan hash)
     const getAvatarColor = (initials: string) => {
-        const colors: Record<string, string> = {
-            'AC': 'bg-blue-100 text-blue-600',
-            'GI': 'bg-purple-100 text-purple-600',
-            'SC': 'bg-pink-100 text-pink-600',
-            'IN': 'bg-indigo-100 text-indigo-600',
-            'UC': 'bg-emerald-100 text-emerald-600',
-        };
-        return colors[initials] || 'bg-gray-100 text-gray-600';
+        return avatarClassFromInitials(initials);
     };
 
     return (
@@ -59,8 +70,15 @@ export default function Table({ invoices }: TableProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {invoices.map((invoice, index) => (
-                            <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
+                        {invoices.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="py-12 px-6 text-center text-sm text-[#64748B]">
+                                    Još nema faktura. Kreirajte prvu fakturu da bi se pojavila ovde.
+                                </td>
+                            </tr>
+                        ) : (
+                            invoices.map((invoice) => (
+                            <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
                                 <td className="py-4 px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
                                     {invoice.id}
                                 </td>
@@ -84,7 +102,7 @@ export default function Table({ invoices }: TableProps) {
                                     </span>
                                 </td>
                                 <td className="py-4 px-6 text-right whitespace-nowrap">
-                                    <button className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100">
+                                    <button type="button" className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                             <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -93,7 +111,8 @@ export default function Table({ invoices }: TableProps) {
                                     </button>
                                 </td>
                             </tr>
-                        ))}
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -101,13 +120,14 @@ export default function Table({ invoices }: TableProps) {
             {/* Paginacija ispod tabele */}
             <div className="bg-[#F8FAFC] border-t border-gray-100 px-6 py-4 flex items-center justify-between">
                 <span className="text-sm text-[#64748B]">
-                    Prikazano <span className="font-semibold text-[#0F172A]">1</span> do <span className="font-semibold text-[#0F172A]">5</span> od <span className="font-semibold text-[#0F172A]">12</span> rezultata
+                    {footerSummary ??
+                        "Prikazano 1 do 5 od 12 rezultata"}
                 </span>
                 <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 text-sm font-medium text-[#94A3B8] bg-transparent border border-transparent rounded-lg hover:text-[#64748B] transition-colors disabled:opacity-50" disabled>
+                    <button type="button" className="px-3 py-1.5 text-sm font-medium text-[#94A3B8] bg-transparent border border-transparent rounded-lg hover:text-[#64748B] transition-colors disabled:opacity-50" disabled>
                         Prethodno
                     </button>
-                    <button className="px-4 py-1.5 text-sm font-medium text-[#0F172A] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                    <button type="button" className="px-4 py-1.5 text-sm font-medium text-[#0F172A] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                         Sledeće
                     </button>
                 </div>
