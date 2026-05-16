@@ -12,9 +12,9 @@ export default function LoginPage() {
     const [state, formAction, isPending] = useActionState(login, initialState)
 
     return (
-        <section id='Login' className='flex justify-center items-center h-screen bg-gray-50 m-0'>
+        <section id='Login' className='flex justify-center items-center min-h-screen bg-gray-50 m-0 px-4 py-8'>
 
-            <div className='bg-white h-[580px] w-[440px] rounded-2xl shadow-xl p-8 border border-gray-100 flex flex-col justify-center'>
+            <div className='bg-white w-full max-w-[440px] rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 flex flex-col justify-center'>
 
                 <h1 className='text-3xl font-bold text-gray-900 m-1'>Dobrodošli nazad</h1>
                 <p className='text-gray-500 m-1 mb-6'>Unesite svoje podatke kako biste se ulogovali</p>

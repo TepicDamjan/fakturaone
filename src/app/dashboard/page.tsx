@@ -87,7 +87,7 @@ export default async function Dashboard() {
             </Link>
             <Link
               href="/dashboard/fakture/novafakturaforma"
-              className="bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+              className="bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 sm:px-4 rounded-lg flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap"
             >
               <svg
                 width="18"
@@ -105,7 +105,8 @@ export default async function Dashboard() {
                   strokeLinejoin="round"
                 />
               </svg>
-              Kreiraj novu fakturu
+              <span className="hidden sm:inline">Kreiraj novu fakturu</span>
+              <span className="sm:hidden">Nova faktura</span>
             </Link>
           </div>
         }

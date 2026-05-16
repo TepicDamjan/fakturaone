@@ -143,11 +143,11 @@ export default function NovaFaktura() {
   return (
     <div>
       <div>
-        <div className="m-8">
-          <h1 className="text-2xl font-bold text-fcrna">
+        <div className="mx-4 mt-4 mb-2 sm:m-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-fcrna">
             Forma za kreiranje nove fakture
           </h1>
-          <p className="text-xl text-[#64748B]">
+          <p className="text-base sm:text-xl text-[#64748B]">
             Popunite detalje ispod kako biste generisali novu fakturu za vašeg
             klijenta.
           </p>
@@ -156,13 +156,13 @@ export default function NovaFaktura() {
         {saveError ? (
           <div
             role="alert"
-            className="mx-8 mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 max-w-4xl"
+            className="mx-4 sm:mx-8 mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 max-w-4xl"
           >
             {saveError}
           </div>
         ) : null}
 
-        <div className="bg-white rounded-lg m-8 p-6 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg mx-4 sm:m-8 p-4 sm:p-6 border border-gray-100 shadow-sm">
           <label className="block text-sm font-bold text-[#0F172A] mb-2">
             Izbor Klijenta
           </label>
@@ -198,7 +198,7 @@ export default function NovaFaktura() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-6">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-bold text-[#0F172A] mb-2">
                 Broj fakture
@@ -252,7 +252,7 @@ export default function NovaFaktura() {
           onUpdateStavka={handleUpdateStavka}
         />
 
-        <div className="bg-white rounded-lg m-8 p-6 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg mx-4 sm:m-8 p-4 sm:p-6 border border-gray-100 shadow-sm">
           <label className="block text-base font-bold text-[#0F172A] mb-4">
             Napomene / Uslovi plaćanja
           </label>

@@ -11,7 +11,7 @@ interface FeatureCardProps {
 
 export default function FeatureDashboardCard({ title, description, icon, className = '', trend }: FeatureCardProps) {
     return (
-        <div className={`bg-white rounded-[24px] p-7 flex flex-col justify-between border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative overflow-hidden flex-1 ${className}`}>
+        <div className={`bg-white rounded-[24px] p-5 sm:p-7 flex flex-col justify-between border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative overflow-hidden flex-1 ${className}`}>
             {/* Background shape */}
             <div className="absolute -top-16 -right-16 w-56 h-56 bg-[#F8FAFC] rounded-full z-0"></div>
 
@@ -37,7 +37,7 @@ export default function FeatureDashboardCard({ title, description, icon, classNa
                 <span className="text-[#64748B] text-[15px] font-medium">
                     {description}
                 </span>
-                <span className="text-[#0F172A] text-[32px] font-extrabold tracking-tight leading-none">
+                <span className="text-[#0F172A] text-2xl sm:text-[32px] font-extrabold tracking-tight leading-none">
                     {title}
                 </span>
             </div>

@@ -39,7 +39,7 @@ export default function FakturaPregled({
   const ukupno = osnovica + pdvIznos - popust;
 
   return (
-    <div className="m-8 space-y-4">
+    <div className="mx-4 sm:m-8 space-y-4">
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6">
           <h2 className="text-lg font-bold text-fcrna mb-5">Pregled</h2>
@@ -152,7 +152,7 @@ export default function FakturaPregled({
           Pregled i štampa
         </button>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             onClick={onSacuvajNacrt}

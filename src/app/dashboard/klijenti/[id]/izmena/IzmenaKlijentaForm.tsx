@@ -61,7 +61,7 @@ export default function IzmenaKlijentaForm({ klijent }: Props) {
 
   return (
     <form onSubmit={handleSacuvaj} className="flex flex-col min-h-full">
-      <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <Link
             href="/dashboard/klijenti"
@@ -99,7 +99,7 @@ export default function IzmenaKlijentaForm({ klijent }: Props) {
         </div>
       </header>
 
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">
         <div className="max-w-6xl mx-auto mb-6">
           {greska ? (
             <div

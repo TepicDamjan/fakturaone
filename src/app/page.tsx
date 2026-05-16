@@ -11,8 +11,8 @@ export default function Hero() {
     return (
         <>
             <Navbar />
-            <section id="Hero" className='m-8'>
-                <div className='flex flex-col items-center justify-center gap-6'>
+            <section id="Hero" className='mx-4 mt-6 mb-8 sm:m-8'>
+                <div className='flex flex-col items-center justify-center gap-4 sm:gap-6 px-2'>
 
                     <div className='flex flex-row justify-center items-center  gap-1 bg-[#DBEAFE] p-1 pl-4 pr-4 rounded-2xl text-fplava text-sm font-medium'>
                         <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -24,7 +24,7 @@ export default function Hero() {
 
                     <div className='max-w-4xl flex flex-col justify-center items-center gap-3'>
 
-                        <h1 className='text-fcrna text-7xl font-bold text-center'>
+                        <h1 className='text-fcrna text-3xl sm:text-5xl lg:text-7xl font-bold text-center leading-tight'>
                             Jednostavno upravljanje <span className='text-fplava'>fakturama</span>
                         </h1>
                         <p className='text-center text-fcrna max-w-2xl'>
@@ -33,9 +33,9 @@ export default function Hero() {
                         </p>
 
                     </div>
-                    <div className='flex flex-row gap-4 items-center justify-center'>
+                    <div className='flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center w-full max-w-sm sm:max-w-none'>
 
-                        <Link href="/registracija" className="block">
+                        <Link href="/registracija" className="block w-full sm:w-auto">
                             <Button backgroundColor="#137FEC">
                                 Započnite besplatno
                             </Button>
@@ -51,7 +51,7 @@ export default function Hero() {
                 </div>
             </section>
 
-            <section id='Image' className='w-full max-w-4xl mx-auto mt-12 m-8 px-6 pb-20'>
+            <section id='Image' className='w-full max-w-4xl mx-auto mt-8 sm:mt-12 mx-4 sm:m-8 px-2 sm:px-6 pb-12 sm:pb-20'>
                 <div className="relative w-full flex justify-center">
                     <Image
                         src="/HeroImg.png"
@@ -64,13 +64,13 @@ export default function Hero() {
                     <NotificationCard
                         title="Nova Faktura"
                         message="Uspešno kreirana"
-                        className="absolute bottom-6 -left-4 md:-left-12 lg:-left-20 z-10"
+                        className="hidden sm:block absolute bottom-6 -left-4 md:-left-12 lg:-left-20 z-10"
                     />
 
                     <NotificationCard
                         title="Status Fakture"
                         message="Plaćeno"
-                        className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-12 lg:-right-20 z-10"
+                        className="hidden sm:block absolute top-1/2 -translate-y-1/2 -right-4 md:-right-12 lg:-right-20 z-10"
                         icon={
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="40" height="40" rx="20" fill="#22C55E" fillOpacity="0.1" />
@@ -84,8 +84,8 @@ export default function Hero() {
             <section id='About' className='bg-white h-full flex flex-col justify-center items-center text-center p-7'>
 
                 <div>
-                    <h1 className='text-fcrna text-4xl font-bold m-3'>Zašto izabrati nas ?</h1>
-                    <p className='text-fcrna text-xl '>Sve što vam je potrebno da vodite svoje finansije bez stresa, na jednom mestu.</p>
+                    <h1 className='text-fcrna text-2xl sm:text-4xl font-bold m-3 px-2'>Zašto izabrati nas ?</h1>
+                    <p className='text-fcrna text-base sm:text-xl px-4'>Sve što vam je potrebno da vodite svoje finansije bez stresa, na jednom mestu.</p>
                 </div>
 
                 <div className="mt-12 flex flex-wrap gap-8 justify-center">
@@ -107,7 +107,7 @@ export default function Hero() {
 
             <section id='Test'>
 
-                <div className='flex flex-col md:flex-row justify-between items-center bg-[#137FEC] max-w-[1000px] w-full mx-auto my-20 px-10 py-12 md:px-16 md:py-16 rounded-[28px] shadow-sm gap-8'>
+                <div className='flex flex-col md:flex-row justify-between items-center bg-[#137FEC] max-w-[1000px] w-full mx-4 sm:mx-auto my-12 sm:my-20 px-6 py-10 sm:px-10 sm:py-12 md:px-16 md:py-16 rounded-2xl sm:rounded-[28px] shadow-sm gap-8'>
                     <div className='flex flex-col text-left max-w-2xl'>
                         <h2 className='text-white text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight mb-4'>
                             Spremni da unapredite poslovanje?

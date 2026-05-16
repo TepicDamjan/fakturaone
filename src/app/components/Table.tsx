@@ -81,19 +81,19 @@ export default function Table({ invoices, footerSummary }: TableProps) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#F8FAFC] border-b border-gray-100">
-              <th className="py-4 px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
+              <th className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
                 ID Fakture
               </th>
-              <th className="py-4 px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
+              <th className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
                 Naziv klijenta
               </th>
-              <th className="py-4 px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
+              <th className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
                 Datum
               </th>
-              <th className="py-4 px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
+              <th className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
                 Iznos
               </th>
-              <th className="py-4 px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
+              <th className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-semibold text-[#64748B] whitespace-nowrap">
                 Status
               </th>
               <th className="py-4 px-6 text-sm font-semibold text-[#64748B] text-right whitespace-nowrap">
@@ -111,10 +111,10 @@ export default function Table({ invoices, footerSummary }: TableProps) {
             ) : (
               invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="py-4 px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
                     {invoice.displayBroj}
                   </td>
-                  <td className="py-4 px-6 whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getAvatarColor(invoice.clientInitials)}`}
@@ -124,20 +124,20 @@ export default function Table({ invoices, footerSummary }: TableProps) {
                       <span className="text-sm font-medium text-[#475569]">{invoice.clientName}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-sm font-medium text-[#64748B] whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-medium text-[#64748B] whitespace-nowrap">
                     {invoice.date}
                   </td>
-                  <td className="py-4 px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
                     {invoice.amount}
                   </td>
-                  <td className="py-4 px-6 whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 whitespace-nowrap">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusStyles(invoice.status)}`}
                     >
                       {invoice.status}
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-right whitespace-nowrap">
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-right whitespace-nowrap">
                     <FakturaAkcijeMeni
                       fakturaId={invoice.id}
                       broj={invoice.broj}
@@ -157,7 +157,7 @@ export default function Table({ invoices, footerSummary }: TableProps) {
         </table>
       </div>
 
-      <div className="bg-[#F8FAFC] border-t border-gray-100 px-6 py-4 flex items-center justify-between">
+      <div className="bg-[#F8FAFC] border-t border-gray-100 px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm text-[#64748B]">
           {footerSummary ?? "Prikazano 1 do 5 od 12 rezultata"}
         </span>
