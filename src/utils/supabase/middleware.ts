@@ -2,16 +2,27 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 
+function getSupabaseEnv() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+    if (!url || !anonKey) return null
+    return { url, anonKey }
+}
+
 export async function updateSession(request: NextRequest) {
-    // Prvo kriramo neizmijenjeni response
+    const env = getSupabaseEnv()
+    if (!env) {
+        // Na Vercelu postavite NEXT_PUBLIC_SUPABASE_URL i NEXT_PUBLIC_SUPABASE_ANON_KEY
+        return NextResponse.next({ request })
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     })
 
-    // Zatim formiramo supabase sa tim objektima
     const supabase = createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        env.url,
+        env.anonKey,
         {
             cookies: {
                 getAll() {
