@@ -13,6 +13,12 @@ import {
   formatKlijentAdresa,
   type Klijent,
 } from "@/lib/klijenti";
+import {
+  FakturaDetaljiPlacanja,
+  FakturaIzdavalacKolona,
+  FakturaLogoZaglavlje,
+} from "@/app/components/FakturaFirmaNaFakturi";
+import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { createClient } from "@/utils/supabase/client";
 
 function formatRsd(amount: number) {
@@ -47,15 +53,9 @@ function formatLongDate(iso: string) {
   });
 }
 
-const IZDAVAC = {
-  naziv: "FakturaOne DOO",
-  tagline: "Jednostavno fakturisanje",
-  adresa: "Beograd, Republika Srbija",
-  email: "billing@fakturaone.rs",
-};
-
 export default function FakturaPregledStranica() {
   const router = useRouter();
+  const { izdavac, bankovniRacun } = usePodesavanjaFirme();
   const [data, setData] = useState<FakturaPregledSesija | null | undefined>(
     undefined
   );
@@ -216,43 +216,14 @@ export default function FakturaPregledStranica() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 mt-8 print:mt-0 print:max-w-none print:px-8">
         <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:border-0">
           <div className="p-8 sm:p-10 print:p-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-8 border-b border-gray-100 pb-8">
-              <div className="flex gap-4">
-                <div className="w-14 h-14 rounded-xl bg-fplava flex items-center justify-center shrink-0 shadow-md">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-                    <path
-                      d="M12 2L4 7v10l8 5 8-5V7l-8-5z"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-fcrna">{IZDAVAC.naziv}</p>
-                  <p className="text-sm text-[#64748B]">{IZDAVAC.tagline}</p>
-                </div>
-              </div>
-              <div className="text-left sm:text-right">
-                <p className="text-3xl sm:text-4xl font-bold text-gray-200 tracking-tight uppercase">
-                  Faktura
-                </p>
-                <p className="text-fcrna font-semibold mt-1">#{brojFakture}</p>
-                <p className="text-sm text-[#64748B] mt-1">
-                  {formatLongDate(data.datumIzdavanja)}
-                </p>
-              </div>
-            </div>
+            <FakturaLogoZaglavlje
+              izdavac={izdavac}
+              brojFakture={brojFakture}
+              datumTekst={formatLongDate(data.datumIzdavanja)}
+            />
 
             <div className="grid sm:grid-cols-2 gap-8 py-8">
-              <div>
-                <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
-                  Izdavalac
-                </p>
-                <p className="font-semibold text-fcrna">{IZDAVAC.naziv}</p>
-                <p className="text-sm text-[#64748B] mt-1">{IZDAVAC.adresa}</p>
-                <p className="text-sm text-fplava mt-2">{IZDAVAC.email}</p>
-              </div>
+              <FakturaIzdavalacKolona izdavac={izdavac} />
               <div>
                 <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
                   Primalac
@@ -343,15 +314,11 @@ export default function FakturaPregledStranica() {
             </div>
 
             <div className="mt-10 pt-8 border-t border-gray-100 grid sm:grid-cols-2 gap-8 text-sm">
-              <div>
-                <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
-                  Detalji plaćanja
-                </p>
-                <p className="text-fcrna">Banka: Primer banka a.d.</p>
-                <p className="text-[#64748B] mt-1">Na ime: {IZDAVAC.naziv}</p>
-                <p className="text-[#64748B]">Broj računa: 340-000000000000-00</p>
-                <p className="text-[#64748B]">Poziv na broj: {brojFakture}</p>
-              </div>
+              <FakturaDetaljiPlacanja
+                izdavac={izdavac}
+                bankovniRacun={bankovniRacun}
+                pozivNaBroj={brojFakture}
+              />
               <div>
                 <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
                   Napomena
@@ -365,7 +332,7 @@ export default function FakturaPregledStranica() {
           </div>
 
           <p className="text-center text-xs text-[#94A3B8] py-4 bg-fsiva border-t border-gray-100 print:bg-transparent">
-            Generisano pomoću FakturaOne
+            Generisano pomoću {izdavac.naziv}
           </p>
         </article>
       </main>

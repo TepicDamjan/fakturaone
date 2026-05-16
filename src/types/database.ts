@@ -122,6 +122,104 @@ export type Database = {
                     }
                 ];
             };
+            firma: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    naziv: string;
+                    pib: string | null;
+                    maticni_broj: string | null;
+                    adresa: string | null;
+                    email: string | null;
+                    telefon: string | null;
+                    valuta: string;
+                    pdv_procenat: number;
+                    rok_placanja_dana: number;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    naziv?: string;
+                    pib?: string | null;
+                    maticni_broj?: string | null;
+                    adresa?: string | null;
+                    email?: string | null;
+                    telefon?: string | null;
+                    valuta?: string;
+                    pdv_procenat?: number;
+                    rok_placanja_dana?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    naziv?: string;
+                    pib?: string | null;
+                    maticni_broj?: string | null;
+                    adresa?: string | null;
+                    email?: string | null;
+                    telefon?: string | null;
+                    valuta?: string;
+                    pdv_procenat?: number;
+                    rok_placanja_dana?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "firma_user_id_fkey";
+                        columns: ["user_id"];
+                        referencedRelation: "users";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            bankovni_racuni: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    naziv_banke: string;
+                    broj_racuna: string;
+                    na_ime: string | null;
+                    swift: string | null;
+                    je_podrazumevani: boolean;
+                    redosled: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    naziv_banke: string;
+                    broj_racuna: string;
+                    na_ime?: string | null;
+                    swift?: string | null;
+                    je_podrazumevani?: boolean;
+                    redosled?: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    naziv_banke?: string;
+                    broj_racuna?: string;
+                    na_ime?: string | null;
+                    swift?: string | null;
+                    je_podrazumevani?: boolean;
+                    redosled?: number;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "bankovni_racuni_user_id_fkey";
+                        columns: ["user_id"];
+                        referencedRelation: "users";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
             stavke_fakture: {
                 Row: {
                     id: string;

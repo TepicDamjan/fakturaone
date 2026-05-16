@@ -63,7 +63,7 @@ export default function LoginPage() {
                         </Button>
 
                         <p className='text-[#64748B] mt-2'>
-                            Nemate nalog? <a href="#" className='text-[#137FEC] font-medium hover:underline'>Registrujte se</a>
+                            Nemate nalog? <a href="/registracija" className='text-[#137FEC] font-medium hover:underline'>Registrujte se</a>
                         </p>
                     </div>
                 </form>

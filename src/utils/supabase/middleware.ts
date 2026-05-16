@@ -43,8 +43,11 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // Ako već ima korisnika, a ide na /login -> Pošalji ga odma' na dashboard 
-    if (request.nextUrl.pathname.startsWith('/login') && user) {
+    const authGuestOnly =
+        request.nextUrl.pathname.startsWith('/login') ||
+        request.nextUrl.pathname.startsWith('/registracija')
+
+    if (authGuestOnly && user) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)

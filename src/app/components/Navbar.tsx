@@ -24,9 +24,11 @@ export default function Navbar() {
 
             {/* Akcije */}
             <div className="flex items-center gap-4">
-                <Button backgroundColor="#f3f4f6" textColor="#374151">
-                    Registracija
-                </Button>
+                <Link href="/registracija" className="block">
+                    <Button backgroundColor="#f3f4f6" textColor="#374151">
+                        Registracija
+                    </Button>
+                </Link>
                 <Link href="/login" className="block">
                     <Button backgroundColor="#2563eb" textColor="#ffffff">
                         Prijava

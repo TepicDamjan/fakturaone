@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthUser } from '@/lib/useAuthUser';
 
 // Helper component for navigation items
 interface NavItemProps {
@@ -30,6 +31,8 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
 
 export default function DashboardSidebar() {
     const pathname = usePathname();
+    const { ime, email, loading } = useAuthUser();
+    const avatarSeed = encodeURIComponent(email ?? 'korisnik');
 
     if (
         pathname === '/dashboard/fakture/novafakturaforma' ||
@@ -113,13 +116,17 @@ export default function DashboardSidebar() {
             <div className="px-6 border-t border-gray-100 pt-6">
                 <div className="bg-[#F8FAFC] rounded-2xl flex items-center gap-3 p-3 mt-auto cursor-pointer border border-gray-50 shadow-sm transition-colors hover:bg-gray-100">
                     <img
-                        src="https://api.dicebear.com/7.x/notionists/svg?seed=Jane&backgroundColor=FFC107"
-                        alt="Jane Doe"
+                        src={`https://api.dicebear.com/7.x/notionists/svg?seed=${avatarSeed}&backgroundColor=FFC107`}
+                        alt={ime ?? 'Profil'}
                         className="w-10 h-10 rounded-full border border-gray-200 bg-white"
                     />
-                    <div className="flex flex-col truncate">
-                        <span className="text-[#0F172A] font-bold text-sm">Jane Doe</span>
-                        <span className="text-[#64748B] text-xs truncate">jane@invoicely.com</span>
+                    <div className="flex flex-col truncate min-w-0">
+                        <span className="text-[#0F172A] font-bold text-sm truncate">
+                            {loading ? '…' : (ime ?? 'Korisnik')}
+                        </span>
+                        <span className="text-[#64748B] text-xs truncate">
+                            {loading ? '…' : (email ?? '')}
+                        </span>
                     </div>
                 </div>
             </div>
