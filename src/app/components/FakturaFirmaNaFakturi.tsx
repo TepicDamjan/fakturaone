@@ -12,17 +12,26 @@ export function FakturaLogoZaglavlje({
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-8 border-b border-gray-100 pb-8">
-      <div className="flex gap-4">
-        <div className="w-14 h-14 rounded-xl bg-fplava flex items-center justify-center shrink-0 shadow-md">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M12 2L4 7v10l8 5 8-5V7l-8-5z"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+      <div className="flex gap-4 items-center">
+        {izdavac.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={izdavac.logoUrl}
+            alt={`Logo ${izdavac.naziv}`}
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-contain bg-white border border-gray-100 shrink-0"
+          />
+        ) : (
+          <div className="w-14 h-14 rounded-xl bg-fplava flex items-center justify-center shrink-0 shadow-md">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M12 2L4 7v10l8 5 8-5V7l-8-5z"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
         <div>
           <p className="text-lg font-bold text-fcrna">{izdavac.naziv}</p>
           <p className="text-sm text-[#64748B]">{izdavac.tagline}</p>

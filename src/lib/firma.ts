@@ -19,6 +19,7 @@ const DEFAULT_FIRMA = {
   valuta: "RSD",
   pdv_procenat: 20,
   rok_placanja_dana: 15,
+  logo_url: null as string | null,
 };
 
 export async function fetchPodesavanjaFirme(
@@ -64,6 +65,7 @@ const IZDAVAC_FALLBACK = {
   pib: null as string | null,
   maticniBroj: null as string | null,
   telefon: null as string | null,
+  logoUrl: null as string | null,
 };
 
 export type IzdavalacPrikaz = {
@@ -74,6 +76,7 @@ export type IzdavalacPrikaz = {
   pib: string | null;
   maticniBroj: string | null;
   telefon: string | null;
+  logoUrl: string | null;
 };
 
 /** Podaci izdavaoca za fakturu iz podešavanja firme. */
@@ -92,5 +95,6 @@ export function izdavalacIzPodesavanja(
     pib: firma.pib?.trim() || null,
     maticniBroj: firma.maticni_broj?.trim() || null,
     telefon: firma.telefon?.trim() || null,
+    logoUrl: firma.logo_url?.trim() || null,
   };
 }

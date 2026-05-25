@@ -7,9 +7,8 @@ import {
   type BankovniRacunInput,
   type SacuvajFirmuInput,
 } from "@/app/dashboard/podesavanja/actions";
+import PodesavanjaLogoFirme from "@/app/dashboard/podesavanja/PodesavanjaLogoFirme";
 import type { BankovniRacunRow, FirmaRow } from "@/lib/firma";
-
-type TabId = "profil" | "firma" | "obavestenja" | "placanja";
 
 type RacunForm = BankovniRacunInput & { key: string };
 
@@ -59,13 +58,6 @@ function firmaFromRow(f: FirmaRow | null): SacuvajFirmuInput {
   };
 }
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "profil", label: "Profil" },
-  { id: "firma", label: "Firma" },
-  { id: "obavestenja", label: "Obaveštenja" },
-  { id: "placanja", label: "Plaćanja" },
-];
-
 const VALUTE = [
   { value: "RSD", label: "RSD (Srpski dinar)" },
   { value: "EUR", label: "EUR (Evro)" },
@@ -80,7 +72,6 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
     [initialRacuni]
   );
 
-  const [tab, setTab] = useState<TabId>("firma");
   const [firma, setFirma] = useState<SacuvajFirmuInput>(initialFirmaForm);
   const [racuni, setRacuni] = useState<RacunForm[]>(initialRacuniForm);
   const [greska, setGreska] = useState<string | null>(null);
@@ -114,45 +105,16 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-0">
-      <nav className="flex gap-1 border-b border-gray-200 mb-8 overflow-x-auto">
-        {TABS.map((t) => {
-          const active = tab === t.id;
-          const disabled = t.id !== "firma";
-          return (
-            <button
-              key={t.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => !disabled && setTab(t.id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
-                active
-                  ? "border-fplava text-fplava"
-                  : disabled
-                    ? "border-transparent text-[#94A3B8] cursor-not-allowed"
-                    : "border-transparent text-[#64748B] hover:text-fcrna"
-              }`}
-            >
-              {t.label}
-              {disabled ? (
-                <span className="ml-1.5 text-[10px] uppercase text-[#94A3B8]">uskoro</span>
-              ) : null}
-            </button>
-          );
-        })}
-      </nav>
-
-      {tab !== "firma" ? (
-        <p className="text-[#64748B] text-sm">Ova sekcija će uskoro biti dostupna.</p>
-      ) : (
-        <>
-          {greska ? (
-            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              {greska}
-            </div>
-          ) : null}
+      {greska ? (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {greska}
+        </div>
+      ) : null}
 
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
             <div className="space-y-6">
+              <PodesavanjaLogoFirme initialLogoUrl={initialFirma?.logo_url ?? null} />
+
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-fcrna">Detalji o firmi</h2>
                 <p className="text-sm text-[#64748B] mt-1 mb-6">
@@ -403,28 +365,24 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
               </div>
             </div>
           </div>
-        </>
-      )}
 
-      {tab === "firma" ? (
-        <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={isPending}
-            className="text-sm font-medium text-[#64748B] hover:text-fcrna px-4 py-2.5 transition-colors disabled:opacity-50"
-          >
-            Otkaži
-          </button>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="bg-fplava hover:bg-blue-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-colors disabled:opacity-60"
-          >
-            {isPending ? "Čuvanje…" : "Sačuvaj promene"}
-          </button>
-        </div>
-      ) : null}
+      <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={isPending}
+          className="text-sm font-medium text-[#64748B] hover:text-fcrna px-4 py-2.5 transition-colors disabled:opacity-50"
+        >
+          Otkaži
+        </button>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="bg-fplava hover:bg-blue-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-colors disabled:opacity-60"
+        >
+          {isPending ? "Čuvanje…" : "Sačuvaj promene"}
+        </button>
+      </div>
     </form>
   );
 }

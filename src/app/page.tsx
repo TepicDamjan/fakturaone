@@ -51,7 +51,7 @@ export default function Hero() {
                 </div>
             </section>
 
-            <section id='Image' className='w-full max-w-4xl mx-auto mt-8 sm:mt-12 mx-4 sm:m-8 px-2 sm:px-6 pb-12 sm:pb-20'>
+            <section id='Image' className='w-full max-w-4xl mx-auto mt-8 sm:mt-12 px-4 sm:px-8 pb-12 sm:pb-20'>
                 <div className="relative w-full flex justify-center">
                     <Image
                         src="/HeroImg.png"

@@ -135,6 +135,7 @@ export type Database = {
                     valuta: string;
                     pdv_procenat: number;
                     rok_placanja_dana: number;
+                    logo_url: string | null;
                     created_at: string;
                     updated_at: string;
                 };
@@ -150,6 +151,7 @@ export type Database = {
                     valuta?: string;
                     pdv_procenat?: number;
                     rok_placanja_dana?: number;
+                    logo_url?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -165,6 +167,7 @@ export type Database = {
                     valuta?: string;
                     pdv_procenat?: number;
                     rok_placanja_dana?: number;
+                    logo_url?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };

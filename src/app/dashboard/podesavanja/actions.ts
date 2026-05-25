@@ -3,6 +3,159 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
+const LOGO_BUCKET = "firma-logos";
+const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
+const DOZVOLJENI_LOGO_TIPOVI = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+]);
+
+function extenzijaIzMime(mime: string): string {
+  switch (mime) {
+    case "image/jpeg":
+    case "image/jpg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/gif":
+      return "gif";
+    case "image/webp":
+      return "webp";
+    case "image/svg+xml":
+      return "svg";
+    default:
+      return "bin";
+  }
+}
+
+function storagePutanjaIzUrl(publicUrl: string | null): string | null {
+  if (!publicUrl) return null;
+  const marker = `/storage/v1/object/public/${LOGO_BUCKET}/`;
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return null;
+  const putanja = publicUrl.slice(idx + marker.length);
+  const qIdx = putanja.indexOf("?");
+  return qIdx === -1 ? putanja : putanja.slice(0, qIdx);
+}
+
+export async function otpremiLogoFirme(
+  formData: FormData
+): Promise<{ ok: true; logoUrl: string } | { ok: false; error: string }> {
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Nije izabrana slika." };
+  }
+  if (file.size > MAX_LOGO_BYTES) {
+    return { ok: false, error: "Logo ne sme biti veći od 1 MB." };
+  }
+  if (!DOZVOLJENI_LOGO_TIPOVI.has(file.type)) {
+    return {
+      ok: false,
+      error: "Dozvoljeni formati su JPG, PNG, GIF, WEBP ili SVG.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: "Morate biti ulogovani." };
+  }
+
+  const ext = extenzijaIzMime(file.type);
+  const putanja = `${user.id}/logo-${Date.now()}.${ext}`;
+
+  const { error: uploadErr } = await supabase.storage
+    .from(LOGO_BUCKET)
+    .upload(putanja, file, {
+      contentType: file.type,
+      upsert: false,
+      cacheControl: "3600",
+    });
+  if (uploadErr) {
+    return { ok: false, error: uploadErr.message };
+  }
+
+  const { data: publicData } = supabase.storage
+    .from(LOGO_BUCKET)
+    .getPublicUrl(putanja);
+  const logoUrl = publicData.publicUrl;
+
+  const { data: postojeca } = await supabase
+    .from("firma")
+    .select("id, logo_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (postojeca) {
+    const { error: updErr } = await supabase
+      .from("firma")
+      .update({ logo_url: logoUrl })
+      .eq("user_id", user.id);
+    if (updErr) {
+      await supabase.storage.from(LOGO_BUCKET).remove([putanja]);
+      return { ok: false, error: updErr.message };
+    }
+    const staraPutanja = storagePutanjaIzUrl(postojeca.logo_url);
+    if (staraPutanja && staraPutanja !== putanja) {
+      await supabase.storage.from(LOGO_BUCKET).remove([staraPutanja]);
+    }
+  } else {
+    const { error: insErr } = await supabase.from("firma").insert({
+      user_id: user.id,
+      naziv: "",
+      logo_url: logoUrl,
+    });
+    if (insErr) {
+      await supabase.storage.from(LOGO_BUCKET).remove([putanja]);
+      return { ok: false, error: insErr.message };
+    }
+  }
+
+  revalidatePath("/dashboard/podesavanja");
+  return { ok: true, logoUrl };
+}
+
+export async function ukloniLogoFirme(): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: "Morate biti ulogovani." };
+  }
+
+  const { data: postojeca } = await supabase
+    .from("firma")
+    .select("logo_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (postojeca?.logo_url) {
+    const { error: updErr } = await supabase
+      .from("firma")
+      .update({ logo_url: null })
+      .eq("user_id", user.id);
+    if (updErr) {
+      return { ok: false, error: updErr.message };
+    }
+    const putanja = storagePutanjaIzUrl(postojeca.logo_url);
+    if (putanja) {
+      await supabase.storage.from(LOGO_BUCKET).remove([putanja]);
+    }
+  }
+
+  revalidatePath("/dashboard/podesavanja");
+  return { ok: true };
+}
+
 export type SacuvajFirmuInput = {
   naziv: string;
   pib: string;
