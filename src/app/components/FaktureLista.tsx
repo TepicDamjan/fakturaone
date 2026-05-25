@@ -8,6 +8,10 @@ import {
   initialsFromName,
 } from "@/lib/fakture";
 import FakturaAkcijeMeni from "@/app/components/FakturaAkcijeMeni";
+import {
+  TIP_DOKUMENTA_META,
+  type TipDokumenta,
+} from "@/lib/tipDokumenta";
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
@@ -29,6 +33,12 @@ const STATUS_BADGE: Record<FakturaStatus, string> = {
     "bg-orange-50 text-orange-700 border border-orange-100/80",
   kasni: "bg-red-50 text-red-700 border border-red-100/80",
   nacrt: "bg-slate-100 text-slate-600 border border-slate-200/80",
+};
+
+const TIP_BADGE: Record<TipDokumenta, string> = {
+  faktura: "bg-blue-50 text-blue-700 border border-blue-100/80",
+  predracun: "bg-amber-50 text-amber-700 border border-amber-100/80",
+  otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100/80",
 };
 
 const AVATAR_COLORS = [
@@ -74,6 +84,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
   const [search, setSearch] = useState("");
   const [datePreset, setDatePreset] = useState<DatePreset>("30");
   const [statusFilter, setStatusFilter] = useState<FakturaStatus | "all">("all");
+  const [tipFilter, setTipFilter] = useState<TipDokumenta | "all">("all");
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -94,6 +105,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
     const q = search.trim().toLowerCase();
     return fakture.filter((f) => {
       if (statusFilter !== "all" && f.status !== statusFilter) return false;
+      if (tipFilter !== "all" && f.tipDokumenta !== tipFilter) return false;
       if (!withinPreset(f.datumIzdavanja, datePreset)) return false;
       if (!q) return true;
       const broj = f.broj.toLowerCase();
@@ -106,7 +118,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
         `#${broj}`.includes(q)
       );
     });
-  }, [fakture, search, datePreset, statusFilter]);
+  }, [fakture, search, datePreset, statusFilter, tipFilter]);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -118,6 +130,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
     setSearch("");
     setDatePreset("30");
     setStatusFilter("all");
+    setTipFilter("all");
     setPage(1);
   };
 
@@ -125,7 +138,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-4 sm:p-6 border-b border-gray-100">
         <div className="flex flex-col xl:flex-row xl:items-end gap-4 xl:justify-between">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             <div>
               <label className="block text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
                 Pretraga
@@ -211,6 +224,42 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                 </span>
               </div>
             </div>
+            <div>
+              <label className="block text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
+                Tip dokumenta
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM14 2v6h6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <select
+                  value={tipFilter}
+                  onChange={(e) => {
+                    setTipFilter(e.target.value as TipDokumenta | "all");
+                    setPage(1);
+                  }}
+                  className="w-full appearance-none pl-10 pr-9 py-2.5 rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava cursor-pointer"
+                >
+                  <option value="all">Svi tipovi</option>
+                  <option value="faktura">Faktura</option>
+                  <option value="predracun">Predračun</option>
+                  <option value="otpremnica">Otpremnica</option>
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
+                    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </div>
+            </div>
           </div>
           <button
             type="button"
@@ -236,7 +285,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
           <thead>
             <tr className="bg-fsiva/80 border-b border-gray-100">
               <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                Broj fakture
+                Dokument
               </th>
               <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Klijent
@@ -245,7 +294,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                 Datum izdavanja
               </th>
               <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider whitespace-nowrap">
-                Rok za uplatu
+                Rok / važi
               </th>
               <th className="px-6 py-3.5 text-xs font-bold text-[#64748B] uppercase tracking-wider text-right">
                 Iznos
@@ -337,10 +386,19 @@ function FakturaRow({
   const initials = initialsFromName(f.klijentNaziv);
   const avatarBg = hashColor(f.klijentNaziv);
 
+  const tipMeta = TIP_DOKUMENTA_META[f.tipDokumenta];
+
   return (
     <tr className="hover:bg-gray-50/60 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className="font-semibold text-fcrna">#{f.broj}</span>
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold text-fcrna">#{f.broj}</span>
+          <span
+            className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${TIP_BADGE[f.tipDokumenta]}`}
+          >
+            {tipMeta.naziv}
+          </span>
+        </div>
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3 min-w-0">

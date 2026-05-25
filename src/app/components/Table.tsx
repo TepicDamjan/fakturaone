@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import FakturaAkcijeMeni from "@/app/components/FakturaAkcijeMeni";
+import type { TipDokumenta } from "@/lib/tipDokumenta";
 
 export interface Invoice {
   /** UUID fakture u bazi */
@@ -11,6 +12,8 @@ export interface Invoice {
   displayBroj: string;
   /** Broj bez # — za potvrdu brisanja i subject mejla */
   broj: string;
+  /** Tip dokumenta (faktura / predračun / otpremnica). */
+  tipDokumenta?: TipDokumenta;
   clientEmail: string;
   clientInitials: string;
   clientName: string;
@@ -18,6 +21,18 @@ export interface Invoice {
   amount: string;
   status: "Plaćeno" | "Na čekanju" | "Kasni" | "Nacrt";
 }
+
+const TIP_BADGE_TABLE: Record<TipDokumenta, string> = {
+  faktura: "bg-blue-50 text-blue-700 border border-blue-100",
+  predracun: "bg-amber-50 text-amber-700 border border-amber-100",
+  otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+};
+
+const TIP_LABEL_TABLE: Record<TipDokumenta, string> = {
+  faktura: "Faktura",
+  predracun: "Predračun",
+  otpremnica: "Otpremnica",
+};
 
 interface TableProps {
   invoices: Invoice[];
@@ -111,8 +126,19 @@ export default function Table({ invoices, footerSummary }: TableProps) {
             ) : (
               invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-sm font-bold text-[#0F172A] whitespace-nowrap">
-                    {invoice.displayBroj}
+                  <td className="py-3 sm:py-4 px-3 sm:px-6 whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-bold text-[#0F172A]">
+                        {invoice.displayBroj}
+                      </span>
+                      {invoice.tipDokumenta ? (
+                        <span
+                          className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${TIP_BADGE_TABLE[invoice.tipDokumenta]}`}
+                        >
+                          {TIP_LABEL_TABLE[invoice.tipDokumenta]}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="py-3 sm:py-4 px-3 sm:px-6 whitespace-nowrap">
                     <div className="flex items-center gap-3">

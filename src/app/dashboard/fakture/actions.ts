@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/types/database";
 import { createClient } from "@/utils/supabase/server";
+import { parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 type StavkaInput = {
   naziv: string;
   opis: string;
   kolicina: number;
   cena: number;
+  jedinica?: string;
 };
 
 export type SacuvajFakturuInput = {
@@ -22,6 +24,11 @@ export type SacuvajFakturuInput = {
   popust: number;
   stavke: StavkaInput[];
   status: Database["public"]["Enums"]["faktura_status"];
+  tipDokumenta: TipDokumenta;
+  nacinTransporta?: string;
+  adresaDostave?: string;
+  registracijaVozila?: string;
+  vozac?: string;
 };
 
 function emptyToNull(s: string): string | null {
@@ -82,6 +89,11 @@ export async function sacuvajFakturu(
     pdv_procenat: pdv,
     popust,
     status: input.status,
+    tip_dokumenta: parseTipDokumenta(input.tipDokumenta),
+    nacin_transporta: emptyToNull(input.nacinTransporta ?? ""),
+    adresa_dostave: emptyToNull(input.adresaDostave ?? ""),
+    registracija_vozila: emptyToNull(input.registracijaVozila ?? ""),
+    vozac: emptyToNull(input.vozac ?? ""),
   };
 
   const { data: faktura, error: fErr } = await supabase
@@ -107,6 +119,7 @@ export async function sacuvajFakturu(
     opis: emptyToNull(s.opis),
     kolicina: s.kolicina,
     cena: s.cena,
+    jedinica: (s.jedinica || "kom").trim() || "kom",
     redosled: i,
   }));
 

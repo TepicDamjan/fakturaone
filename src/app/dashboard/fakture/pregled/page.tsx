@@ -20,6 +20,7 @@ import {
 } from "@/app/components/FakturaFirmaNaFakturi";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { createClient } from "@/utils/supabase/client";
+import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
 
 function formatIznos(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
@@ -76,7 +77,10 @@ export default function FakturaPregledStranica() {
       .catch(() => setPrimalac(null));
   }, [data?.klijentId]);
 
-  const brojFakture = data?.brojFakture?.trim() || "INV-—";
+  const tipDokumenta = parseTipDokumenta(data?.tipDokumenta);
+  const tipMeta = metaZaTip(tipDokumenta);
+  const brojFakture =
+    data?.brojFakture?.trim() || `${tipMeta.brojPrefiks}-—`;
 
   const osnovica = useMemo(() => {
     if (!data?.stavke?.length) return 0;
@@ -94,7 +98,7 @@ export default function FakturaPregledStranica() {
 
   const handleEmail = () => {
     if (!primalac?.email) return;
-    const sub = encodeURIComponent(`Faktura ${brojFakture}`);
+    const sub = encodeURIComponent(`${tipMeta.naziv} ${brojFakture}`);
     window.location.href = `mailto:${primalac.email}?subject=${sub}`;
   };
 
@@ -132,15 +136,15 @@ export default function FakturaPregledStranica() {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold text-fcrna">
-                Faktura #{brojFakture}
+                {tipMeta.naziv} #{brojFakture}
               </h1>
               <span className="rounded-full bg-emerald-50 px-3 py-0.5 text-sm font-semibold text-emerald-700 border border-emerald-200">
                 Nacrt
               </span>
             </div>
             <p className="mt-1 text-sm text-[#64748B]">
-              Kreirano {formatShortDate(data.datumIzdavanja)} • Rok plaćanja{" "}
-              {formatShortDate(data.datumPlacanja)}
+              Kreirano {formatShortDate(data.datumIzdavanja)} •{" "}
+              {tipMeta.rokLabel} {formatShortDate(data.datumPlacanja)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -305,7 +309,7 @@ export default function FakturaPregledStranica() {
                   </span>
                 </div>
                 <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
-                  <span className="text-fcrna font-semibold">Ukupno za uplatu</span>
+                  <span className="text-fcrna font-semibold">{tipMeta.totalLabel}</span>
                   <span className="text-2xl font-bold text-fplava tabular-nums">
                     {formatIznos(ukupno)} BAM
                   </span>
@@ -324,8 +328,7 @@ export default function FakturaPregledStranica() {
                   Napomena
                 </p>
                 <p className="text-[#64748B] leading-relaxed whitespace-pre-wrap">
-                  {data.napomene?.trim() ||
-                    "Hvala na poverenju. Molimo uplatite iznos u naznačenom roku."}
+                  {data.napomene?.trim() || tipMeta.defaultNapomena}
                 </p>
               </div>
             </div>

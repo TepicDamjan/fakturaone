@@ -1,11 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 export type FakturaStatus = Database["public"]["Enums"]["faktura_status"];
 
 export type FakturaListItem = {
   id: string;
   broj: string;
+  tipDokumenta: TipDokumenta;
   klijentNaziv: string;
   klijentEmail: string;
   datumIzdavanja: string;
@@ -41,6 +43,7 @@ export async function fetchFaktureLista(
     .map((r) => ({
       id: r.id as string,
       broj: r.broj as string,
+      tipDokumenta: parseTipDokumenta(r.tip_dokumenta),
       klijentNaziv: r.klijent_naziv ?? "",
       klijentEmail: r.klijent_email ?? "",
       datumIzdavanja: r.datum_izdavanja ?? "",

@@ -16,6 +16,7 @@ import {
 import { formatKlijentAdresa } from "@/lib/klijenti";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { createClient } from "@/utils/supabase/client";
+import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
 
 function formatIznos(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
@@ -86,6 +87,8 @@ export default function SacuvanaFakturaPregledPage() {
 
   const f = payload?.faktura;
   const brojFakture = f?.broj?.trim() || "—";
+  const tipDokumenta = parseTipDokumenta(f?.tip_dokumenta);
+  const tipMeta = metaZaTip(tipDokumenta);
 
   const osnovica = useMemo(() => {
     if (!payload?.stavke?.length) return 0;
@@ -108,7 +111,7 @@ export default function SacuvanaFakturaPregledPage() {
 
   const handleEmail = () => {
     if (!primalac?.email) return;
-    const sub = encodeURIComponent(`Faktura ${brojFakture}`);
+    const sub = encodeURIComponent(`${tipMeta.naziv} ${brojFakture}`);
     window.location.href = `mailto:${primalac.email}?subject=${sub}`;
   };
 
@@ -135,7 +138,7 @@ export default function SacuvanaFakturaPregledPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8FAFC] p-8">
         <p className="text-fcrna font-medium text-center max-w-md">
-          Faktura nije pronađena ili vam ne pripada.
+          Dokument nije pronađen ili vam ne pripada.
         </p>
         <Link
           href="/dashboard/fakture"
@@ -156,7 +159,7 @@ export default function SacuvanaFakturaPregledPage() {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold text-fcrna">
-                Faktura #{brojFakture}
+                {tipMeta.naziv} #{brojFakture}
               </h1>
               <span
                 className={`rounded-full px-3 py-0.5 text-sm font-semibold ${STATUS_BADGE[f.status]}`}
@@ -165,7 +168,7 @@ export default function SacuvanaFakturaPregledPage() {
               </span>
             </div>
             <p className="mt-1 text-sm text-[#64748B]">
-              Izdato {formatShortDate(f.datum_izdavanja)} • Rok plaćanja{" "}
+              Izdato {formatShortDate(f.datum_izdavanja)} • {tipMeta.rokLabel}{" "}
               {formatShortDate(f.datum_placanja)}
             </p>
           </div>
@@ -263,15 +266,50 @@ export default function SacuvanaFakturaPregledPage() {
             ) : null}
 
             <div className="border border-gray-100 rounded-lg overflow-hidden">
-              <div className="grid grid-cols-12 gap-2 bg-fsiva px-4 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide">
-                <div className="col-span-5">Opis</div>
-                <div className="col-span-2 text-center">Količina</div>
-                <div className="col-span-3 text-center">Jedinična cena</div>
-                <div className="col-span-2 text-right">Ukupno</div>
-              </div>
+              {tipDokumenta === "otpremnica" ? (
+                <div className="grid grid-cols-12 gap-2 bg-fsiva px-4 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide">
+                  <div className="col-span-8">Opis robe / materijala</div>
+                  <div className="col-span-2 text-center">Jedinica</div>
+                  <div className="col-span-2 text-right">Količina</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-12 gap-2 bg-fsiva px-4 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide">
+                  <div className="col-span-5">Opis</div>
+                  <div className="col-span-2 text-center">Količina</div>
+                  <div className="col-span-3 text-center">Jedinična cena</div>
+                  <div className="col-span-2 text-right">Ukupno</div>
+                </div>
+              )}
               {stavke.map((row) => {
                 const kolicina = Number(row.kolicina);
                 const cena = Number(row.cena);
+                if (tipDokumenta === "otpremnica") {
+                  return (
+                    <div
+                      key={row.id}
+                      className="grid grid-cols-12 gap-2 px-4 py-4 border-t border-gray-100 text-sm items-center"
+                    >
+                      <div className="col-span-8">
+                        <p className="font-medium text-fcrna">
+                          {row.naziv || "—"}
+                        </p>
+                        {row.opis ? (
+                          <p className="text-[#64748B] text-xs mt-0.5">
+                            {row.opis}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span className="inline-flex items-center rounded-md bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 text-xs font-semibold">
+                          {row.jedinica || "kom"}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right font-bold tabular-nums text-fcrna">
+                        {kolicina}
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <div
                     key={row.id}
@@ -297,51 +335,116 @@ export default function SacuvanaFakturaPregledPage() {
               })}
             </div>
 
-            <div className="flex justify-end mt-8">
-              <div className="w-full max-w-xs space-y-2 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-[#64748B]">Međuzbir</span>
-                  <span className="tabular-nums font-medium text-fcrna">
-                    {formatIznos(osnovica)} BAM
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-[#64748B]">PDV ({pdvProcenat}%)</span>
-                  <span className="tabular-nums font-medium text-fcrna">
-                    {formatIznos(pdvIznos)} BAM
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-[#64748B]">Popust</span>
-                  <span className="tabular-nums font-medium text-fcrna">
-                    -{formatIznos(popust)} BAM
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
-                  <span className="text-fcrna font-semibold">Ukupno za uplatu</span>
-                  <span className="text-2xl font-bold text-fplava tabular-nums">
-                    {formatIznos(ukupno)} BAM
-                  </span>
+            {tipDokumenta !== "otpremnica" ? (
+              <div className="flex justify-end mt-8">
+                <div className="w-full max-w-xs space-y-2 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-[#64748B]">Međuzbir</span>
+                    <span className="tabular-nums font-medium text-fcrna">
+                      {formatIznos(osnovica)} BAM
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-[#64748B]">PDV ({pdvProcenat}%)</span>
+                    <span className="tabular-nums font-medium text-fcrna">
+                      {formatIznos(pdvIznos)} BAM
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-[#64748B]">Popust</span>
+                    <span className="tabular-nums font-medium text-fcrna">
+                      -{formatIznos(popust)} BAM
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
+                    <span className="text-fcrna font-semibold">
+                      {tipMeta.totalLabel}
+                    </span>
+                    <span className="text-2xl font-bold text-fplava tabular-nums">
+                      {formatIznos(ukupno)} BAM
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="mt-10 pt-8 border-t border-gray-100 grid sm:grid-cols-2 gap-8 text-sm">
-              <FakturaDetaljiPlacanja
-                izdavac={izdavac}
-                bankovniRacun={bankovniRacun}
-                pozivNaBroj={brojFakture}
-              />
+              {tipDokumenta === "otpremnica" ? (
+                <div>
+                  <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
+                    Detalji isporuke
+                  </p>
+                  <div className="space-y-1 text-[#64748B]">
+                    {f.nacin_transporta ? (
+                      <p>
+                        <span className="text-fcrna font-medium">Transport:</span>{" "}
+                        {f.nacin_transporta}
+                      </p>
+                    ) : null}
+                    {f.registracija_vozila ? (
+                      <p>
+                        <span className="text-fcrna font-medium">Vozilo:</span>{" "}
+                        {f.registracija_vozila}
+                      </p>
+                    ) : null}
+                    {f.vozac ? (
+                      <p>
+                        <span className="text-fcrna font-medium">Vozač:</span>{" "}
+                        {f.vozac}
+                      </p>
+                    ) : null}
+                    {f.adresa_dostave ? (
+                      <p className="whitespace-pre-wrap pt-1">
+                        <span className="text-fcrna font-medium">Adresa dostave:</span>
+                        <br />
+                        {f.adresa_dostave}
+                      </p>
+                    ) : null}
+                    {!f.nacin_transporta &&
+                    !f.registracija_vozila &&
+                    !f.vozac &&
+                    !f.adresa_dostave ? (
+                      <p className="italic">Podaci o isporuci nisu uneti.</p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <FakturaDetaljiPlacanja
+                  izdavac={izdavac}
+                  bankovniRacun={bankovniRacun}
+                  pozivNaBroj={brojFakture}
+                />
+              )}
               <div>
                 <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-2">
                   Napomena
                 </p>
                 <p className="text-[#64748B] leading-relaxed whitespace-pre-wrap">
-                  {f.napomene?.trim() ||
-                    "Hvala na poverenju. Molimo uplatite iznos u naznačenom roku."}
+                  {f.napomene?.trim() || tipMeta.defaultNapomena}
                 </p>
               </div>
             </div>
+
+            {tipDokumenta === "otpremnica" ? (
+              <div className="mt-10 pt-8 border-t border-gray-100 grid sm:grid-cols-2 gap-12 text-sm">
+                <div>
+                  <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-8">
+                    Pošiljalac
+                  </p>
+                  <div className="border-t-2 border-dashed border-gray-300 pt-2 text-[#64748B] text-xs">
+                    Potpis odgovornog lica
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-8">
+                    Primalac
+                  </p>
+                  <div className="border-t-2 border-dashed border-gray-300 pt-2 text-[#64748B] text-xs">
+                    Potpis primaoca robe
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <p className="text-center text-xs text-[#94A3B8] py-4 bg-fsiva border-t border-gray-100 print:bg-transparent">

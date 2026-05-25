@@ -1,4 +1,5 @@
 import type { Stavka } from "@/app/components/StavkeFakture";
+import type { TipDokumenta } from "@/lib/tipDokumenta";
 
 export const FAKTURA_PREGLED_SESSION_KEY = "fakturaone:fakturaPregled";
 
@@ -12,6 +13,11 @@ export type FakturaPregledSesija = {
   napomene: string;
   pdvProcenat: number;
   popust: number;
+  tipDokumenta: TipDokumenta;
+  nacinTransporta?: string;
+  adresaDostave?: string;
+  registracijaVozila?: string;
+  vozac?: string;
 };
 
 export function saveFakturaPregledSesija(data: FakturaPregledSesija): void {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { metaZaTip, type TipDokumenta } from "@/lib/tipDokumenta";
 
 function formatCurrency(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
@@ -20,6 +21,8 @@ type FakturaPregledProps = {
   onPosalji?: () => void;
   /** Kada je true, dugmad za čuvanje/slanje su onemogućena (npr. tokom server akcije). */
   akcijeDisabled?: boolean;
+  /** Tip dokumenta — koristi se za prilagođavanje labela (npr. "Ukupno za uplatu" vs "Ukupan iznos ponude"). */
+  tipDokumenta?: TipDokumenta;
 };
 
 export default function FakturaPregled({
@@ -32,7 +35,9 @@ export default function FakturaPregled({
   onSacuvajNacrt,
   onPosalji,
   akcijeDisabled = false,
+  tipDokumenta = "faktura",
 }: FakturaPregledProps) {
+  const tipMeta = metaZaTip(tipDokumenta);
   const [popustEdit, setPopustEdit] = useState(false);
 
   const pdvIznos = osnovica * (pdvProcenat / 100);
@@ -112,7 +117,7 @@ export default function FakturaPregled({
 
           <div className="flex justify-between items-end gap-4">
             <span className="text-[#64748B] text-base font-medium">
-              Ukupno za uplatu
+              {tipMeta.totalLabel}
             </span>
             <span className="text-fcrna text-3xl font-bold tabular-nums tracking-tight">
               {formatCurrency(ukupno)}

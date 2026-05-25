@@ -74,6 +74,11 @@ export type Database = {
                     pdv_procenat: number;
                     popust: number;
                     status: Database["public"]["Enums"]["faktura_status"];
+                    tip_dokumenta: Database["public"]["Enums"]["tip_dokumenta"];
+                    nacin_transporta: string | null;
+                    adresa_dostave: string | null;
+                    registracija_vozila: string | null;
+                    vozac: string | null;
                     created_at: string;
                     updated_at: string;
                 };
@@ -89,6 +94,11 @@ export type Database = {
                     pdv_procenat?: number;
                     popust?: number;
                     status?: Database["public"]["Enums"]["faktura_status"];
+                    tip_dokumenta?: Database["public"]["Enums"]["tip_dokumenta"];
+                    nacin_transporta?: string | null;
+                    adresa_dostave?: string | null;
+                    registracija_vozila?: string | null;
+                    vozac?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -104,6 +114,11 @@ export type Database = {
                     pdv_procenat?: number;
                     popust?: number;
                     status?: Database["public"]["Enums"]["faktura_status"];
+                    tip_dokumenta?: Database["public"]["Enums"]["tip_dokumenta"];
+                    nacin_transporta?: string | null;
+                    adresa_dostave?: string | null;
+                    registracija_vozila?: string | null;
+                    vozac?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -231,6 +246,7 @@ export type Database = {
                     opis: string | null;
                     kolicina: number;
                     cena: number;
+                    jedinica: string;
                     redosled: number;
                     created_at: string;
                 };
@@ -241,6 +257,7 @@ export type Database = {
                     opis?: string | null;
                     kolicina?: number;
                     cena?: number;
+                    jedinica?: string;
                     redosled?: number;
                     created_at?: string;
                 };
@@ -251,6 +268,7 @@ export type Database = {
                     opis?: string | null;
                     kolicina?: number;
                     cena?: number;
+                    jedinica?: string;
                     redosled?: number;
                     created_at?: string;
                 };
@@ -270,6 +288,7 @@ export type Database = {
                     id: string | null;
                     user_id: string | null;
                     broj: string | null;
+                    tip_dokumenta: Database["public"]["Enums"]["tip_dokumenta"] | null;
                     klijent_naziv: string | null;
                     klijent_email: string | null;
                     datum_izdavanja: string | null;
@@ -283,6 +302,7 @@ export type Database = {
         Functions: Record<string, never>;
         Enums: {
             faktura_status: "nacrt" | "na_cekanju" | "placeno" | "kasni";
+            tip_dokumenta: "faktura" | "predracun" | "otpremnica";
         };
         CompositeTypes: Record<string, never>;
     };
