@@ -38,7 +38,7 @@ export default function NovaFaktura() {
   const [datumIzdavanja, setDatumIzdavanja] = useState("");
   const [datumPlacanja, setDatumPlacanja] = useState("");
   const [napomene, setNapomene] = useState("");
-  const [pdvProcenat, setPdvProcenat] = useState(20);
+  const [pdvProcenat, setPdvProcenat] = useState(17);
   const [popust, setPopust] = useState(0);
 
   useEffect(() => {

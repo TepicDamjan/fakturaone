@@ -22,7 +22,7 @@ export default function StavkeFakture({
   onUpdateStavka,
 }: StavkeFaktureProps) {
   const formatCurrency = (amount: number) =>
-    amount.toLocaleString("sr-RS", {
+    amount.toLocaleString("bs-Latn-BA", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });

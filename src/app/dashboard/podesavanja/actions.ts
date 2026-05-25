@@ -220,7 +220,7 @@ export async function sacuvajPodesavanjaFirme(
     adresa: emptyToNull(firma.adresa),
     email: emptyToNull(firma.email),
     telefon: emptyToNull(firma.telefon),
-    valuta: firma.valuta.trim() || "RSD",
+    valuta: firma.valuta.trim() || "BAM",
     pdv_procenat: clampPdv(firma.pdvProcenat),
     rok_placanja_dana: clampDana(firma.rokPlacanjaDana),
   };

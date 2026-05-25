@@ -48,7 +48,7 @@ function hashColor(s: string): string {
 
 function formatTableDate(iso: string) {
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("sr-Latn", {
+  return d.toLocaleDateString("bs-Latn-BA", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -56,7 +56,7 @@ function formatTableDate(iso: string) {
 }
 
 function formatIznos(n: number) {
-  return `${n.toLocaleString("sr-RS", { maximumFractionDigits: 0 })} RSD`;
+  return `${n.toLocaleString("bs-Latn-BA", { maximumFractionDigits: 0 })} BAM`;
 }
 
 type DatePreset = "7" | "30" | "90" | "all";

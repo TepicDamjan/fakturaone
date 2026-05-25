@@ -11,7 +11,7 @@ type KlijentiTabelaProps = {
 };
 
 function formatFakturisano(n: number) {
-  return `${Math.round(n).toLocaleString("sr-RS")} RSD`;
+  return `${Math.round(n).toLocaleString("bs-Latn-BA")} BAM`;
 }
 
 export default function KlijentiTabela({ klijenti }: KlijentiTabelaProps) {

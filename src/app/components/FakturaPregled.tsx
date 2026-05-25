@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 function formatCurrency(amount: number) {
-  return amount.toLocaleString("sr-RS", {
+  return amount.toLocaleString("bs-Latn-BA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -122,7 +122,7 @@ export default function FakturaPregled({
 
         <div className="bg-fsiva border-t border-ftsiva px-4 py-3 text-center">
           <p className="text-xs text-[#64748B]">
-            Iznosi su prikazani u RSD
+            Iznosi su prikazani u BAM
           </p>
         </div>
       </div>

@@ -16,8 +16,8 @@ const DEFAULT_FIRMA = {
   adresa: null as string | null,
   email: null as string | null,
   telefon: null as string | null,
-  valuta: "RSD",
-  pdv_procenat: 20,
+  valuta: "BAM",
+  pdv_procenat: 17,
   rok_placanja_dana: 15,
   logo_url: null as string | null,
 };
@@ -60,8 +60,8 @@ export function podrazumevaniBankovniRacun(
 const IZDAVAC_FALLBACK = {
   naziv: "FakturaOne DOO",
   tagline: "Jednostavno fakturisanje",
-  adresa: "Beograd, Republika Srbija",
-  email: "billing@fakturaone.rs",
+  adresa: "Sarajevo, Bosna i Hercegovina",
+  email: "billing@fakturaone.ba",
   pib: null as string | null,
   maticniBroj: null as string | null,
   telefon: null as string | null,

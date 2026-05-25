@@ -21,8 +21,8 @@ import {
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { createClient } from "@/utils/supabase/client";
 
-function formatRsd(amount: number) {
-  return amount.toLocaleString("sr-RS", {
+function formatIznos(amount: number) {
+  return amount.toLocaleString("bs-Latn-BA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -31,7 +31,7 @@ function formatRsd(amount: number) {
 function formatShortDate(iso: string) {
   if (!iso) return "—";
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("sr-Latn", {
+  return d.toLocaleDateString("bs-Latn-BA", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -40,13 +40,13 @@ function formatShortDate(iso: string) {
 
 function formatLongDate(iso: string) {
   if (!iso)
-    return new Date().toLocaleDateString("sr-Latn", {
+    return new Date().toLocaleDateString("bs-Latn-BA", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("sr-Latn", {
+  return d.toLocaleDateString("bs-Latn-BA", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -83,7 +83,7 @@ export default function FakturaPregledStranica() {
     return data.stavke.reduce((s, x) => s + x.kolicina * x.cena, 0);
   }, [data]);
 
-  const pdvProcenat = data?.pdvProcenat ?? 20;
+  const pdvProcenat = data?.pdvProcenat ?? 17;
   const popust = data?.popust ?? 0;
   const pdvIznos = osnovica * (pdvProcenat / 100);
   const ukupno = osnovica + pdvIznos - popust;
@@ -275,10 +275,10 @@ export default function FakturaPregledStranica() {
                     {row.kolicina}
                   </div>
                   <div className="col-span-3 text-center tabular-nums text-fcrna">
-                    {formatRsd(row.cena)}
+                    {formatIznos(row.cena)}
                   </div>
                   <div className="col-span-2 text-right font-semibold tabular-nums text-fcrna">
-                    {formatRsd(row.kolicina * row.cena)}
+                    {formatIznos(row.kolicina * row.cena)}
                   </div>
                 </div>
               ))}
@@ -289,25 +289,25 @@ export default function FakturaPregledStranica() {
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">Međuzbir</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    {formatRsd(osnovica)} RSD
+                    {formatIznos(osnovica)} BAM
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">PDV ({pdvProcenat}%)</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    {formatRsd(pdvIznos)} RSD
+                    {formatIznos(pdvIznos)} BAM
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">Popust</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    -{formatRsd(popust)} RSD
+                    -{formatIznos(popust)} BAM
                   </span>
                 </div>
                 <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
                   <span className="text-fcrna font-semibold">Ukupno za uplatu</span>
                   <span className="text-2xl font-bold text-fplava tabular-nums">
-                    {formatRsd(ukupno)} RSD
+                    {formatIznos(ukupno)} BAM
                   </span>
                 </div>
               </div>

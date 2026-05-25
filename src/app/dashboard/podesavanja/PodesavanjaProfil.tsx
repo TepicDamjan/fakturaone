@@ -292,7 +292,7 @@ export default function PodesavanjaProfil({
                 type="tel"
                 value={forma.telefon}
                 onChange={(v) => setForma((f) => ({ ...f, telefon: v }))}
-                placeholder="+381 60 123 4567"
+                placeholder="+387 61 123 456"
               />
               <Field
                 label="Pozicija"
@@ -377,7 +377,7 @@ export default function PodesavanjaProfil({
       {deaktivirajOpen ? (
         <InfoModal
           title="Deaktivacija naloga"
-          opis="Za deaktivaciju naloga kontaktirajte podršku na podrska@fakturaone.rs."
+          opis="Za deaktivaciju naloga kontaktirajte podršku na podrska@fakturaone.ba."
           onClose={() => setDeaktivirajOpen(false)}
         />
       ) : null}

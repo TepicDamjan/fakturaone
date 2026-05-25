@@ -90,7 +90,7 @@ export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
         <div className="space-y-4">
           <KlijentPolje
             label="Puni naziv kompanije"
-            placeholder="Npr. Primer DOO Beograd"
+            placeholder="Npr. Primer DOO Sarajevo"
             value={forma.naziv}
             onChange={(v) => onChange("naziv", v)}
           />
@@ -143,7 +143,7 @@ export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <KlijentPolje
             label="Email adresa"
-            placeholder="klijent@kompanija.rs"
+            placeholder="klijent@kompanija.ba"
             type="email"
             value={forma.email}
             onChange={(v) => onChange("email", v)}
@@ -162,7 +162,7 @@ export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
           />
           <KlijentPolje
             label="Broj telefona"
-            placeholder="+381 11 1234567"
+            placeholder="+387 33 1234567"
             type="tel"
             value={forma.telefon}
             onChange={(v) => onChange("telefon", v)}
@@ -214,7 +214,7 @@ export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <KlijentPolje
               label="Grad"
-              placeholder="Beograd"
+              placeholder="Sarajevo"
               value={forma.grad}
               onChange={(v) => onChange("grad", v)}
             />

@@ -52,14 +52,14 @@ function firmaFromRow(f: FirmaRow | null): SacuvajFirmuInput {
     adresa: f?.adresa ?? "",
     email: f?.email ?? "",
     telefon: f?.telefon ?? "",
-    valuta: f?.valuta ?? "RSD",
-    pdvProcenat: f ? Number(f.pdv_procenat) : 20,
+    valuta: f?.valuta ?? "BAM",
+    pdvProcenat: f ? Number(f.pdv_procenat) : 17,
     rokPlacanjaDana: f?.rok_placanja_dana ?? 15,
   };
 }
 
 const VALUTE = [
-  { value: "RSD", label: "RSD (Srpski dinar)" },
+  { value: "BAM", label: "BAM (Konvertibilna marka)" },
   { value: "EUR", label: "EUR (Evro)" },
   { value: "USD", label: "USD (Američki dolar)" },
 ];
@@ -148,7 +148,7 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
                       value={firma.adresa}
                       onChange={(e) => setFirma((f) => ({ ...f, adresa: e.target.value }))}
                       rows={3}
-                      placeholder="Bulevar Oslobođenja 12, Novi Sad"
+                      placeholder="Maršala Tita 12, Sarajevo"
                       className="w-full bg-fsiva border border-ftsiva rounded-lg text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 py-2.5 px-3 resize-y min-h-[88px]"
                     />
                   </label>
@@ -158,14 +158,14 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
                       type="email"
                       value={firma.email}
                       onChange={(v) => setFirma((f) => ({ ...f, email: v }))}
-                      placeholder="firma@primer.rs"
+                      placeholder="firma@primer.ba"
                     />
                     <Field
                       label="Telefon"
                       type="tel"
                       value={firma.telefon}
                       onChange={(v) => setFirma((f) => ({ ...f, telefon: v }))}
-                      placeholder="+381 11 123 4567"
+                      placeholder="+387 33 123 456"
                     />
                   </div>
                 </div>
@@ -355,10 +355,10 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
                 <p className="text-sm text-[#64748B] mt-1 leading-relaxed">
                   Za pitanja o podešavanjima firme i fakturisanju pišite na{" "}
                   <a
-                    href="mailto:podrska@fakturaone.rs"
+                    href="mailto:podrska@fakturaone.ba"
                     className="text-fplava font-medium hover:underline"
                   >
-                    podrska@fakturaone.rs
+                    podrska@fakturaone.ba
                   </a>
                   .
                 </p>

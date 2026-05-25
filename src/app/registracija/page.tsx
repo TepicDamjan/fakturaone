@@ -69,7 +69,7 @@ export default function RegistracijaPage() {
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="marko@firma.rs"
+                  placeholder="marko@firma.ba"
                   className={inputClass}
                 />
               </div>

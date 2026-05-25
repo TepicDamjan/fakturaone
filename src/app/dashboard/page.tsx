@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<FakturaStatus, Invoice["status"]> = {
 function formatDashboardDate(iso: string): string {
   if (!iso) return "—";
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("sr-Latn", {
+  return d.toLocaleDateString("bs-Latn-BA", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -37,7 +37,7 @@ function fakturaToInvoice(f: FakturaListItem): Invoice {
     clientInitials: initialsFromName(f.klijentNaziv || "?"),
     clientName: f.klijentNaziv || "—",
     date: formatDashboardDate(f.datumIzdavanja),
-    amount: `${Math.round(f.iznos).toLocaleString("sr-RS")} RSD`,
+    amount: `${Math.round(f.iznos).toLocaleString("bs-Latn-BA")} BAM`,
     status: STATUS_LABEL[f.status],
   };
 }
@@ -70,7 +70,7 @@ export default async function Dashboard() {
       ? "Nema faktura za prikaz."
       : `Lista prikazuje ${nedavne.length} od ukupno ${brojFaktura} faktura.`;
 
-  const ukupnoTekst = `${Math.round(ukupnoFakturisano).toLocaleString("sr-RS")} RSD`;
+  const ukupnoTekst = `${Math.round(ukupnoFakturisano).toLocaleString("bs-Latn-BA")} BAM`;
 
   return (
     <>
