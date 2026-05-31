@@ -7,11 +7,19 @@ interface FeatureCardProps {
     className?: string;
     /** Ako nije prosleđeno, trend badge se ne prikazuje. */
     trend?: string;
+    onClick?: () => void;
 }
 
-export default function FeatureDashboardCard({ title, description, icon, className = '', trend }: FeatureCardProps) {
+export default function FeatureDashboardCard({ title, description, icon, className = '', trend, onClick }: FeatureCardProps) {
+    const interactive = Boolean(onClick);
+    const Tag = interactive ? 'button' : 'div';
+
     return (
-        <div className={`bg-white rounded-[24px] p-5 sm:p-7 flex flex-col justify-between border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative overflow-hidden flex-1 ${className}`}>
+        <Tag
+            type={interactive ? 'button' : undefined}
+            onClick={onClick}
+            className={`bg-white rounded-[24px] p-5 sm:p-7 flex flex-col justify-between border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative overflow-hidden flex-1 ${interactive ? 'cursor-pointer hover:border-gray-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] transition-all text-left w-full' : ''} ${className}`}
+        >
             {/* Background shape */}
             <div className="absolute -top-16 -right-16 w-56 h-56 bg-[#F8FAFC] rounded-full z-0"></div>
 
@@ -41,6 +49,6 @@ export default function FeatureDashboardCard({ title, description, icon, classNa
                     {title}
                 </span>
             </div>
-        </div>
+        </Tag>
     );
 }
