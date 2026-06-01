@@ -26,9 +26,19 @@ export type FakturaSaStavkama = {
 
 type FaktureListaViewRow = Database["public"]["Views"]["fakture_lista"]["Row"];
 
+/** Ažurira status na "kasni" za izdate fakture čiji je rok plaćanja prošao. */
+export async function oznaciDospjeleFakture(
+  supabase: SupabaseClient<Database>
+): Promise<void> {
+  const { error } = await supabase.rpc("oznaci_dospjele_fakture");
+  if (error) throw error;
+}
+
 export async function fetchFaktureLista(
   supabase: SupabaseClient<Database>
 ): Promise<FakturaListItem[]> {
+  await oznaciDospjeleFakture(supabase);
+
   const { data, error } = await supabase
     .from("fakture_lista")
     .select("*")
@@ -64,6 +74,8 @@ export async function fetchFakturaSaStavkama(
   supabase: SupabaseClient<Database>,
   id: string
 ): Promise<FakturaSaStavkama | null> {
+  await oznaciDospjeleFakture(supabase);
+
   const { data: faktura, error: fErr } = await supabase
     .from("fakture")
     .select("*")

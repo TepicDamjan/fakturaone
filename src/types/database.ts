@@ -299,7 +299,12 @@ export type Database = {
                 Relationships: [];
             };
         };
-        Functions: Record<string, never>;
+        Functions: {
+            oznaci_dospjele_fakture: {
+                Args: Record<PropertyKey, never>;
+                Returns: number;
+            };
+        };
         Enums: {
             faktura_status: "nacrt" | "na_cekanju" | "placeno" | "kasni";
             tip_dokumenta: "faktura" | "predracun" | "otpremnica";
