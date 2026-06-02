@@ -35,13 +35,15 @@ export async function oznaciDospjeleFakture(
 }
 
 export async function fetchFaktureLista(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  firmaId: string
 ): Promise<FakturaListItem[]> {
   await oznaciDospjeleFakture(supabase);
 
   const { data, error } = await supabase
     .from("fakture_lista")
     .select("*")
+    .eq("firma_id", firmaId)
     .order("datum_izdavanja", { ascending: false });
 
   if (error) throw error;
@@ -72,7 +74,8 @@ export function initialsFromName(name: string): string {
 
 export async function fetchFakturaSaStavkama(
   supabase: SupabaseClient<Database>,
-  id: string
+  id: string,
+  firmaId: string
 ): Promise<FakturaSaStavkama | null> {
   await oznaciDospjeleFakture(supabase);
 
@@ -80,6 +83,7 @@ export async function fetchFakturaSaStavkama(
     .from("fakture")
     .select("*")
     .eq("id", id)
+    .eq("firma_id", firmaId)
     .maybeSingle();
 
   if (fErr) throw fErr;
@@ -101,6 +105,7 @@ export async function fetchFakturaSaStavkama(
       .from("klijenti")
       .select("*")
       .eq("id", fRow.klijent_id)
+      .eq("firma_id", firmaId)
       .maybeSingle();
     if (kErr) throw kErr;
     klijent = k as Database["public"]["Tables"]["klijenti"]["Row"] | null;

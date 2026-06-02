@@ -15,16 +15,20 @@ type FakturaSaStavkamaRow = {
 };
 
 export async function fetchKlijentiSaFakturisano(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  firmaId: string
 ): Promise<KlijentSaFakturisano[]> {
-  const klijenti = await fetchKlijentiList(supabase);
+  const klijenti = await fetchKlijentiList(supabase, firmaId);
 
-  const { data: fakture, error } = await supabase.from("fakture").select(`
+  const { data: fakture, error } = await supabase
+    .from("fakture")
+    .select(`
       klijent_id,
       pdv_procenat,
       popust,
       stavke_fakture ( kolicina, cena )
-    `);
+    `)
+    .eq("firma_id", firmaId);
 
   if (error) throw error;
 
@@ -52,6 +56,21 @@ export async function fetchKlijentiSaFakturisano(
 }
 
 export async function fetchKlijentiList(
+  supabase: SupabaseClient<Database>,
+  firmaId: string
+): Promise<Klijent[]> {
+  const { data, error } = await supabase
+    .from("klijenti")
+    .select("*")
+    .eq("firma_id", firmaId)
+    .order("naziv", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as Klijent[];
+}
+
+/** Svi klijenti korisnika (svih firmi) — RLS ograničava na vlasnika. */
+export async function fetchSviKlijentiKorisnika(
   supabase: SupabaseClient<Database>
 ): Promise<Klijent[]> {
   const { data, error } = await supabase
@@ -65,12 +84,14 @@ export async function fetchKlijentiList(
 
 export async function fetchKlijentById(
   supabase: SupabaseClient<Database>,
-  id: string
+  id: string,
+  firmaId: string
 ): Promise<Klijent | null> {
   const { data, error } = await supabase
     .from("klijenti")
     .select("*")
     .eq("id", id)
+    .eq("firma_id", firmaId)
     .maybeSingle();
 
   if (error) throw error;

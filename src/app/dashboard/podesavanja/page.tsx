@@ -1,7 +1,7 @@
 import DashboardHeader from "@/app/components/DashboardHeader";
 import PodesavanjaTabs from "@/app/dashboard/podesavanja/PodesavanjaTabs";
 import { logout } from "@/app/login/actions";
-import { fetchPodesavanjaFirme } from "@/lib/firma";
+import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 import { createClient } from "@/utils/supabase/server";
 
 function metaText(value: unknown): string {

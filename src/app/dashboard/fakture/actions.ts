@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/types/database";
 import { createClient } from "@/utils/supabase/server";
+import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
 import { parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 type StavkaInput = {
@@ -59,6 +60,13 @@ export async function sacuvajFakturu(
     return { ok: false, error: "Morate biti ulogovani da biste sačuvali fakturu." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
   const broj = input.brojFakture.trim() || `INV-${Date.now()}`;
   const klijentRaw = input.klijentId.trim();
   let klijent_id: string | null = klijentRaw || null;
@@ -68,7 +76,7 @@ export async function sacuvajFakturu(
       .from("klijenti")
       .select("id")
       .eq("id", klijent_id)
-      .eq("user_id", user.id)
+      .eq("firma_id", firmaId)
       .maybeSingle();
     if (kErr || !klijentOk) {
       return { ok: false, error: "Izabrani klijent nije validan ili vam ne pripada." };
@@ -80,6 +88,7 @@ export async function sacuvajFakturu(
 
   const fakturaRow = {
     user_id: user.id,
+    firma_id: firmaId,
     klijent_id,
     broj,
     referenca: emptyToNull(input.referenca),
@@ -149,11 +158,18 @@ export async function promeniStatusFakture(
     return { ok: false, error: "Morate biti ulogovani." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
   const { error } = await supabase
     .from("fakture")
     .update({ status })
     .eq("id", fakturaId)
-    .eq("user_id", user.id);
+    .eq("firma_id", firmaId);
 
   if (error) {
     return { ok: false, error: error.message };
@@ -177,11 +193,18 @@ export async function obrisiFakturu(
     return { ok: false, error: "Morate biti ulogovani." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
   const { error } = await supabase
     .from("fakture")
     .delete()
     .eq("id", fakturaId)
-    .eq("user_id", user.id);
+    .eq("firma_id", firmaId);
 
   if (error) {
     return { ok: false, error: error.message };
@@ -190,4 +213,10 @@ export async function obrisiFakturu(
   revalidatePath("/dashboard/fakture");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+export async function ucitajFakturuSaStavkama(fakturaId: string) {
+  const supabase = await createClient();
+  const { fetchFakturaSaStavkama } = await import("@/lib/fakture.server");
+  return fetchFakturaSaStavkama(supabase, fakturaId);
 }

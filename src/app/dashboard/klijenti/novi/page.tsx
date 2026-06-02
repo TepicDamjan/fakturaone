@@ -142,7 +142,14 @@ export default function NoviKlijent() {
             </div>
           </aside>
 
-          <KlijentFormFields forma={forma} onChange={handleChange} />
+          <KlijentFormFields
+            forma={forma}
+            onChange={handleChange}
+            onPopuniFormu={(nova) => {
+              setForma(nova);
+              setGreska(null);
+            }}
+          />
         </div>
       </main>
 

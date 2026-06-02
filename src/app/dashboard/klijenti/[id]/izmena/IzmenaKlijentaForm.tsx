@@ -7,21 +7,9 @@ import {
   KlijentFormFields,
   type KlijentForma,
 } from "@/app/components/KlijentFormFields";
+import { klijentToForma } from "@/lib/klijentForma";
 import { azurirajKlijenta } from "@/app/dashboard/klijenti/actions";
 import type { Klijent } from "@/lib/klijenti";
-
-function klijentToForma(k: Klijent): KlijentForma {
-  return {
-    naziv: k.naziv,
-    pib: k.pib ?? "",
-    maticniBroj: k.maticni_broj ?? "",
-    email: k.email ?? "",
-    telefon: k.telefon ?? "",
-    ulica: k.ulica ?? "",
-    grad: k.grad ?? "",
-    postanskiBroj: k.postanski_broj ?? "",
-  };
-}
 
 type Props = {
   klijent: Klijent;
@@ -120,7 +108,15 @@ export default function IzmenaKlijentaForm({ klijent }: Props) {
             </div>
           </aside>
 
-          <KlijentFormFields forma={forma} onChange={handleChange} />
+          <KlijentFormFields
+            forma={forma}
+            onChange={handleChange}
+            onPopuniFormu={(nova) => {
+              setForma(nova);
+              setGreska(null);
+            }}
+            iskljuciKlijentId={klijent.id}
+          />
         </div>
       </main>
     </form>

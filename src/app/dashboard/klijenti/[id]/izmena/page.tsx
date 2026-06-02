@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { fetchKlijentById } from "@/lib/klijenti";
+import { fetchKlijentById } from "@/lib/klijenti.server";
 import { createClient } from "@/utils/supabase/server";
 import IzmenaKlijentaForm from "./IzmenaKlijentaForm";
 

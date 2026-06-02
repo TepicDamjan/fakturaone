@@ -74,7 +74,7 @@ export async function signup(
 
   if (data.session) {
     revalidatePath("/dashboard");
-    redirect("/dashboard");
+    redirect("/izbor-firme");
   }
 
   return {

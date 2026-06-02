@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  fetchFakturaSaStavkama,
   type FakturaSaStavkama,
   type FakturaStatus,
 } from "@/lib/fakture";
+import { ucitajFakturuSaStavkama } from "@/app/dashboard/fakture/actions";
 import {
   FakturaDetaljiPlacanja,
   FakturaIzdavalacKolona,
@@ -15,7 +15,6 @@ import {
 } from "@/app/components/FakturaFirmaNaFakturi";
 import { formatKlijentAdresa } from "@/lib/klijenti";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
-import { createClient } from "@/utils/supabase/client";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
 
 function formatIznos(amount: number) {
@@ -79,8 +78,7 @@ export default function SacuvanaFakturaPregledPage() {
       setPayload(null);
       return;
     }
-    const supabase = createClient();
-    fetchFakturaSaStavkama(supabase, id)
+    ucitajFakturuSaStavkama(id)
       .then(setPayload)
       .catch(() => setPayload(null));
   }, [id]);

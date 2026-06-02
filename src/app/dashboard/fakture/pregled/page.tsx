@@ -9,17 +9,16 @@ import {
   type FakturaPregledSesija,
 } from "@/lib/fakturaPregledSession";
 import {
-  fetchKlijentById,
   formatKlijentAdresa,
   type Klijent,
 } from "@/lib/klijenti";
+import { ucitajKlijenta } from "@/app/dashboard/klijenti/actions";
 import {
   FakturaDetaljiPlacanja,
   FakturaIzdavalacKolona,
   FakturaLogoZaglavlje,
 } from "@/app/components/FakturaFirmaNaFakturi";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
-import { createClient } from "@/utils/supabase/client";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
 
 function formatIznos(amount: number) {
@@ -71,8 +70,7 @@ export default function FakturaPregledStranica() {
       setPrimalac(null);
       return;
     }
-    const supabase = createClient();
-    fetchKlijentById(supabase, data.klijentId)
+    ucitajKlijenta(data.klijentId)
       .then(setPrimalac)
       .catch(() => setPrimalac(null));
   }, [data?.klijentId]);

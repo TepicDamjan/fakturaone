@@ -10,12 +10,13 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sacuvajFakturu } from "@/app/dashboard/fakture/actions";
+import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
 import StavkeFakture, { type Stavka } from "@/app/components/StavkeFakture";
 import OtpremnicaLogistika from "@/app/components/OtpremnicaLogistika";
 import PredracunSumaSidebar from "@/app/components/PredracunSumaSidebar";
 import { saveFakturaPregledSesija } from "@/lib/fakturaPregledSession";
-import { fetchKlijentiList, type Klijent } from "@/lib/klijenti";
-import { createClient } from "@/utils/supabase/client";
+import type { Klijent } from "@/lib/klijenti";
+import KlijentBrzaPretraga from "@/app/components/KlijentBrzaPretraga";
 import {
   metaZaTip,
   parseTipDokumenta,
@@ -95,8 +96,7 @@ function NovaFakturaForma() {
   const [vozac, setVozac] = useState("");
 
   useEffect(() => {
-    const supabase = createClient();
-    fetchKlijentiList(supabase)
+    ucitajKlijentiList()
       .then(setKlijenti)
       .catch(() => setKlijenti([]));
   }, []);
@@ -490,30 +490,61 @@ function DetaljiKartica({
     <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <Polje label={klijentLabel}>
-          <div className="relative">
-            <select
-              value={klijentId}
-              onChange={(e) => onKlijentChange(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 px-3 py-2.5 pr-9 cursor-pointer"
-            >
-              <option value="">Izaberi klijenta...</option>
-              {klijenti.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.naziv}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
-                <path
-                  d="M5 7.5L10 12.5L15 7.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+          <div className="space-y-3">
+            <KlijentBrzaPretraga
+              placeholder="Pretraži klijente i firme..."
+              uputstvo="Odaberite klijenta iz baze da biste ga povezali sa dokumentom."
+              odabraniNaziv={
+                klijenti.find((k) => k.id === klijentId)?.naziv ?? ""
+              }
+              onOdaberi={(stavka) => {
+                if (stavka.tip === "klijent") {
+                  const uListi = klijenti.find((k) => k.id === stavka.podaci.id);
+                  if (uListi) {
+                    onKlijentChange(uListi.id);
+                    return;
+                  }
+                }
+
+                const pib = stavka.podaci.pib?.trim();
+                const naziv = stavka.podaci.naziv.trim();
+                const poPibu = pib
+                  ? klijenti.find((k) => k.pib?.trim() === pib)
+                  : undefined;
+                const poNazivu = klijenti.find(
+                  (k) => k.naziv.trim().toLowerCase() === naziv.toLowerCase()
+                );
+                const match = poPibu ?? poNazivu;
+                if (match) {
+                  onKlijentChange(match.id);
+                }
+              }}
+            />
+            <div className="relative">
+              <select
+                value={klijentId}
+                onChange={(e) => onKlijentChange(e.target.value)}
+                className="w-full appearance-none rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 px-3 py-2.5 pr-9 cursor-pointer"
+              >
+                <option value="">Izaberi klijenta...</option>
+                {klijenti.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.naziv}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
+                  <path
+                    d="M5 7.5L10 12.5L15 7.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </div>
           </div>
           {!jeOtpremnica ? (
             <Link

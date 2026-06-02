@@ -13,6 +13,7 @@ export type Database = {
                 Row: {
                     id: string;
                     user_id: string;
+                    firma_id: string;
                     naziv: string;
                     pib: string | null;
                     maticni_broj: string | null;
@@ -27,6 +28,7 @@ export type Database = {
                 Insert: {
                     id?: string;
                     user_id: string;
+                    firma_id: string;
                     naziv: string;
                     pib?: string | null;
                     maticni_broj?: string | null;
@@ -41,6 +43,7 @@ export type Database = {
                 Update: {
                     id?: string;
                     user_id?: string;
+                    firma_id?: string;
                     naziv?: string;
                     pib?: string | null;
                     maticni_broj?: string | null;
@@ -54,6 +57,12 @@ export type Database = {
                 };
                 Relationships: [
                     {
+                        foreignKeyName: "klijenti_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
+                    {
                         foreignKeyName: "klijenti_user_id_fkey";
                         columns: ["user_id"];
                         referencedRelation: "users";
@@ -65,6 +74,7 @@ export type Database = {
                 Row: {
                     id: string;
                     user_id: string;
+                    firma_id: string;
                     klijent_id: string | null;
                     broj: string;
                     referenca: string | null;
@@ -85,6 +95,7 @@ export type Database = {
                 Insert: {
                     id?: string;
                     user_id: string;
+                    firma_id: string;
                     klijent_id?: string | null;
                     broj: string;
                     referenca?: string | null;
@@ -105,6 +116,7 @@ export type Database = {
                 Update: {
                     id?: string;
                     user_id?: string;
+                    firma_id?: string;
                     klijent_id?: string | null;
                     broj?: string;
                     referenca?: string | null;
@@ -123,6 +135,12 @@ export type Database = {
                     updated_at?: string;
                 };
                 Relationships: [
+                    {
+                        foreignKeyName: "fakture_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
                     {
                         foreignKeyName: "fakture_klijent_id_fkey";
                         columns: ["klijent_id"];
@@ -145,6 +163,8 @@ export type Database = {
                     pib: string | null;
                     maticni_broj: string | null;
                     adresa: string | null;
+                    grad: string | null;
+                    postanski_broj: string | null;
                     email: string | null;
                     telefon: string | null;
                     valuta: string;
@@ -161,6 +181,8 @@ export type Database = {
                     pib?: string | null;
                     maticni_broj?: string | null;
                     adresa?: string | null;
+                    grad?: string | null;
+                    postanski_broj?: string | null;
                     email?: string | null;
                     telefon?: string | null;
                     valuta?: string;
@@ -177,6 +199,8 @@ export type Database = {
                     pib?: string | null;
                     maticni_broj?: string | null;
                     adresa?: string | null;
+                    grad?: string | null;
+                    postanski_broj?: string | null;
                     email?: string | null;
                     telefon?: string | null;
                     valuta?: string;
@@ -199,6 +223,7 @@ export type Database = {
                 Row: {
                     id: string;
                     user_id: string;
+                    firma_id: string;
                     naziv_banke: string;
                     broj_racuna: string;
                     na_ime: string | null;
@@ -210,6 +235,7 @@ export type Database = {
                 Insert: {
                     id?: string;
                     user_id: string;
+                    firma_id: string;
                     naziv_banke: string;
                     broj_racuna: string;
                     na_ime?: string | null;
@@ -221,6 +247,7 @@ export type Database = {
                 Update: {
                     id?: string;
                     user_id?: string;
+                    firma_id?: string;
                     naziv_banke?: string;
                     broj_racuna?: string;
                     na_ime?: string | null;
@@ -230,6 +257,12 @@ export type Database = {
                     created_at?: string;
                 };
                 Relationships: [
+                    {
+                        foreignKeyName: "bankovni_racuni_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
                     {
                         foreignKeyName: "bankovni_racuni_user_id_fkey";
                         columns: ["user_id"];
@@ -287,6 +320,7 @@ export type Database = {
                 Row: {
                     id: string | null;
                     user_id: string | null;
+                    firma_id: string | null;
                     broj: string | null;
                     tip_dokumenta: Database["public"]["Enums"]["tip_dokumenta"] | null;
                     klijent_naziv: string | null;

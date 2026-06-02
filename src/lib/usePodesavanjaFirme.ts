@@ -2,19 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  fetchPodesavanjaFirme,
   izdavalacIzPodesavanja,
   podrazumevaniBankovniRacun,
   type PodesavanjaFirme,
 } from "@/lib/firma";
-import { createClient } from "@/utils/supabase/client";
+import { ucitajPodesavanjaFirme } from "@/app/dashboard/podesavanja/actions";
 
 export function usePodesavanjaFirme() {
   const [podesavanja, setPodesavanja] = useState<PodesavanjaFirme | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    fetchPodesavanjaFirme(supabase)
+    ucitajPodesavanjaFirme()
       .then(setPodesavanja)
       .catch(() => setPodesavanja(null));
   }, []);

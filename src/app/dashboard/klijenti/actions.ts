@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { greskaAkoKlijentPostojiUFirmi } from "@/lib/preduzeceUnique";
 
 export type SacuvajKlijentaInput = {
   naziv: string;
@@ -36,10 +38,28 @@ export async function sacuvajKlijenta(
     return { ok: false, error: "Puni naziv kompanije je obavezan." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
+  const pib = emptyToNull(input.pib);
+  const konflikt = await greskaAkoKlijentPostojiUFirmi(supabase, {
+    firmaId,
+    naziv,
+    pib,
+  });
+  if (konflikt) {
+    return { ok: false, error: konflikt };
+  }
+
   const row = {
     user_id: user.id,
+    firma_id: firmaId,
     naziv,
-    pib: emptyToNull(input.pib),
+    pib,
     maticni_broj: emptyToNull(input.maticniBroj),
     email: emptyToNull(input.email),
     telefon: emptyToNull(input.telefon),
@@ -55,7 +75,7 @@ export async function sacuvajKlijenta(
       return {
         ok: false,
         error:
-          "Klijent sa istim PIB-om ili istom e-mail adresom već postoji. Proverite unos.",
+          "Klijent sa istim PIB-om ili e-mail adresom već postoji u ovoj firmi.",
       };
     }
     return { ok: false, error: error.message };
@@ -84,9 +104,27 @@ export async function azurirajKlijenta(
     return { ok: false, error: "Puni naziv kompanije je obavezan." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
+  const pib = emptyToNull(input.pib);
+  const konflikt = await greskaAkoKlijentPostojiUFirmi(supabase, {
+    firmaId,
+    naziv,
+    pib,
+    iskljuciKlijentId: klijentId,
+  });
+  if (konflikt) {
+    return { ok: false, error: konflikt };
+  }
+
   const row = {
     naziv,
-    pib: emptyToNull(input.pib),
+    pib,
     maticni_broj: emptyToNull(input.maticniBroj),
     email: emptyToNull(input.email),
     telefon: emptyToNull(input.telefon),
@@ -99,14 +137,14 @@ export async function azurirajKlijenta(
     .from("klijenti")
     .update(row)
     .eq("id", klijentId)
-    .eq("user_id", user.id);
+    .eq("firma_id", firmaId);
 
   if (error) {
     if (error.code === "23505") {
       return {
         ok: false,
         error:
-          "Klijent sa istim PIB-om ili istom e-mail adresom već postoji. Proverite unos.",
+          "Klijent sa istim PIB-om ili e-mail adresom već postoji u ovoj firmi.",
       };
     }
     return { ok: false, error: error.message };
@@ -130,11 +168,18 @@ export async function obrisiKlijenta(
     return { ok: false, error: "Morate biti ulogovani." };
   }
 
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
   const { count, error: countErr } = await supabase
     .from("fakture")
     .select("id", { count: "exact", head: true })
     .eq("klijent_id", klijentId)
-    .eq("user_id", user.id);
+    .eq("firma_id", firmaId);
 
   if (countErr) {
     return { ok: false, error: countErr.message };
@@ -151,7 +196,7 @@ export async function obrisiKlijenta(
     .from("klijenti")
     .delete()
     .eq("id", klijentId)
-    .eq("user_id", user.id);
+    .eq("firma_id", firmaId);
 
   if (error) {
     return { ok: false, error: error.message };
@@ -161,4 +206,30 @@ export async function obrisiKlijenta(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/fakture");
   return { ok: true };
+}
+
+export async function ucitajKlijentiList() {
+  const supabase = await createClient();
+  const { fetchKlijentiList } = await import("@/lib/klijenti.server");
+  return fetchKlijentiList(supabase);
+}
+
+export async function ucitajBrzaPretragaBazu() {
+  const supabase = await createClient();
+  const { fetchSviKlijentiKorisnika } = await import("@/lib/klijenti");
+  const { fetchFirmeZaBrzuPretragu } = await import("@/lib/firma");
+  const { deduplirajBrzaPretragaBazu } = await import("@/lib/brzaPretraga");
+
+  const [klijenti, firme] = await Promise.all([
+    fetchSviKlijentiKorisnika(supabase),
+    fetchFirmeZaBrzuPretragu(supabase),
+  ]);
+
+  return deduplirajBrzaPretragaBazu({ klijenti, firme });
+}
+
+export async function ucitajKlijenta(klijentId: string) {
+  const supabase = await createClient();
+  const { fetchKlijentById } = await import("@/lib/klijenti.server");
+  return fetchKlijentById(supabase, klijentId);
 }

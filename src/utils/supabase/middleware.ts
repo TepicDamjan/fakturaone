@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
+import { AKTIVNA_FIRMA_COOKIE, getAktivnaFirmaIdFromRequest } from '@/lib/aktivnaFirmaCookie'
 
 function getSupabaseEnv() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
@@ -54,13 +55,43 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    if (request.nextUrl.pathname.startsWith('/izbor-firme') && !user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+    }
+
+    if (request.nextUrl.pathname.startsWith('/dashboard') && user) {
+        const aktivnaFirmaId = getAktivnaFirmaIdFromRequest(request)
+        if (!aktivnaFirmaId) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/izbor-firme'
+            return NextResponse.redirect(url)
+        }
+
+        const { data: firmaOk } = await supabase
+            .from('firma')
+            .select('id')
+            .eq('id', aktivnaFirmaId)
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+        if (!firmaOk) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/izbor-firme'
+            const res = NextResponse.redirect(url)
+            res.cookies.delete(AKTIVNA_FIRMA_COOKIE)
+            return res
+        }
+    }
+
     const authGuestOnly =
         request.nextUrl.pathname.startsWith('/login') ||
         request.nextUrl.pathname.startsWith('/registracija')
 
     if (authGuestOnly && user) {
         const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
+        url.pathname = '/izbor-firme'
         return NextResponse.redirect(url)
     }
 

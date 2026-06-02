@@ -2,6 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { getAktivnaFirmaId, setAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { fetchPodesavanjaFirme } from "@/lib/firma.server";
+import type { PodesavanjaFirme } from "@/lib/firma";
+import { greskaAkoFirmaPostoji } from "@/lib/preduzeceUnique";
 
 const LOGO_BUCKET = "firma-logos";
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
@@ -40,6 +44,11 @@ function storagePutanjaIzUrl(publicUrl: string | null): string | null {
   const putanja = publicUrl.slice(idx + marker.length);
   const qIdx = putanja.indexOf("?");
   return qIdx === -1 ? putanja : putanja.slice(0, qIdx);
+}
+
+export async function ucitajPodesavanjaFirme(): Promise<PodesavanjaFirme> {
+  const supabase = await createClient();
+  return fetchPodesavanjaFirme(supabase);
 }
 
 export async function otpremiLogoFirme(
@@ -86,16 +95,22 @@ export async function otpremiLogoFirme(
     .getPublicUrl(putanja);
   const logoUrl = publicData.publicUrl;
 
-  const { data: postojeca } = await supabase
-    .from("firma")
-    .select("id, logo_url")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const aktivnaFirmaId = await getAktivnaFirmaId();
+
+  let firmaQuery = supabase.from("firma").select("id, logo_url");
+  if (aktivnaFirmaId) {
+    firmaQuery = firmaQuery.eq("id", aktivnaFirmaId);
+  } else {
+    firmaQuery = firmaQuery.eq("user_id", user.id).order("created_at", { ascending: true }).limit(1);
+  }
+
+  const { data: postojeca } = await firmaQuery.maybeSingle();
 
   if (postojeca) {
     const { error: updErr } = await supabase
       .from("firma")
       .update({ logo_url: logoUrl })
+      .eq("id", postojeca.id)
       .eq("user_id", user.id);
     if (updErr) {
       await supabase.storage.from(LOGO_BUCKET).remove([putanja]);
@@ -132,16 +147,22 @@ export async function ukloniLogoFirme(): Promise<
     return { ok: false, error: "Morate biti ulogovani." };
   }
 
-  const { data: postojeca } = await supabase
-    .from("firma")
-    .select("logo_url")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const aktivnaFirmaId = await getAktivnaFirmaId();
+
+  let firmaQuery = supabase.from("firma").select("id, logo_url");
+  if (aktivnaFirmaId) {
+    firmaQuery = firmaQuery.eq("id", aktivnaFirmaId);
+  } else {
+    firmaQuery = firmaQuery.eq("user_id", user.id).order("created_at", { ascending: true }).limit(1);
+  }
+
+  const { data: postojeca } = await firmaQuery.maybeSingle();
 
   if (postojeca?.logo_url) {
     const { error: updErr } = await supabase
       .from("firma")
       .update({ logo_url: null })
+      .eq("id", postojeca.id)
       .eq("user_id", user.id);
     if (updErr) {
       return { ok: false, error: updErr.message };
@@ -212,10 +233,32 @@ export async function sacuvajPodesavanjaFirme(
     return { ok: false, error: "Naziv firme je obavezan." };
   }
 
+  const aktivnaFirmaId = await getAktivnaFirmaId();
+
+  let existingQuery = supabase.from("firma").select("id");
+  if (aktivnaFirmaId) {
+    existingQuery = existingQuery.eq("id", aktivnaFirmaId);
+  } else {
+    existingQuery = existingQuery.eq("user_id", user.id).order("created_at", { ascending: true }).limit(1);
+  }
+
+  const { data: existing } = await existingQuery.maybeSingle();
+
+  const pib = emptyToNull(firma.pib);
+  const konflikt = await greskaAkoFirmaPostoji(supabase, {
+    userId: user.id,
+    naziv,
+    pib,
+    iskljuciFirmaId: existing?.id,
+  });
+  if (konflikt) {
+    return { ok: false, error: konflikt };
+  }
+
   const firmaRow = {
     user_id: user.id,
     naziv,
-    pib: emptyToNull(firma.pib),
+    pib,
     maticni_broj: emptyToNull(firma.maticniBroj),
     adresa: emptyToNull(firma.adresa),
     email: emptyToNull(firma.email),
@@ -225,21 +268,41 @@ export async function sacuvajPodesavanjaFirme(
     rok_placanja_dana: clampDana(firma.rokPlacanjaDana),
   };
 
-  const { data: existing } = await supabase
-    .from("firma")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  let targetFirmaId: string;
 
   if (existing) {
     const { error } = await supabase
       .from("firma")
       .update(firmaRow)
+      .eq("id", existing.id)
       .eq("user_id", user.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      if (error.code === "23505") {
+        return {
+          ok: false,
+          error: "Preduzeće sa ovim PIB-om već postoji na vašem nalogu.",
+        };
+      }
+      return { ok: false, error: error.message };
+    }
+    targetFirmaId = existing.id;
   } else {
-    const { error } = await supabase.from("firma").insert(firmaRow);
-    if (error) return { ok: false, error: error.message };
+    const { data: inserted, error } = await supabase
+      .from("firma")
+      .insert(firmaRow)
+      .select("id")
+      .single();
+    if (error || !inserted) {
+      if (error?.code === "23505") {
+        return {
+          ok: false,
+          error: "Preduzeće sa ovim PIB-om već postoji na vašem nalogu.",
+        };
+      }
+      return { ok: false, error: error?.message ?? "Greška pri čuvanju firme." };
+    }
+    targetFirmaId = inserted.id;
+    await setAktivnaFirmaId(targetFirmaId);
   }
 
   const validRacuni = racuni.filter(
@@ -265,7 +328,7 @@ export async function sacuvajPodesavanjaFirme(
   const { data: existingRacuni } = await supabase
     .from("bankovni_racuni")
     .select("id")
-    .eq("user_id", user.id);
+    .eq("firma_id", targetFirmaId);
 
   const keptIds = new Set(
     validRacuni.map((r) => r.id).filter((id): id is string => Boolean(id))
@@ -280,7 +343,7 @@ export async function sacuvajPodesavanjaFirme(
       .from("bankovni_racuni")
       .delete()
       .in("id", toDelete)
-      .eq("user_id", user.id);
+      .eq("firma_id", targetFirmaId);
     if (error) return { ok: false, error: error.message };
   }
 
@@ -288,6 +351,7 @@ export async function sacuvajPodesavanjaFirme(
     const r = validRacuni[i];
     const row = {
       user_id: user.id,
+      firma_id: targetFirmaId,
       naziv_banke: r.nazivBanke.trim(),
       broj_racuna: r.brojRacuna.trim(),
       na_ime: emptyToNull(r.naIme),
@@ -301,7 +365,7 @@ export async function sacuvajPodesavanjaFirme(
         .from("bankovni_racuni")
         .update(row)
         .eq("id", r.id)
-        .eq("user_id", user.id);
+        .eq("firma_id", targetFirmaId);
       if (error) return { ok: false, error: error.message };
     } else {
       const { error } = await supabase.from("bankovni_racuni").insert(row);

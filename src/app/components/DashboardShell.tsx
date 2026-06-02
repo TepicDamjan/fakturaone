@@ -5,11 +5,14 @@ import { usePathname } from "next/navigation";
 import DashboardSidebar from "@/app/components/DashboardSidebar";
 import { DashboardNavContext } from "@/app/components/DashboardNavContext";
 import { shouldHideDashboardSidebar } from "@/lib/dashboardNav";
+import type { AktivnaFirmaPregled } from "@/app/components/DashboardSidebar";
 
 export default function DashboardShell({
   children,
+  aktivnaFirma = null,
 }: {
   children: React.ReactNode;
+  aktivnaFirma?: AktivnaFirmaPregled;
 }) {
   const pathname = usePathname();
   const sidebarHidden = shouldHideDashboardSidebar(pathname);
@@ -42,6 +45,7 @@ export default function DashboardShell({
           <DashboardSidebar
             mobileOpen={mobileOpen}
             onMobileClose={() => setMobileOpen(false)}
+            aktivnaFirma={aktivnaFirma}
           />
         ) : null}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">

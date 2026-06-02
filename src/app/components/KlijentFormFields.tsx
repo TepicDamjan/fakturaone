@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import KlijentBrzaPretraga from "@/app/components/KlijentBrzaPretraga";
+import { stavkaToForma } from "@/lib/brzaPretraga";
 
 export type KlijentForma = {
   naziv: string;
@@ -66,9 +68,17 @@ export function KlijentPolje({
 type KlijentFormFieldsProps = {
   forma: KlijentForma;
   onChange: (polje: keyof KlijentForma, vrednost: string) => void;
+  /** Popuni cijelu formu iz postojećeg klijenta (brza pretraga). */
+  onPopuniFormu?: (forma: KlijentForma) => void;
+  iskljuciKlijentId?: string;
 };
 
-export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
+export function KlijentFormFields({
+  forma,
+  onChange,
+  onPopuniFormu,
+  iskljuciKlijentId,
+}: KlijentFormFieldsProps) {
   return (
     <div className="space-y-6">
       <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
@@ -86,6 +96,15 @@ export function KlijentFormFields({ forma, onChange }: KlijentFormFieldsProps) {
           </span>
           <h3 className="text-sm font-bold text-fcrna tracking-wider">OSNOVNI PODACI</h3>
         </div>
+
+        {onPopuniFormu ? (
+          <div className="mb-5">
+            <KlijentBrzaPretraga
+              iskljuciKlijentId={iskljuciKlijentId}
+              onOdaberi={(stavka) => onPopuniFormu(stavkaToForma(stavka))}
+            />
+          </div>
+        ) : null}
 
         <div className="space-y-4">
           <KlijentPolje

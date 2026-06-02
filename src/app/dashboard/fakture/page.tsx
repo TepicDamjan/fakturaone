@@ -2,7 +2,7 @@ import DashboardHeader from "@/app/components/DashboardHeader";
 import FaktureLista from "@/app/components/FaktureLista";
 import KreirajDokumentDugme from "@/app/components/KreirajDokumentDugme";
 import { createClient } from "@/utils/supabase/server";
-import { fetchFaktureLista } from "@/lib/fakture";
+import { fetchFaktureLista } from "@/lib/fakture.server";
 
 export default async function Fakture() {
   const supabase = await createClient();

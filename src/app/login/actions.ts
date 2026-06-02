@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { clearAktivnaFirmaId } from '@/lib/aktivnaFirma.server'
 
 export async function login(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -27,12 +28,13 @@ export async function login(prevState: any, formData: FormData) {
 
     // Ako je prijava uspešna, osveži putanje i redirektuj na /dashboard
     revalidatePath('/dashboard')
-    redirect('/dashboard')
+    redirect('/izbor-firme')
 }
 
 export async function logout() {
     const supabase = await createClient()
     await supabase.auth.signOut()
+    await clearAktivnaFirmaId()
 
     // Očisti keš servera i redirektuj nazad na /login
     revalidatePath('/', 'layout')

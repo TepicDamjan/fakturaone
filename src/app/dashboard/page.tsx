@@ -5,12 +5,12 @@ import type { DashboardFakturaRow } from "@/app/components/DashboardFaktureModal
 import KreirajDokumentDugme from "@/app/components/KreirajDokumentDugme";
 import Table, { type Invoice } from "@/app/components/Table";
 import {
-  fetchFaktureLista,
   initialsFromName,
   type FakturaListItem,
   type FakturaStatus,
 } from "@/lib/fakture";
-import { fetchKlijentiList } from "@/lib/klijenti";
+import { fetchFaktureLista } from "@/lib/fakture.server";
+import { fetchKlijentiList } from "@/lib/klijenti.server";
 import { createClient } from "@/utils/supabase/server";
 
 const STATUS_LABEL: Record<FakturaStatus, Invoice["status"]> = {

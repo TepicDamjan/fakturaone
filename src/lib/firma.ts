@@ -4,6 +4,16 @@ import type { Database } from "@/types/database";
 export type FirmaRow = Database["public"]["Tables"]["firma"]["Row"];
 export type BankovniRacunRow = Database["public"]["Tables"]["bankovni_racuni"]["Row"];
 
+export type FirmaListItem = {
+  id: string;
+  naziv: string;
+  pib: string | null;
+  email: string | null;
+  logoUrl: string | null;
+  grad: string | null;
+  adresa: string | null;
+};
+
 export type PodesavanjaFirme = {
   firma: FirmaRow | null;
   racuni: BankovniRacunRow[];
@@ -22,28 +32,74 @@ const DEFAULT_FIRMA = {
   logo_url: null as string | null,
 };
 
-export async function fetchPodesavanjaFirme(
+export async function fetchFirmeLista(
   supabase: SupabaseClient<Database>
-): Promise<PodesavanjaFirme> {
-  const { data: firma, error: fErr } = await supabase
+): Promise<FirmaListItem[]> {
+  const { data, error } = await supabase
     .from("firma")
-    .select("*")
-    .maybeSingle();
+    .select("id, naziv, pib, email, logo_url, grad, adresa")
+    .order("created_at", { ascending: false });
 
-  if (fErr) throw fErr;
+  if (error) throw error;
 
-  const { data: racuni, error: rErr } = await supabase
-    .from("bankovni_racuni")
-    .select("*")
-    .order("redosled", { ascending: true })
-    .order("created_at", { ascending: true });
+  return (data ?? [])
+    .filter((f) => f.naziv?.trim())
+    .map((f) => ({
+      id: f.id,
+      naziv: f.naziv.trim(),
+      pib: f.pib,
+      email: f.email,
+      logoUrl: f.logo_url,
+      grad: f.grad,
+      adresa: f.adresa,
+    }));
+}
 
-  if (rErr) throw rErr;
+/** Firme korisnika sa poljima za brzu pretragu / popunu forme klijenta. */
+export async function fetchFirmeZaBrzuPretragu(
+  supabase: SupabaseClient<Database>
+): Promise<
+  Pick<
+    FirmaRow,
+    | "id"
+    | "naziv"
+    | "pib"
+    | "maticni_broj"
+    | "email"
+    | "telefon"
+    | "adresa"
+    | "grad"
+    | "postanski_broj"
+  >[]
+> {
+  const { data, error } = await supabase
+    .from("firma")
+    .select(
+      "id, naziv, pib, maticni_broj, email, telefon, adresa, grad, postanski_broj"
+    )
+    .order("naziv", { ascending: true });
 
-  return {
-    firma: firma as FirmaRow | null,
-    racuni: (racuni ?? []) as BankovniRacunRow[],
-  };
+  if (error) throw error;
+
+  return (data ?? []).filter((f) => f.naziv?.trim()) as Pick<
+    FirmaRow,
+    | "id"
+    | "naziv"
+    | "pib"
+    | "maticni_broj"
+    | "email"
+    | "telefon"
+    | "adresa"
+    | "grad"
+    | "postanski_broj"
+  >[];
+}
+
+export function initialsFromFirma(naziv: string): string {
+  const parts = naziv.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export function defaultFirmaValues(): Omit<FirmaRow, "id" | "user_id" | "created_at" | "updated_at"> {
