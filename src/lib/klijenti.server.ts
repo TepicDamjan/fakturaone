@@ -30,3 +30,5 @@ export async function fetchKlijentById(
   const firmaId = await requireAktivnaFirmaId();
   return fetchKlijentByIdBase(supabase, id, firmaId);
 }
+
+export type { Klijent, KlijentSaFakturisano } from "@/lib/klijenti";

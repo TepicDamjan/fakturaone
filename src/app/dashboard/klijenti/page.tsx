@@ -1,7 +1,8 @@
 import Link from "next/link";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import KlijentiTabela from "@/app/components/KlijentiTabela";
-import { fetchKlijentiSaFakturisano, type KlijentSaFakturisano } from "@/lib/klijenti.server";
+import { fetchKlijentiSaFakturisano } from "@/lib/klijenti.server";
+import type { KlijentSaFakturisano } from "@/lib/klijenti";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function Klijenti() {
