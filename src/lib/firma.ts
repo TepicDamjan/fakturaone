@@ -24,6 +24,8 @@ const DEFAULT_FIRMA = {
   pib: null as string | null,
   maticni_broj: null as string | null,
   adresa: null as string | null,
+  grad: null as string | null,
+  postanski_broj: null as string | null,
   email: null as string | null,
   telefon: null as string | null,
   valuta: "BAM",
