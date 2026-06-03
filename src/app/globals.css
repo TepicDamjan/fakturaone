@@ -148,7 +148,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal,
-  .landing-scroll-reveal {
+  .landing-scroll-reveal,
+  .auth-reveal {
     opacity: 1;
     animation: none;
     transform: none;
@@ -158,11 +159,164 @@ body {
   .landing-float,
   .landing-glow-text,
   .landing-glow-orb,
-  .landing-glow-btn {
+  .landing-glow-btn,
+  .auth-float,
+  .auth-glow-orb,
+  .auth-glow-text,
+  .auth-icon-glow,
+  .auth-card-glow {
     animation: none;
   }
 
-  .landing-card-hover:hover {
+  .landing-card-hover:hover,
+  .auth-btn-arrow {
     transform: none;
   }
+
+  .auth-field-group:focus-within .auth-label-focusable {
+    color: white;
+  }
+}
+
+/* Auth page animations */
+@keyframes auth-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes auth-glow-pulse-orb {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes auth-glow-pulse-card {
+  0%,
+  100% {
+    box-shadow:
+      0 0 48px rgba(0, 229, 255, 0.06),
+      0 24px 80px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 64px rgba(0, 229, 255, 0.12),
+      0 24px 80px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@keyframes auth-glow-pulse-icon {
+  0%,
+  100% {
+    box-shadow: 0 0 28px rgba(0, 229, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 42px rgba(0, 229, 255, 0.42);
+  }
+}
+
+.auth-reveal {
+  opacity: 0;
+  animation: auth-fade-in-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.auth-reveal-delay-1 {
+  animation-delay: 0.08s;
+}
+.auth-reveal-delay-2 {
+  animation-delay: 0.18s;
+}
+.auth-reveal-delay-3 {
+  animation-delay: 0.28s;
+}
+.auth-reveal-delay-4 {
+  animation-delay: 0.38s;
+}
+.auth-reveal-delay-5 {
+  animation-delay: 0.48s;
+}
+.auth-reveal-delay-6 {
+  animation-delay: 0.58s;
+}
+.auth-reveal-delay-7 {
+  animation-delay: 0.68s;
+}
+
+.auth-float {
+  animation: auth-float-soft 6s ease-in-out infinite;
+}
+
+.auth-glow-orb {
+  animation: auth-glow-pulse-orb 5s ease-in-out infinite;
+}
+
+.auth-glow-text {
+  animation: landing-glow-pulse-text 3s ease-in-out infinite;
+}
+
+.auth-icon-glow {
+  animation: auth-glow-pulse-icon 3s ease-in-out infinite;
+}
+
+.auth-card-glow {
+  animation: auth-glow-pulse-card 4.5s ease-in-out infinite;
+}
+
+/* Combined: single `animation` property must list every effect or reveal stays at opacity 0 */
+.auth-reveal.auth-card-glow {
+  animation:
+    auth-fade-in-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    auth-glow-pulse-card 4.5s ease-in-out 0.75s infinite;
+}
+
+.auth-reveal.auth-icon-glow {
+  animation:
+    auth-fade-in-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    auth-glow-pulse-icon 3s ease-in-out 0.75s infinite;
+}
+
+.auth-reveal.auth-glow-text {
+  animation:
+    auth-fade-in-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    landing-glow-pulse-text 3s ease-in-out 0.75s infinite;
+}
+
+.auth-field-group:focus-within .auth-label-focusable {
+  color: #00e5ff;
+  transition: color 0.3s ease;
+}
+
+.auth-field-group:focus-within .auth-input-icon {
+  color: #00e5ff;
+  transition: color 0.3s ease;
+}
+
+.auth-btn-arrow {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .auth-btn-arrow {
+  transform: translateX(5px);
 }

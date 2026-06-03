@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 .cursor-video-frames/
+.cursor-video-frames-auth/
 *.pem
 
 # debug

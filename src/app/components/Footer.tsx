@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import AnimateIn from '@/app/components/landing/AnimateIn';
+
+const AUTH_PATHS = ['/login', '/registracija'];
 
 const footerLinks = [
     { href: '#', label: 'Politika privatnosti' },
@@ -11,7 +14,12 @@ const footerLinks = [
 ];
 
 export default function Footer() {
+    const pathname = usePathname();
     const year = new Date().getFullYear();
+
+    if (AUTH_PATHS.includes(pathname)) {
+        return null;
+    }
 
     return (
         <AnimateIn>

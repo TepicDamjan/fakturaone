@@ -1,75 +1,178 @@
-"use client"
+"use client";
 
-import Button from "@/app/components/Button";
-import { login } from './actions';
-import { useActionState } from 'react';
+
+
+import Link from "next/link";
+
+import AuthPageShell from "@/app/components/auth/AuthPageShell";
+
+import AuthCard from "@/app/components/auth/AuthCard";
+
+import AuthInputWithIcon from "@/app/components/auth/AuthInputWithIcon";
+
+import AuthSubmitButton from "@/app/components/auth/AuthSubmitButton";
+
+import PasswordInput from "@/app/components/auth/PasswordInput";
+
+import { authLinkClass, authErrorClass, authLabelClass } from "@/app/components/auth/authStyles";
+
+import { login } from "./actions";
+
+import { useActionState } from "react";
+
+
 
 const initialState = {
-    error: '',
-}
 
-export default function LoginPage() {
-    const [state, formAction, isPending] = useActionState(login, initialState)
+    error: "",
+
+};
+
+
+
+function EnvelopeIcon() {
 
     return (
-        <section id='Login' className='flex justify-center items-center min-h-screen bg-gray-50 m-0 px-4 py-8'>
 
-            <div className='bg-white w-full max-w-[440px] rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 flex flex-col justify-center'>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
 
-                <h1 className='text-3xl font-bold text-gray-900 m-1'>Dobrodošli nazad</h1>
-                <p className='text-gray-500 m-1 mb-6'>Unesite svoje podatke kako biste se ulogovali</p>
+            <path
 
-                <form action={formAction} className='flex flex-col gap-4'>
-                    <div className="flex flex-col gap-1.5">
-                        <label className='font-medium text-gray-700 text-sm m-1'>Email adresa</label>
-                        <input
-                            name="email"
-                            className='bg-[#F8FAFC] w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:bg-white transition-all'
-                            type="email"
-                            placeholder='Unesite vaš email'
-                            required
-                        />
-                    </div>
+                d="M4 6h16v12H4V6z"
 
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex justify-between items-center m-1">
-                            <label className='font-medium text-gray-700 text-sm'>Lozinka</label>
-                            <a href="#" className='text-[#137FEC] text-sm hover:underline hover:text-blue-700'>Zaboravili ste lozinku?</a>
+                stroke="currentColor"
+
+                strokeWidth="1.75"
+
+                strokeLinejoin="round"
+
+            />
+
+            <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+
+        </svg>
+
+    );
+
+}
+
+
+
+export default function LoginPage() {
+
+    const [state, formAction, isPending] = useActionState(login, initialState);
+
+
+
+    return (
+
+        <AuthPageShell>
+
+            <AuthCard
+
+                mobileSubtitle="Dobrodošli nazad"
+
+                title="Dobrodošli nazad"
+
+                subtitle="Unesite podatke za prijavu kako biste pristupili nalogu"
+
+            >
+
+                <form action={formAction} className="flex flex-col gap-5">
+
+                    <AuthInputWithIcon
+
+                        id="email"
+
+                        name="email"
+
+                        type="email"
+
+                        label="E-mail adresa"
+
+                        placeholder="unesite@email.com"
+
+                        autoComplete="email"
+
+                        required
+
+                        icon={<EnvelopeIcon />}
+
+                        revealClassName="auth-reveal auth-reveal-delay-3"
+
+                    />
+
+
+
+                    <div className="auth-field-group auth-reveal auth-reveal-delay-4 flex flex-col gap-1.5">
+
+                        <div className="flex items-center justify-between gap-2">
+
+                            <label htmlFor="password" className={authLabelClass}>
+
+                                Lozinka
+
+                            </label>
+
+                            <Link href="#" className={`text-xs sm:text-sm ${authLinkClass}`}>
+
+                                Zaboravili ste lozinku?
+
+                            </Link>
+
                         </div>
-                        <input
-                            name="password"
-                            className='bg-[#F8FAFC] w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:bg-white transition-all'
-                            type="password"
-                            placeholder='Unesite lozinku'
-                            required
+
+                        <PasswordInput
+
+                            placeholder="Unesite vašu lozinku"
+
+                            autoComplete="current-password"
+
                         />
+
                     </div>
 
-                    {/* Prikaz eventualnih grešaka */}
-                    {state?.error && (
-                        <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg mt-2">
-                            {state.error}
-                        </p>
-                    )}
 
-                    <div className='flex flex-col gap-3 justify-center items-center w-full mt-6'>
-                        <Button
-                            className='w-full py-3 text-lg'
-                            backgroundColor="#137FEC"
-                            type="submit"
-                            disabled={isPending}
-                        >
-                            {isPending ? 'Prijava u toku...' : 'Prijavi se'}
-                        </Button>
 
-                        <p className='text-[#64748B] mt-2'>
-                            Nemate nalog? <a href="/registracija" className='text-[#137FEC] font-medium hover:underline'>Registrujte se</a>
+                    {state?.error ? (
+
+                        <p className={`${authErrorClass} auth-reveal auth-reveal-delay-4`}>{state.error}</p>
+
+                    ) : null}
+
+
+
+                    <div className="auth-reveal auth-reveal-delay-5 flex flex-col items-center gap-4 pt-2">
+
+                        <AuthSubmitButton type="submit" disabled={isPending} showArrow={!isPending}>
+
+                            {isPending ? "Prijava u toku…" : "Prijavi se"}
+
+                        </AuthSubmitButton>
+
+
+
+                        <p className="text-center text-sm text-slate-400">
+
+                            Nemate nalog?{" "}
+
+                            <Link href="/registracija" className={authLinkClass}>
+
+                                Registrujte se
+
+                            </Link>
+
                         </p>
+
                     </div>
+
                 </form>
 
-            </div>
+            </AuthCard>
 
-        </section>
-    )
+        </AuthPageShell>
+
+    );
+
 }
+

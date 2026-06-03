@@ -1,141 +1,270 @@
 "use client";
 
+
+
 import Link from "next/link";
+
 import { useActionState } from "react";
-import AuthMarketingPanel from "@/app/components/auth/AuthMarketingPanel";
+
+import AuthPageShell from "@/app/components/auth/AuthPageShell";
+
+import AuthCard from "@/app/components/auth/AuthCard";
+
+import AuthInputWithIcon from "@/app/components/auth/AuthInputWithIcon";
+
+import AuthSubmitButton from "@/app/components/auth/AuthSubmitButton";
+
 import PasswordInput from "@/app/components/auth/PasswordInput";
-import Button from "@/app/components/Button";
+
+import {
+
+    authLinkClass,
+
+    authErrorClass,
+
+    authSuccessClass,
+
+    authLabelClass,
+
+} from "@/app/components/auth/authStyles";
+
 import { signup, type SignupState } from "./actions";
+
+
 
 const initialState: SignupState = {};
 
-const inputClass =
-  "w-full rounded-xl border border-ftsiva bg-fsiva px-4 py-3.5 text-fcrna outline-none transition-all placeholder:text-slate-400 focus:border-fplava focus:bg-white";
+
+
+function UserIcon() {
+
+    return (
+
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+
+            <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.75" />
+
+            <path d="M5 20v-1a7 7 0 0114 0v1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+
+        </svg>
+
+    );
+
+}
+
+
+
+function EnvelopeIcon() {
+
+    return (
+
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+
+            <path
+
+                d="M4 6h16v12H4V6z"
+
+                stroke="currentColor"
+
+                strokeWidth="1.75"
+
+                strokeLinejoin="round"
+
+            />
+
+            <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+
+        </svg>
+
+    );
+
+}
+
+
 
 export default function RegistracijaPage() {
-  const [state, formAction, isPending] = useActionState(signup, initialState);
 
-  return (
-    <div className="flex min-h-screen bg-white">
-      <AuthMarketingPanel />
+    const [state, formAction, isPending] = useActionState(signup, initialState);
 
-      <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-12 lg:px-16 xl:px-20">
-          <Link
-            href="/"
-            className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-fplava transition-colors w-fit"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Nazad
-          </Link>
 
-          <div className="mx-auto w-full max-w-md">
-            <h1 className="text-3xl font-bold text-fcrna tracking-tight">Kreirajte nalog</h1>
-            <p className="mt-2 text-slate-500">
-              Počnite sa fakturisanjem već danas. Kreditna kartica nije potrebna.
-            </p>
 
-            <form action={formAction} className="mt-8 flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="fullName" className="text-sm font-medium text-fcrna">
-                  Ime i prezime
-                </label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  required
-                  autoComplete="name"
-                  placeholder="Marko Petrović"
-                  className={inputClass}
-                />
-              </div>
+    return (
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-fcrna">
-                  Poslovni email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="marko@firma.ba"
-                  className={inputClass}
-                />
-              </div>
+        <AuthPageShell showBackLink>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-fcrna">
-                  Lozinka
-                </label>
-                <PasswordInput />
-              </div>
+            <AuthCard
 
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  name="terms"
-                  type="checkbox"
-                  required
-                  className="mt-1 h-4 w-4 rounded border-ftsiva text-fplava focus:ring-fplava"
-                />
-                <span className="text-sm text-slate-600 leading-relaxed">
-                  Prihvatam{" "}
-                  <Link href="#" className="font-medium text-fplava hover:underline">
-                    Uslove korišćenja
-                  </Link>{" "}
-                  i{" "}
-                  <Link href="#" className="font-medium text-fplava hover:underline">
-                    Politiku privatnosti
-                  </Link>
-                  .
-                </span>
-              </label>
+                mobileSubtitle="Kreirajte nalog"
 
-              {state?.error && (
-                <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-600">
-                  {state.error}
+                title="Kreirajte nalog"
+
+                subtitle="Počnite sa fakturisanjem već danas. Kreditna kartica nije potrebna."
+
+            >
+
+                <form action={formAction} className="flex flex-col gap-5">
+
+                    <AuthInputWithIcon
+
+                        id="fullName"
+
+                        name="fullName"
+
+                        type="text"
+
+                        label="Ime i prezime"
+
+                        placeholder="Marko Petrović"
+
+                        autoComplete="name"
+
+                        required
+
+                        icon={<UserIcon />}
+
+                        revealClassName="auth-reveal auth-reveal-delay-3"
+
+                    />
+
+
+
+                    <AuthInputWithIcon
+
+                        id="email"
+
+                        name="email"
+
+                        type="email"
+
+                        label="Poslovni e-mail"
+
+                        placeholder="marko@firma.ba"
+
+                        autoComplete="email"
+
+                        required
+
+                        icon={<EnvelopeIcon />}
+
+                        revealClassName="auth-reveal auth-reveal-delay-4"
+
+                    />
+
+
+
+                    <div className="auth-field-group auth-reveal auth-reveal-delay-5 flex flex-col gap-1.5">
+
+                        <label htmlFor="password" className={authLabelClass}>
+
+                            Lozinka
+
+                        </label>
+
+                        <PasswordInput
+
+                            placeholder="Kreirajte jaku lozinku"
+
+                            minLength={8}
+
+                            showStrength
+
+                        />
+
+                    </div>
+
+
+
+                    <label className="auth-reveal auth-reveal-delay-6 flex cursor-pointer items-start gap-3">
+
+                        <input
+
+                            name="terms"
+
+                            type="checkbox"
+
+                            required
+
+                            className="mt-1 h-4 w-4 rounded border-white/20 bg-[#05070A] text-[#00E5FF] focus:ring-[#00E5FF]/40 focus:ring-offset-0"
+
+                        />
+
+                        <span className="text-sm leading-relaxed text-slate-400">
+
+                            Prihvatam{" "}
+
+                            <Link href="#" className={authLinkClass}>
+
+                                Uslove korišćenja
+
+                            </Link>{" "}
+
+                            i{" "}
+
+                            <Link href="#" className={authLinkClass}>
+
+                                Politiku privatnosti
+
+                            </Link>
+
+                            .
+
+                        </span>
+
+                    </label>
+
+
+
+                    {state?.error ? (
+
+                        <p className={`${authErrorClass} auth-reveal auth-reveal-delay-6`}>{state.error}</p>
+
+                    ) : null}
+
+                    {state?.success ? (
+
+                        <p className={`${authSuccessClass} auth-reveal auth-reveal-delay-6`}>{state.success}</p>
+
+                    ) : null}
+
+
+
+                    <AuthSubmitButton
+
+                        type="submit"
+
+                        disabled={isPending}
+
+                        showArrow={!isPending}
+
+                        className="auth-reveal auth-reveal-delay-7 mt-1"
+
+                    >
+
+                        {isPending ? "Kreiranje naloga…" : "Kreiraj nalog"}
+
+                    </AuthSubmitButton>
+
+                </form>
+
+
+
+                <p className="auth-reveal auth-reveal-delay-7 mt-6 text-center text-sm text-slate-400">
+
+                    Već imate nalog?{" "}
+
+                    <Link href="/login" className={authLinkClass}>
+
+                        Prijavite se
+
+                    </Link>
+
                 </p>
-              )}
 
-              {state?.success && (
-                <p className="rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-700">
-                  {state.success}
-                </p>
-              )}
+            </AuthCard>
 
-              <Button
-                type="submit"
-                backgroundColor="#137FEC"
-                disabled={isPending}
-                className="w-full py-3.5 text-base rounded-xl mt-1"
-              >
-                {isPending ? "Kreiranje naloga…" : "Kreiraj nalog"}
-              </Button>
-            </form>
+        </AuthPageShell>
 
-            <p className="mt-8 text-center text-sm text-slate-500">
-              Već imate nalog?{" "}
-              <Link href="/login" className="font-semibold text-fplava hover:underline">
-                Prijavite se
-              </Link>
-            </p>
-          </div>
-        </div>
+    );
 
-        <p className="pb-6 text-center text-xs text-slate-400 lg:hidden">
-          FakturaOne — jednostavno fakturisanje
-        </p>
-      </div>
-    </div>
-  );
 }
+
