@@ -20,5 +20,149 @@
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Landing page animations */
+@keyframes landing-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes landing-glow-pulse-text {
+  0%,
+  100% {
+    text-shadow:
+      0 0 20px rgba(0, 229, 255, 0.35),
+      0 0 40px rgba(0, 229, 255, 0.15);
+  }
+  50% {
+    text-shadow:
+      0 0 28px rgba(0, 229, 255, 0.55),
+      0 0 56px rgba(0, 229, 255, 0.25);
+  }
+}
+
+@keyframes landing-glow-pulse-orb {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+@keyframes landing-glow-pulse-btn {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(0, 229, 255, 0.45);
+  }
+}
+
+.landing-reveal {
+  opacity: 0;
+  animation: landing-fade-in-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.landing-reveal-delay-1 {
+  animation-delay: 0.1s;
+}
+.landing-reveal-delay-2 {
+  animation-delay: 0.25s;
+}
+.landing-reveal-delay-3 {
+  animation-delay: 0.4s;
+}
+.landing-reveal-delay-4 {
+  animation-delay: 0.55s;
+}
+.landing-reveal-delay-5 {
+  animation-delay: 0.7s;
+}
+
+.landing-float {
+  animation: landing-float 5.5s ease-in-out infinite;
+}
+
+.landing-glow-text {
+  animation: landing-glow-pulse-text 3s ease-in-out infinite;
+}
+
+.landing-glow-orb {
+  animation: landing-glow-pulse-orb 4s ease-in-out infinite;
+}
+
+.landing-glow-btn {
+  animation: landing-glow-pulse-btn 3s ease-in-out infinite;
+}
+
+.landing-scroll-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-card-hover {
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.landing-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 36px rgba(0, 229, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal,
+  .landing-scroll-reveal {
+    opacity: 1;
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+
+  .landing-float,
+  .landing-glow-text,
+  .landing-glow-orb,
+  .landing-glow-btn {
+    animation: none;
+  }
+
+  .landing-card-hover:hover {
+    transform: none;
+  }
 }
