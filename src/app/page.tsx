@@ -52,7 +52,7 @@ const features = [
 
 export default function LandingPage() {
     return (
-        <div className="bg-[#05070A] text-white">
+        <div className="min-h-dvh bg-[#05070A] text-white">
             <div className="landing-reveal landing-reveal-delay-1">
                 <Navbar variant="dark" />
             </div>

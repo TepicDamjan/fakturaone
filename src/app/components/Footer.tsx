@@ -4,7 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AnimateIn from '@/app/components/landing/AnimateIn';
 
-const AUTH_PATHS = ['/login', '/registracija'];
+const AUTH_PATHS = ["/login", "/registracija"];
+
+function hideFooter(pathname: string): boolean {
+  if (AUTH_PATHS.includes(pathname)) return true;
+  if (pathname.startsWith("/dashboard")) return true;
+  if (pathname === "/izbor-firme") return true;
+  return false;
+}
 
 const footerLinks = [
     { href: '#', label: 'Politika privatnosti' },
@@ -17,7 +24,7 @@ export default function Footer() {
     const pathname = usePathname();
     const year = new Date().getFullYear();
 
-    if (AUTH_PATHS.includes(pathname)) {
+    if (hideFooter(pathname)) {
         return null;
     }
 

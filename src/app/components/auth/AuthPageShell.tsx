@@ -10,7 +10,7 @@ export default function AuthPageShell({ children, showBackLink = false }: AuthPa
     const year = new Date().getFullYear();
 
     return (
-        <section className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:py-12">
+        <section className="relative flex min-h-dvh flex-col items-center justify-center bg-[#05070A] px-4 py-8 sm:py-12">
             <div
                 className="auth-glow-orb pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_40%,rgba(0,229,255,0.08),transparent)]"
                 aria-hidden

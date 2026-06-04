@@ -1,0 +1,270 @@
+import type { FakturaListItem, FakturaStatus } from "@/lib/fakture";
+
+export type IzvjestajPeriod =
+  | "ovaj_mjesec"
+  | "prosli_mjesec"
+  | "zadnjih_6"
+  | "ova_godina";
+
+export const IZVJESTAJ_PERIODI: { id: IzvjestajPeriod; label: string }[] = [
+  { id: "ovaj_mjesec", label: "Ovaj mjesec" },
+  { id: "prosli_mjesec", label: "Prošli mjesec" },
+  { id: "zadnjih_6", label: "Zadnjih 6 mjeseci" },
+  { id: "ova_godina", label: "Ova godina" },
+];
+
+export function parseIzvjestajPeriod(
+  value: string | null | undefined
+): IzvjestajPeriod {
+  if (
+    value === "ovaj_mjesec" ||
+    value === "prosli_mjesec" ||
+    value === "zadnjih_6" ||
+    value === "ova_godina"
+  ) {
+    return value;
+  }
+  return "zadnjih_6";
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** Lokalni YYYY-MM-DD bez UTC pomaka. */
+export function toIsoDateLocal(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+export type PeriodRange = {
+  period: IzvjestajPeriod;
+  label: string;
+  start: string;
+  end: string;
+};
+
+export function periodRange(period: IzvjestajPeriod, today = new Date()): PeriodRange {
+  const y = today.getFullYear();
+  const m = today.getMonth();
+
+  if (period === "ovaj_mjesec") {
+    const start = new Date(y, m, 1);
+    const end = new Date(y, m + 1, 0);
+    return {
+      period,
+      label: "Ovaj mjesec",
+      start: toIsoDateLocal(start),
+      end: toIsoDateLocal(end),
+    };
+  }
+
+  if (period === "prosli_mjesec") {
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 0);
+    return {
+      period,
+      label: "Prošli mjesec",
+      start: toIsoDateLocal(start),
+      end: toIsoDateLocal(end),
+    };
+  }
+
+  if (period === "ova_godina") {
+    const start = new Date(y, 0, 1);
+    const end = new Date(y, 11, 31);
+    return {
+      period,
+      label: String(y),
+      start: toIsoDateLocal(start),
+      end: toIsoDateLocal(end),
+    };
+  }
+
+  const start = new Date(y, m - 5, 1);
+  const end = new Date(y, m + 1, 0);
+  return {
+    period: "zadnjih_6",
+    label: "Zadnjih 6 mjeseci",
+    start: toIsoDateLocal(start),
+    end: toIsoDateLocal(end),
+  };
+}
+
+export function uPeriodu(
+  datumIzdavanja: string | null | undefined,
+  range: PeriodRange
+): boolean {
+  if (!datumIzdavanja?.trim()) return false;
+  const d = datumIzdavanja.trim().slice(0, 10);
+  return d >= range.start && d <= range.end;
+}
+
+export function jeFinansijskaFaktura(f: FakturaListItem): boolean {
+  return f.tipDokumenta === "faktura";
+}
+
+export function filtrirajZaPeriod(
+  fakture: FakturaListItem[],
+  range: PeriodRange
+): FakturaListItem[] {
+  return fakture.filter(
+    (f) => jeFinansijskaFaktura(f) && uPeriodu(f.datumIzdavanja, range)
+  );
+}
+
+export type IzvjestajKpi = {
+  fakturisano: number;
+  placeno: number;
+  naCekanju: number;
+  kasni: number;
+  brojFaktura: number;
+};
+
+export function izracunajKpi(fakture: FakturaListItem[]): IzvjestajKpi {
+  let fakturisano = 0;
+  let placeno = 0;
+  let naCekanju = 0;
+  let kasni = 0;
+
+  for (const f of fakture) {
+    fakturisano += f.iznos;
+    if (f.status === "placeno") placeno += f.iznos;
+    else if (f.status === "na_cekanju") naCekanju += f.iznos;
+    else if (f.status === "kasni") kasni += f.iznos;
+  }
+
+  return {
+    fakturisano,
+    placeno,
+    naCekanju,
+    kasni,
+    brojFaktura: fakture.length,
+  };
+}
+
+export type MesecniBucket = {
+  key: string;
+  label: string;
+  iznos: number;
+};
+
+function mesecLabel(key: string): string {
+  const [y, mo] = key.split("-");
+  const d = new Date(`${y}-${mo}-01T12:00:00`);
+  return d.toLocaleDateString("bs-Latn-BA", { month: "short", year: "numeric" });
+}
+
+/** Prihod po mjesecu (samo plaćene fakture u periodu). */
+export function prihodPoMesecu(
+  fakture: FakturaListItem[],
+  range: PeriodRange
+): MesecniBucket[] {
+  const map = new Map<string, number>();
+
+  const [sy, sm] = range.start.split("-").map(Number);
+  const [ey, em] = range.end.split("-").map(Number);
+  let cy = sy;
+  let cm = sm;
+  while (cy < ey || (cy === ey && cm <= em)) {
+    const key = `${cy}-${pad2(cm)}`;
+    map.set(key, 0);
+    cm += 1;
+    if (cm > 12) {
+      cm = 1;
+      cy += 1;
+    }
+  }
+
+  for (const f of fakture) {
+    if (f.status !== "placeno") continue;
+    const d = f.datumIzdavanja?.slice(0, 7);
+    if (!d || !map.has(d)) continue;
+    map.set(d, (map.get(d) ?? 0) + f.iznos);
+  }
+
+  return [...map.entries()].map(([key, iznos]) => ({
+    key,
+    label: mesecLabel(key),
+    iznos,
+  }));
+}
+
+export type TopKlijentRed = {
+  naziv: string;
+  iznos: number;
+  brojFaktura: number;
+};
+
+export function topKlijenti(
+  fakture: FakturaListItem[],
+  limit = 8
+): TopKlijentRed[] {
+  const map = new Map<string, { iznos: number; broj: number }>();
+
+  for (const f of fakture) {
+    if (f.status !== "placeno") continue;
+    const naziv = f.klijentNaziv?.trim() || "Bez klijenta";
+    const cur = map.get(naziv) ?? { iznos: 0, broj: 0 };
+    map.set(naziv, {
+      iznos: cur.iznos + f.iznos,
+      broj: cur.broj + 1,
+    });
+  }
+
+  return [...map.entries()]
+    .map(([naziv, v]) => ({
+      naziv,
+      iznos: v.iznos,
+      brojFaktura: v.broj,
+    }))
+    .sort((a, b) => b.iznos - a.iznos)
+    .slice(0, limit);
+}
+
+const NEPLACENI_STATUSI: FakturaStatus[] = ["na_cekanju", "kasni"];
+
+export function neplaceneFakture(
+  fakture: FakturaListItem[]
+): FakturaListItem[] {
+  return fakture
+    .filter((f) => NEPLACENI_STATUSI.includes(f.status))
+    .sort((a, b) => {
+      const da = a.datumPlacanja || a.datumIzdavanja || "";
+      const db = b.datumPlacanja || b.datumIzdavanja || "";
+      return da.localeCompare(db);
+    });
+}
+
+export type IzvjestajSnapshot = {
+  range: PeriodRange;
+  valuta: string;
+  kpi: IzvjestajKpi;
+  poMesecu: MesecniBucket[];
+  topKlijenti: TopKlijentRed[];
+  neplacene: FakturaListItem[];
+};
+
+export function buildIzvjestajSnapshot(
+  sveFakture: FakturaListItem[],
+  period: IzvjestajPeriod,
+  valuta = "BAM"
+): IzvjestajSnapshot {
+  const range = periodRange(period);
+  const uPeriodu = filtrirajZaPeriod(sveFakture, range);
+
+  return {
+    range,
+    valuta,
+    kpi: izracunajKpi(uPeriodu),
+    poMesecu: prihodPoMesecu(uPeriodu, range),
+    topKlijenti: topKlijenti(uPeriodu),
+    neplacene: neplaceneFakture(uPeriodu),
+  };
+}
+
+export function formatIzvjestajIznos(
+  amount: number,
+  valuta: string
+): string {
+  return `${Math.round(amount).toLocaleString("bs-Latn-BA")} ${valuta}`;
+}
