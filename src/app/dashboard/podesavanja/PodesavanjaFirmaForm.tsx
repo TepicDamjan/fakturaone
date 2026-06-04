@@ -355,10 +355,10 @@ export default function PodesavanjaFirmaForm({ initialFirma, initialRacuni }: Pr
                 <p className="text-sm text-[#64748B] mt-1 leading-relaxed">
                   Za pitanja o podešavanjima firme i fakturisanju pišite na{" "}
                   <a
-                    href="mailto:podrska@fakturaone.ba"
+                    href="mailto:podrska@fakturaone.app"
                     className="text-fplava font-medium hover:underline"
                   >
-                    podrska@fakturaone.ba
+                    podrska@fakturaone.app
                   </a>
                   .
                 </p>

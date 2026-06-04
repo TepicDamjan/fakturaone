@@ -57,13 +57,13 @@ export default function LandingPage() {
                 <Navbar variant="dark" />
             </div>
 
-            <section id="Hero" className="relative overflow-hidden">
+            <section id="Hero" className="relative overflow-hidden pb-0">
                 <div
                     className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(0,229,255,0.12),transparent)]"
                     aria-hidden
                 />
 
-                <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-8 pt-12 text-center sm:px-6 sm:pt-16 md:pt-20">
+                <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-0 pt-12 text-center sm:px-6 sm:pt-16 md:pt-20">
                     <h1 className="landing-reveal landing-reveal-delay-1 max-w-4xl text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                         Moderno rešenje za vaše{" "}
                         <span className="text-[#00E5FF] landing-glow-text">fakturisanje</span>
@@ -93,11 +93,11 @@ export default function LandingPage() {
 
                     <div className="relative mt-12 w-full max-w-4xl sm:mt-16 md:mt-20">
                         <div
-                            className="landing-glow-orb pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[90%] rounded-full bg-[#00E5FF]/20 blur-[80px]"
+                            className="landing-glow-orb pointer-events-none absolute left-1/2 top-[45%] h-[60%] w-[90%] -translate-x-1/2 rounded-full bg-[#00E5FF]/20 blur-[80px]"
                             aria-hidden
                         />
                         <div className="landing-reveal landing-reveal-delay-4 relative z-10">
-                            <div className="landing-float">
+                            <div className="landing-float relative">
                                 <Image
                                     src="/HeroImage.png"
                                     alt="Pregled FakturaOne platforme za fakturisanje"
@@ -106,13 +106,22 @@ export default function LandingPage() {
                                     priority
                                     className="mx-auto h-auto w-full drop-shadow-[0_0_48px_rgba(0,229,255,0.35)]"
                                 />
+                                <div
+                                    className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[40%] min-h-[140px] max-h-[220px] bg-gradient-to-b from-transparent via-[#05070A]/80 to-[#05070A]"
+                                    aria-hidden
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-32 bg-gradient-to-b from-transparent to-[#05070A] sm:h-40"
+                    aria-hidden
+                />
             </section>
 
-            <section id="features" className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+            <section id="features" className="relative -mt-8 px-4 pb-16 pt-20 sm:-mt-12 sm:px-6 sm:pb-24 sm:pt-28 lg:px-8">
                 <div className="mx-auto max-w-6xl text-center">
                     <AnimateIn>
                         <h2 className="text-2xl font-bold sm:text-4xl">Sve što vam je potrebno</h2>

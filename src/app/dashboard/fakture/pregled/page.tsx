@@ -94,10 +94,10 @@ export default function FakturaPregledStranica() {
     if (typeof window !== "undefined") window.print();
   };
 
-  const handleEmail = () => {
-    if (!primalac?.email) return;
-    const sub = encodeURIComponent(`${tipMeta.naziv} ${brojFakture}`);
-    window.location.href = `mailto:${primalac.email}?subject=${sub}`;
+  const nacrtPdfEmailInfo = () => {
+    window.alert(
+      "Sačuvajte dokument da biste preuzeli PDF ili poslali email klijentu."
+    );
   };
 
   if (data === undefined) {
@@ -164,7 +164,7 @@ export default function FakturaPregledStranica() {
             </button>
             <button
               type="button"
-              onClick={handlePrint}
+              onClick={nacrtPdfEmailInfo}
               className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -196,7 +196,7 @@ export default function FakturaPregledStranica() {
             </button>
             <button
               type="button"
-              onClick={handleEmail}
+              onClick={nacrtPdfEmailInfo}
               disabled={!primalac?.email}
               className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >

@@ -433,6 +433,7 @@ function FakturaRow({
         <FakturaAkcijeMeni
           fakturaId={f.id}
           broj={f.broj}
+          tipDokumenta={f.tipDokumenta}
           klijentEmail={f.klijentEmail}
           menuOpen={menuOpen}
           onToggleMenu={onToggleMenu}

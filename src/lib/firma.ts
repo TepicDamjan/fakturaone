@@ -119,7 +119,7 @@ const IZDAVAC_FALLBACK = {
   naziv: "FakturaOne DOO",
   tagline: "Jednostavno fakturisanje",
   adresa: "Sarajevo, Bosna i Hercegovina",
-  email: "billing@fakturaone.ba",
+  email: "billing@fakturaone.app",
   pib: null as string | null,
   maticniBroj: null as string | null,
   telefon: null as string | null,

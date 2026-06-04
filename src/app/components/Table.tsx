@@ -167,6 +167,7 @@ export default function Table({ invoices, footerSummary }: TableProps) {
                     <FakturaAkcijeMeni
                       fakturaId={invoice.id}
                       broj={invoice.broj}
+                      tipDokumenta={invoice.tipDokumenta}
                       klijentEmail={invoice.clientEmail}
                       menuOpen={openMenuId === invoice.id}
                       onToggleMenu={() =>

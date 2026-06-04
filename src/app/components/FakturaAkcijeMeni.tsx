@@ -4,10 +4,16 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { obrisiFakturu, promeniStatusFakture } from "@/app/dashboard/fakture/actions";
+import { posaljiFakturuEmail } from "@/app/dashboard/fakture/emailActions";
+import { preuzmiDokumentPdf } from "@/lib/dokument/dokumentClient";
+import { dokumentPdfFilenameZa } from "@/lib/dokument/dokumentModel";
+import PosaljiDokumentModal from "@/app/components/PosaljiDokumentModal";
+import { metaZaTip, parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 export type FakturaAkcijeMeniProps = {
   fakturaId: string;
   broj: string;
+  tipDokumenta?: TipDokumenta;
   klijentEmail: string;
   menuOpen: boolean;
   onToggleMenu: () => void;
@@ -23,6 +29,7 @@ const DEFAULT_TRIGGER =
 export default function FakturaAkcijeMeni({
   fakturaId,
   broj,
+  tipDokumenta: tipRaw,
   klijentEmail,
   menuOpen,
   onToggleMenu,
@@ -30,7 +37,10 @@ export default function FakturaAkcijeMeni({
   routerRefresh,
   triggerClassName = DEFAULT_TRIGGER,
 }: FakturaAkcijeMeniProps) {
+  const tipDokumenta = parseTipDokumenta(tipRaw);
+  const tipMeta = metaZaTip(tipDokumenta);
   const [busy, setBusy] = useState(false);
+  const [emailModal, setEmailModal] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const MENU_WIDTH = 220;
@@ -114,11 +124,19 @@ export default function FakturaAkcijeMeni({
           </svg>
           Pregledaj
         </Link>
-        <Link
-          href={`/dashboard/fakture/${fakturaId}/pregled?print=1`}
+        <button
+          type="button"
           role="menuitem"
-          onClick={onCloseMenu}
-          className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors"
+          disabled={busy}
+          onClick={async () => {
+            onCloseMenu();
+            const res = await preuzmiDokumentPdf(
+              fakturaId,
+              dokumentPdfFilenameZa(tipDokumenta, broj)
+            );
+            if (!res.ok) window.alert(res.error);
+          }}
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-50"
         >
           <svg
             className="shrink-0 text-[#64748B]"
@@ -137,16 +155,15 @@ export default function FakturaAkcijeMeni({
             />
           </svg>
           Preuzmi PDF
-        </Link>
+        </button>
         <button
           type="button"
           role="menuitem"
           disabled={!klijentEmail?.trim()}
           onClick={() => {
             if (!klijentEmail?.trim()) return;
-            const sub = encodeURIComponent(`Faktura #${broj}`);
-            window.location.href = `mailto:${klijentEmail.trim()}?subject=${sub}`;
             onCloseMenu();
+            setEmailModal(true);
           }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -284,6 +301,18 @@ export default function FakturaAkcijeMeni({
 
   return (
     <>
+      <PosaljiDokumentModal
+        open={emailModal}
+        onClose={() => setEmailModal(false)}
+        onConfirm={async (poruka) => {
+          const res = await posaljiFakturuEmail(fakturaId, poruka || null);
+          if (res.ok) routerRefresh();
+          return res;
+        }}
+        brojDokumenta={broj}
+        primalacEmail={klijentEmail.trim()}
+        nazivDokumenta={tipMeta.naziv.toLowerCase()}
+      />
       <div className="inline-flex justify-end" data-faktura-actions={fakturaId}>
         <button
           ref={triggerRef}

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import DokumentPdfEmailAkcije from "@/app/components/DokumentPdfEmailAkcije";
 import {
   type FakturaSaStavkama,
   type FakturaStatus,
@@ -65,7 +66,6 @@ const STATUS_BADGE: Record<FakturaStatus, string> = {
 
 export default function SacuvanaFakturaPregledPage() {
   const params = useParams();
-  const router = useRouter();
   const id = typeof params.id === "string" ? params.id : "";
 
   const [payload, setPayload] = useState<FakturaSaStavkama | null | undefined>(
@@ -101,28 +101,7 @@ export default function SacuvanaFakturaPregledPage() {
   const pdvIznos = osnovica * (pdvProcenat / 100);
   const ukupno = osnovica + pdvIznos - popust;
 
-  const handlePrint = () => {
-    if (typeof window !== "undefined") window.print();
-  };
-
   const primalac = payload?.klijent ?? null;
-
-  const handleEmail = () => {
-    if (!primalac?.email) return;
-    const sub = encodeURIComponent(`${tipMeta.naziv} ${brojFakture}`);
-    window.location.href = `mailto:${primalac.email}?subject=${sub}`;
-  };
-
-  useEffect(() => {
-    if (payload === undefined || !f || typeof window === "undefined") return;
-    const sp = new URLSearchParams(window.location.search);
-    if (sp.get("print") !== "1") return;
-    const t = window.setTimeout(() => {
-      window.print();
-      router.replace(`/dashboard/fakture/${id}/pregled`, { scroll: false });
-    }, 300);
-    return () => window.clearTimeout(t);
-  }, [payload, f, id, router]);
 
   if (payload === undefined) {
     return (
@@ -186,39 +165,14 @@ export default function SacuvanaFakturaPregledPage() {
               </svg>
               Nazad
             </Link>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Preuzmi PDF
-            </button>
-            <button
-              type="button"
-              onClick={handleEmail}
-              disabled={!primalac?.email}
-              className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Pošalji e-mail
-            </button>
+            <DokumentPdfEmailAkcije
+              fakturaId={id}
+              broj={brojFakture}
+              tipDokumenta={tipDokumenta}
+              primalacEmail={primalac?.email}
+              showPrint
+              onPrint={() => window.print()}
+            />
           </div>
         </div>
       </header>

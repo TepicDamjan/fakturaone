@@ -377,7 +377,7 @@ export default function PodesavanjaProfil({
       {deaktivirajOpen ? (
         <InfoModal
           title="Deaktivacija naloga"
-          opis="Za deaktivaciju naloga kontaktirajte podršku na podrska@fakturaone.ba."
+          opis="Za deaktivaciju naloga kontaktirajte podršku na podrska@fakturaone.app."
           onClose={() => setDeaktivirajOpen(false)}
         />
       ) : null}
