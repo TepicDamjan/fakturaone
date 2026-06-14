@@ -1,10 +1,53 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Button from "@/app/components/Button";
 import Navbar from "@/app/components/Navbar";
 import FeatureCard from "@/app/components/FeatureCard";
 import PricingCard from "@/app/components/PricingCard";
+import { PLAN_DEFS, PLANS_ORDER } from "@/lib/plans";
 import AnimateIn from "@/app/components/landing/AnimateIn";
 import Image from "next/image";
+import { DEFAULT_DESCRIPTION, getSiteUrl, SITE_NAME } from "@/lib/site";
+
+export const metadata: Metadata = {
+    title: "Online fakturisanje za preduzeća u Srbiji",
+    description:
+        "Ubrzajte naplatu, pratite finansije i upravljajte klijentima sa lakoćom. Profesionalne fakture u nekoliko klikova.",
+    openGraph: {
+        title: "Online fakturisanje za preduzeća u Srbiji | FakturaOne",
+        description: DEFAULT_DESCRIPTION,
+        url: getSiteUrl(),
+    },
+};
+
+const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "Organization",
+            name: SITE_NAME,
+            url: getSiteUrl(),
+            email: "podrska@fakturaone.app",
+        },
+        {
+            "@type": "SoftwareApplication",
+            name: SITE_NAME,
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web",
+            offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "RSD",
+                description: "Besplatan starter paket",
+            },
+        },
+        {
+            "@type": "WebSite",
+            name: SITE_NAME,
+            url: getSiteUrl(),
+        },
+    ],
+};
 
 const features = [
     {
@@ -53,6 +96,10 @@ const features = [
 export default function LandingPage() {
     return (
         <div className="min-h-[calc(100dvh-2.5rem)] bg-[#05070A] text-white">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <div className="landing-reveal landing-reveal-delay-1">
                 <Navbar variant="dark" />
             </div>
@@ -154,55 +201,31 @@ export default function LandingPage() {
                         </p>
                     </AnimateIn>
 
-                    <div className="mt-12 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3 lg:gap-8">
-                        <AnimateIn delay={0}>
-                            <PricingCard
-                                name="Starter"
-                                price="0€"
-                                period="/mesečno"
-                                features={[
-                                    "Do 10 faktura mesečno",
-                                    "Osnovni šabloni",
-                                    "Email podrška",
-                                    "Izveštaji osnovnog nivoa",
-                                ]}
-                                ctaLabel="Započnite besplatno"
-                                ctaHref="/registracija"
-                            />
-                        </AnimateIn>
-                        <AnimateIn delay={120}>
-                            <PricingCard
-                                name="Professional"
-                                price="15€"
-                                period="/mesečno"
-                                highlighted
-                                features={[
-                                    "Neograničene fakture",
-                                    "Prilagođeni šabloni",
-                                    "Automatsko slanje",
-                                    "Napredni izveštaji",
-                                    "Prioritetna podrška",
-                                ]}
-                                ctaLabel="Izaberite Professional"
-                                ctaHref="/registracija"
-                            />
-                        </AnimateIn>
-                        <AnimateIn delay={240}>
-                            <PricingCard
-                                name="Enterprise"
-                                price="Dogovor"
-                                features={[
-                                    "Sve iz Professional paketa",
-                                    "Više korisnika i timova",
-                                    "API integracije",
-                                    "Posvećen account manager",
-                                    "SLA i enterprise podrška",
-                                ]}
-                                ctaLabel="Kontaktirajte nas"
-                                ctaHref="#kontakt"
-                                ctaVariant="outline"
-                            />
-                        </AnimateIn>
+                    <div className="mt-12 grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-4 lg:gap-6">
+                        {PLANS_ORDER.map((tier, index) => {
+                            const plan = PLAN_DEFS[tier];
+                            const cta =
+                                tier === "enterprise"
+                                    ? { label: "Kontaktirajte nas", href: "#kontakt", variant: "outline" as const }
+                                    : tier === "starter"
+                                      ? { label: "Započnite besplatno", href: "/registracija", variant: "primary" as const }
+                                      : { label: `Izaberite ${plan.naziv}`, href: "/registracija", variant: "primary" as const };
+
+                            return (
+                                <AnimateIn key={tier} delay={index * 120}>
+                                    <PricingCard
+                                        name={plan.naziv}
+                                        price={plan.cenaTekst}
+                                        period={plan.cenaMesecno != null ? "/mesečno" : undefined}
+                                        highlighted={plan.istaknuto}
+                                        features={plan.features}
+                                        ctaLabel={cta.label}
+                                        ctaHref={cta.href}
+                                        ctaVariant={cta.variant}
+                                    />
+                                </AnimateIn>
+                            );
+                        })}
                     </div>
                 </div>
             </section>

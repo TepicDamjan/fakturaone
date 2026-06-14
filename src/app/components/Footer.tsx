@@ -14,10 +14,10 @@ function hideFooter(pathname: string): boolean {
 }
 
 const footerLinks = [
-    { href: '#', label: 'Politika privatnosti' },
-    { href: '#', label: 'Uslovi korišćenja' },
-    { href: '#', label: 'Bezbednost' },
-    { href: '#', label: 'Centar za pomoć' },
+    { href: '/politika-privatnosti', label: 'Politika privatnosti' },
+    { href: '/uslovi-koriscenja', label: 'Uslovi korišćenja' },
+    { href: '/bezbednost', label: 'Bezbednost' },
+    { href: '/pomoc', label: 'Centar za pomoć' },
 ];
 
 export default function Footer() {

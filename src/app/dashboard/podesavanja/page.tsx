@@ -2,6 +2,7 @@ import DashboardHeader from "@/app/components/DashboardHeader";
 import PodesavanjaTabs from "@/app/dashboard/podesavanja/PodesavanjaTabs";
 import { logout } from "@/app/login/actions";
 import { fetchPodesavanjaFirme } from "@/lib/firma.server";
+import { fetchPretplataPregled, defaultPretplataPregled } from "@/lib/pretplata.server";
 import { createClient } from "@/utils/supabase/server";
 
 function metaText(value: unknown): string {
@@ -35,6 +36,17 @@ export default async function Podesavanja() {
   } catch {
     firma = null;
     racuni = [];
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  let pretplata = defaultPretplataPregled();
+  try {
+    pretplata = await fetchPretplataPregled(supabase, user.id);
+  } catch {
+    /* tabela pretplate možda nije migrirana */
   }
 
   const meta = (user?.user_metadata as Record<string, unknown> | undefined) ?? {};
@@ -72,6 +84,7 @@ export default async function Podesavanja() {
           initialFirma={firma}
           initialRacuni={racuni}
           korisnik={korisnik}
+          pretplata={pretplata}
         />
       </main>
     </>

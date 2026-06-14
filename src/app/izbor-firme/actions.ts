@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { setAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { proveriLimitFirme } from "@/lib/pretplata.server";
 import { greskaAkoFirmaPostoji } from "@/lib/preduzeceUnique";
 
 const LOGO_BUCKET = "firma-logos";
@@ -101,6 +102,11 @@ export async function kreirajFirmu(
   });
   if (konflikt) {
     return { error: konflikt };
+  }
+
+  const limitCheck = await proveriLimitFirme(supabase, user.id);
+  if (!limitCheck.ok) {
+    return { error: limitCheck.error };
   }
 
   const { data: novaFirma, error: insertErr } = await supabase

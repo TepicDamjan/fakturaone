@@ -6,6 +6,7 @@ import { getAktivnaFirmaId, setAktivnaFirmaId } from "@/lib/aktivnaFirma.server"
 import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 import type { PodesavanjaFirme } from "@/lib/firma";
 import { greskaAkoFirmaPostoji } from "@/lib/preduzeceUnique";
+import { proveriLimitFirme } from "@/lib/pretplata.server";
 
 const LOGO_BUCKET = "firma-logos";
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
@@ -287,6 +288,11 @@ export async function sacuvajPodesavanjaFirme(
     }
     targetFirmaId = existing.id;
   } else {
+    const limitCheck = await proveriLimitFirme(supabase, user.id);
+    if (!limitCheck.ok) {
+      return { ok: false, error: limitCheck.error };
+    }
+
     const { data: inserted, error } = await supabase
       .from("firma")
       .insert(firmaRow)

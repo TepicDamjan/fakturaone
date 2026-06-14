@@ -271,6 +271,52 @@ export type Database = {
                     }
                 ];
             };
+            pretplate: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    plan: Database["public"]["Enums"]["plan_tier"];
+                    status: Database["public"]["Enums"]["subscription_status"];
+                    trial_ends_at: string | null;
+                    current_period_end: string | null;
+                    stripe_customer_id: string | null;
+                    stripe_subscription_id: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    plan?: Database["public"]["Enums"]["plan_tier"];
+                    status?: Database["public"]["Enums"]["subscription_status"];
+                    trial_ends_at?: string | null;
+                    current_period_end?: string | null;
+                    stripe_customer_id?: string | null;
+                    stripe_subscription_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    plan?: Database["public"]["Enums"]["plan_tier"];
+                    status?: Database["public"]["Enums"]["subscription_status"];
+                    trial_ends_at?: string | null;
+                    current_period_end?: string | null;
+                    stripe_customer_id?: string | null;
+                    stripe_subscription_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "pretplate_user_id_fkey";
+                        columns: ["user_id"];
+                        referencedRelation: "users";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
             stavke_fakture: {
                 Row: {
                     id: string;
@@ -342,6 +388,8 @@ export type Database = {
         Enums: {
             faktura_status: "nacrt" | "na_cekanju" | "placeno" | "kasni";
             tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+            plan_tier: "starter" | "professional" | "business" | "enterprise";
+            subscription_status: "trialing" | "active" | "past_due" | "canceled" | "expired";
         };
         CompositeTypes: Record<string, never>;
     };

@@ -2,16 +2,43 @@ import DashboardHeader from "@/app/components/DashboardHeader";
 import IzvjestajiFilter from "@/app/dashboard/izvjestaji/IzvjestajiFilter";
 import IzvjestajiKpi from "@/app/dashboard/izvjestaji/IzvjestajiKpi";
 import IzvjestajiNeplacene from "@/app/dashboard/izvjestaji/IzvjestajiNeplacene";
+import IzvjestajiPlanGate from "@/app/dashboard/izvjestaji/IzvjestajiPlanGate";
 import IzvjestajiPrihodChart from "@/app/dashboard/izvjestaji/IzvjestajiPrihodChart";
 import IzvjestajiTopKlijenti from "@/app/dashboard/izvjestaji/IzvjestajiTopKlijenti";
 import { fetchIzvjestajSnapshot } from "@/lib/izvjestaji.server";
 import { parseIzvjestajPeriod } from "@/lib/izvjestaji";
+import { proveriPristupIzvestajima } from "@/lib/pretplata.server";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   searchParams: Promise<{ period?: string }>;
 };
 
 export default async function IzvjestajiPage({ searchParams }: PageProps) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const pristup = await proveriPristupIzvestajima(supabase, user.id);
+
+  if (!pristup.ok) {
+    return (
+      <>
+        <DashboardHeader
+          title="Izveštaji"
+          subtitle="Finansijski pregled fakturisanja i naplate"
+        />
+        <IzvjestajiPlanGate pretplata={pristup.pregled} />
+      </>
+    );
+  }
+
   const sp = await searchParams;
   const period = parseIzvjestajPeriod(sp.period);
   const snapshot = await fetchIzvjestajSnapshot(sp.period);

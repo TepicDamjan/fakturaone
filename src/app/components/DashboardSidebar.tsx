@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import PlanBadge from '@/app/components/PlanBadge';
 import { useAuthUser } from '@/lib/useAuthUser';
 import { initialsFromFirma } from '@/lib/firma';
+import type { PretplataPregled } from '@/lib/pretplata.types';
 
 export type AktivnaFirmaPregled = {
     naziv: string;
@@ -40,14 +42,17 @@ type DashboardSidebarProps = {
     mobileOpen?: boolean;
     onMobileClose?: () => void;
     aktivnaFirma?: AktivnaFirmaPregled;
+    pretplata: PretplataPregled;
 };
 
 function SidebarContent({
     onNavigate,
     aktivnaFirma,
+    pretplata,
 }: {
     onNavigate?: () => void;
     aktivnaFirma?: AktivnaFirmaPregled;
+    pretplata: PretplataPregled;
 }) {
     const pathname = usePathname();
     const { ime, email, loading, avatarUrl } = useAuthUser();
@@ -67,7 +72,7 @@ function SidebarContent({
                     </div>
                     <div className="flex flex-col min-w-0">
                         <span className="text-[#0F172A] font-bold text-lg leading-tight">Faktura<span className="text-[#0F172A]">Ona</span></span>
-                        <span className="text-[#137FEC] text-xs font-semibold">Pro Plan</span>
+                        <PlanBadge pretplata={pretplata} />
                     </div>
                 </div>
 
@@ -225,6 +230,7 @@ export default function DashboardSidebar({
     mobileOpen = false,
     onMobileClose,
     aktivnaFirma = null,
+    pretplata,
 }: DashboardSidebarProps) {
     const close = onMobileClose ?? (() => {});
 
@@ -235,7 +241,7 @@ export default function DashboardSidebar({
         <>
             {/* Desktop sidebar */}
             <aside className={`hidden lg:flex shrink-0 sticky top-0 h-screen ${panelClass}`}>
-                <SidebarContent aktivnaFirma={aktivnaFirma} />
+                <SidebarContent aktivnaFirma={aktivnaFirma} pretplata={pretplata} />
             </aside>
 
             {/* Mobile drawer */}
@@ -260,7 +266,7 @@ export default function DashboardSidebar({
                                 </svg>
                             </button>
                         </div>
-                        <SidebarContent onNavigate={close} aktivnaFirma={aktivnaFirma} />
+                        <SidebarContent onNavigate={close} aktivnaFirma={aktivnaFirma} pretplata={pretplata} />
                     </aside>
                 </div>
             ) : null}

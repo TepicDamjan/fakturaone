@@ -5,6 +5,7 @@ import PodesavanjaFirmaForm from "@/app/dashboard/podesavanja/PodesavanjaFirmaFo
 import PodesavanjaProfil from "@/app/dashboard/podesavanja/PodesavanjaProfil";
 import PodesavanjaPlacanja from "@/app/dashboard/podesavanja/PodesavanjaPlacanja";
 import type { BankovniRacunRow, FirmaRow } from "@/lib/firma";
+import type { PretplataPregled } from "@/lib/pretplata.types";
 
 export type TabId = "profil" | "firma" | "obavestenja" | "placanja";
 
@@ -18,6 +19,7 @@ type Props = {
     pozicija: string;
     avatarUrl: string | null;
   };
+  pretplata: PretplataPregled;
 };
 
 const TABS: { id: TabId; label: string; disabled?: boolean }[] = [
@@ -31,6 +33,7 @@ export default function PodesavanjaTabs({
   initialFirma,
   initialRacuni,
   korisnik,
+  pretplata,
 }: Props) {
   const [tab, setTab] = useState<TabId>("profil");
 
@@ -80,7 +83,7 @@ export default function PodesavanjaTabs({
       ) : null}
 
       {tab === "placanja" ? (
-        <PodesavanjaPlacanja email={korisnik.email} />
+        <PodesavanjaPlacanja email={korisnik.email} pretplata={pretplata} />
       ) : null}
 
       {tab === "obavestenja" ? (

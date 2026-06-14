@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { Database } from "@/types/database";
 import { createClient } from "@/utils/supabase/server";
 import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { proveriLimitDokumenta } from "@/lib/pretplata.server";
 import { parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 type StavkaInput = {
@@ -65,6 +66,11 @@ export async function sacuvajFakturu(
     firmaId = await requireAktivnaFirmaId();
   } catch {
     return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
+  const limitCheck = await proveriLimitDokumenta(supabase, user.id);
+  if (!limitCheck.ok) {
+    return limitCheck;
   }
 
   const broj = input.brojFakture.trim() || `INV-${Date.now()}`;

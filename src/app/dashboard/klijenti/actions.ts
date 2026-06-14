@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { proveriLimitKlijenata } from "@/lib/pretplata.server";
 import { greskaAkoKlijentPostojiUFirmi } from "@/lib/preduzeceUnique";
 
 export type SacuvajKlijentaInput = {
@@ -53,6 +54,11 @@ export async function sacuvajKlijenta(
   });
   if (konflikt) {
     return { ok: false, error: konflikt };
+  }
+
+  const limitCheck = await proveriLimitKlijenata(supabase, user.id);
+  if (!limitCheck.ok) {
+    return limitCheck;
   }
 
   const row = {

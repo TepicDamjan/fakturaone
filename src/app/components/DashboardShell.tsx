@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import DashboardSidebar from "@/app/components/DashboardSidebar";
+import PlanUsageBanner from "@/app/components/PlanUsageBanner";
 import { DashboardNavContext } from "@/app/components/DashboardNavContext";
 import { shouldHideDashboardSidebar } from "@/lib/dashboardNav";
 import type { AktivnaFirmaPregled } from "@/app/components/DashboardSidebar";
+import type { PretplataPregled } from "@/lib/pretplata.types";
 
 export default function DashboardShell({
   children,
   aktivnaFirma = null,
+  pretplata,
 }: {
   children: React.ReactNode;
   aktivnaFirma?: AktivnaFirmaPregled;
+  pretplata: PretplataPregled;
 }) {
   const pathname = usePathname();
   const sidebarHidden = shouldHideDashboardSidebar(pathname);
@@ -46,9 +50,11 @@ export default function DashboardShell({
             mobileOpen={mobileOpen}
             onMobileClose={() => setMobileOpen(false)}
             aktivnaFirma={aktivnaFirma}
+            pretplata={pretplata}
           />
         ) : null}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          {!sidebarHidden ? <PlanUsageBanner pretplata={pretplata} /> : null}
           {children}
         </div>
       </div>
