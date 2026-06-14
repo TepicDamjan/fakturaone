@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Footer from "@/app/components/Footer";
+import SajtUIzradiBaner from "@/app/components/SajtUIzradiBaner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,8 +34,9 @@ export default function RootLayout({
     <html lang="sr" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} bg-[#F8FAFC] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#F8FAFC] antialiased pt-10`}
       >
+        <SajtUIzradiBaner />
         {children}
         <Footer />
         <Analytics />

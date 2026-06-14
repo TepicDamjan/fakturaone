@@ -26,7 +26,7 @@ export default function IzborFirmeSadrzaj({ firme }: IzborFirmeSadrzajProps) {
   }, [firme, search]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-[calc(100dvh-2.5rem)] bg-[#F8FAFC] flex flex-col">
       <IzborFirmeHeader
         search={search}
         onSearchChange={setSearch}

@@ -40,7 +40,7 @@ export default function DashboardShell({
         closeMobileMenu: () => setMobileOpen(false),
       }}
     >
-      <div className="flex min-h-dvh h-dvh w-full min-h-0 bg-[#F8FAFC]">
+      <div className="flex min-h-[calc(100dvh-2.5rem)] h-[calc(100dvh-2.5rem)] w-full min-h-0 bg-[#F8FAFC]">
         {!sidebarHidden ? (
           <DashboardSidebar
             mobileOpen={mobileOpen}
