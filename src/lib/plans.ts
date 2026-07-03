@@ -29,6 +29,11 @@ export type PlanDef = {
 
 const UNLIMITED = Number.POSITIVE_INFINITY;
 
+/** Besplatan probni Professional plan za nove korisnike */
+export const PRO_TRIAL_DAYS = 14;
+
+export const PRO_TRIAL_LABEL = `${PRO_TRIAL_DAYS} dana besplatno`;
+
 export const PLAN_DEFS: Record<PlanTier, PlanDef> = {
   starter: {
     id: "starter",
@@ -60,6 +65,7 @@ export const PLAN_DEFS: Record<PlanTier, PlanDef> = {
     opis: "Za freelancere i mala preduzeća sa punim pristupom.",
     istaknuto: true,
     features: [
+      `${PRO_TRIAL_LABEL} — pun pristup`,
       "1 preduzeće",
       "Neograničeni dokumenti",
       "Neograničeni klijenti",

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PretplataPregled } from "@/lib/pretplata.types";
-import { isUnlimited } from "@/lib/plans";
+import { PRO_TRIAL_DAYS, isUnlimited } from "@/lib/plans";
 
 type Props = {
   pretplata: PretplataPregled;
@@ -19,8 +19,7 @@ export default function PlanUsageBanner({ pretplata }: Props) {
   const docNearLimit = docLimited && docUsed >= docMax - 2;
   const docAtLimit = docLimited && docUsed >= docMax;
 
-  const showTrial =
-    isTrial && trialDaysLeft != null && trialDaysLeft <= 7;
+  const showTrial = isTrial && trialDaysLeft != null;
   const showDocWarning = docNearLimit || docAtLimit;
 
   if (!showTrial && !showDocWarning && pretplata.tier !== "starter") {
@@ -32,11 +31,11 @@ export default function PlanUsageBanner({ pretplata }: Props) {
       {showTrial ? (
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-[#1E3A8A]">
-            <span className="font-semibold">Probni period — {tierLabel}</span>
+            <span className="font-semibold">Besplatan {tierLabel} plan</span>
             {" · "}
             {trialDaysLeft === 0
               ? "Ističe danas"
-              : `Još ${trialDaysLeft} ${trialDaysLeft === 1 ? "dan" : "dana"}`}
+              : `Još ${trialDaysLeft} od ${PRO_TRIAL_DAYS} ${trialDaysLeft === 1 ? "dana" : "dana"} besplatno`}
           </p>
           <Link
             href="/dashboard/nadogradi"

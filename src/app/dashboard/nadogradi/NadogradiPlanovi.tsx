@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { PretplataPregled } from "@/lib/pretplata.types";
 import { PLAN_DEFS, PLANS_ORDER } from "@/lib/plans";
+import NadogradiCheckoutDugme from "@/app/dashboard/nadogradi/NadogradiCheckoutDugme";
 
 type Props = {
   trenutniPlan: PretplataPregled["tier"];
+  placanjeAktivno: boolean;
 };
 
 function CheckIcon() {
@@ -17,13 +19,15 @@ function CheckIcon() {
   );
 }
 
-export default function NadogradiPlanovi({ trenutniPlan }: Props) {
+export default function NadogradiPlanovi({ trenutniPlan, placanjeAktivno }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       {PLANS_ORDER.map((tier) => {
         const plan = PLAN_DEFS[tier];
         const aktivan = tier === trenutniPlan;
         const istaknuto = plan.istaknuto && !aktivan;
+        const mozePlacanje =
+          placanjeAktivno && (tier === "professional" || tier === "business");
 
         return (
           <div
@@ -77,16 +81,21 @@ export default function NadogradiPlanovi({ trenutniPlan }: Props) {
                 >
                   Kontaktirajte nas
                 </Link>
+              ) : tier === "starter" ? (
+                <span className="inline-flex w-full items-center justify-center rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-[#64748B]">
+                  Besplatan plan
+                </span>
+              ) : mozePlacanje ? (
+                <NadogradiCheckoutDugme
+                  planTier={tier}
+                  label={`Izaberi ${plan.naziv}`}
+                  highlighted={istaknuto}
+                />
               ) : (
                 <button
                   type="button"
                   disabled
-                  title="Online plaćanje uskoro"
-                  className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors cursor-not-allowed opacity-60 ${
-                    istaknuto
-                      ? "bg-fplava text-white"
-                      : "border border-gray-200 text-fcrna"
-                  }`}
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-fcrna opacity-60 cursor-not-allowed"
                 >
                   Uskoro dostupno
                 </button>

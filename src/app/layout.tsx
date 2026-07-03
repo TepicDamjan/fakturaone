@@ -55,13 +55,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const showWipBanner = process.env.NODE_ENV === "development";
+
   return (
     <html lang="sr" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} bg-[#F8FAFC] antialiased pt-10`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#F8FAFC] antialiased${showWipBanner ? " pt-10" : ""}`}
       >
-        <SajtUIzradiBaner />
+        {showWipBanner ? <SajtUIzradiBaner /> : null}
         {children}
         <Footer />
         <Analytics />

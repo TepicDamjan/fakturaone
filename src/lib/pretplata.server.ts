@@ -3,6 +3,7 @@ import type { Database } from "@/types/database";
 import {
   planLabel,
   planLimits,
+  PRO_TRIAL_DAYS,
   type PlanTier,
 } from "@/lib/plans";
 import type { PretplataPregled } from "@/lib/pretplata.types";
@@ -85,6 +86,66 @@ async function countFirme(supabase: Supabase, userId: string): Promise<number> {
   return count ?? 0;
 }
 
+function trialEndsAtFromNow(): string {
+  const trialEnds = new Date();
+  trialEnds.setDate(trialEnds.getDate() + PRO_TRIAL_DAYS);
+  return trialEnds.toISOString();
+}
+
+function hasPaidSubscription(row: PretplataRow): boolean {
+  return (
+    row.status === "active" ||
+    row.status === "past_due" ||
+    Boolean(row.freemius_license_id)
+  );
+}
+
+function isTrialActive(row: PretplataRow): boolean {
+  return (
+    row.status === "trialing" &&
+    row.trial_ends_at != null &&
+    new Date(row.trial_ends_at).getTime() > Date.now()
+  );
+}
+
+/** Aktivira 14 dana Professional — pri registraciji ili prvom ulasku */
+export async function ensureProTrialForUser(
+  supabase: Supabase,
+  userId: string
+): Promise<PretplataRow> {
+  const { data: existing, error } = await supabase
+    .from("pretplate")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  if (existing) {
+    if (hasPaidSubscription(existing) || isTrialActive(existing)) {
+      return existing;
+    }
+    return existing;
+  }
+
+  const { data: created, error: insertErr } = await supabase
+    .from("pretplate")
+    .insert({
+      user_id: userId,
+      plan: "professional",
+      status: "trialing",
+      trial_ends_at: trialEndsAtFromNow(),
+    })
+    .select("*")
+    .single();
+
+  if (insertErr || !created) {
+    throw new Error(insertErr?.message ?? "Greška pri kreiranju pretplate.");
+  }
+
+  return created;
+}
+
 export async function fetchOrCreatePretplata(
   supabase: Supabase,
   userId: string
@@ -98,25 +159,7 @@ export async function fetchOrCreatePretplata(
   if (error) throw new Error(error.message);
   if (existing) return existing;
 
-  const trialEnds = new Date();
-  trialEnds.setDate(trialEnds.getDate() + 14);
-
-  const { data: created, error: insertErr } = await supabase
-    .from("pretplate")
-    .insert({
-      user_id: userId,
-      plan: "professional",
-      status: "trialing",
-      trial_ends_at: trialEnds.toISOString(),
-    })
-    .select("*")
-    .single();
-
-  if (insertErr || !created) {
-    throw new Error(insertErr?.message ?? "Greška pri kreiranju pretplate.");
-  }
-
-  return created;
+  return ensureProTrialForUser(supabase, userId);
 }
 
 export async function fetchPretplataPregled(

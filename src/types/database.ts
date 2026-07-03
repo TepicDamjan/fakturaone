@@ -279,8 +279,10 @@ export type Database = {
                     status: Database["public"]["Enums"]["subscription_status"];
                     trial_ends_at: string | null;
                     current_period_end: string | null;
-                    stripe_customer_id: string | null;
-                    stripe_subscription_id: string | null;
+                    freemius_license_id: string | null;
+                    freemius_user_id: string | null;
+                    freemius_plan_id: string | null;
+                    freemius_subscription_id: string | null;
                     created_at: string;
                     updated_at: string;
                 };
@@ -291,8 +293,10 @@ export type Database = {
                     status?: Database["public"]["Enums"]["subscription_status"];
                     trial_ends_at?: string | null;
                     current_period_end?: string | null;
-                    stripe_customer_id?: string | null;
-                    stripe_subscription_id?: string | null;
+                    freemius_license_id?: string | null;
+                    freemius_user_id?: string | null;
+                    freemius_plan_id?: string | null;
+                    freemius_subscription_id?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -303,8 +307,10 @@ export type Database = {
                     status?: Database["public"]["Enums"]["subscription_status"];
                     trial_ends_at?: string | null;
                     current_period_end?: string | null;
-                    stripe_customer_id?: string | null;
-                    stripe_subscription_id?: string | null;
+                    freemius_license_id?: string | null;
+                    freemius_user_id?: string | null;
+                    freemius_plan_id?: string | null;
+                    freemius_subscription_id?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -383,6 +389,10 @@ export type Database = {
             oznaci_dospjele_fakture: {
                 Args: Record<PropertyKey, never>;
                 Returns: number;
+            };
+            user_id_by_email: {
+                Args: { p_email: string };
+                Returns: string | null;
             };
         };
         Enums: {

@@ -4,6 +4,7 @@ interface PricingCardProps {
     name: string;
     price: string;
     period?: string;
+    subtitle?: string;
     features: string[];
     highlighted?: boolean;
     ctaLabel: string;
@@ -26,6 +27,7 @@ export default function PricingCard({
     name,
     price,
     period,
+    subtitle,
     features,
     highlighted = false,
     ctaLabel,
@@ -47,9 +49,12 @@ export default function PricingCard({
             ) : null}
 
             <h3 className="text-lg font-semibold text-white">{name}</h3>
-            <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-white sm:text-4xl">{price}</span>
-                {period ? <span className="text-slate-400">{period}</span> : null}
+            <div className="mt-4 flex flex-col items-start gap-0.5">
+                <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-white sm:text-4xl">{price}</span>
+                    {period ? <span className="text-slate-400">{period}</span> : null}
+                </div>
+                {subtitle ? <span className="text-xs text-slate-500">{subtitle}</span> : null}
             </div>
 
             <ul className="mt-6 flex flex-1 flex-col gap-3">

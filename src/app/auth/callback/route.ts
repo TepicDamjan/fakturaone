@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureProTrialForUser } from "@/lib/pretplata.server";
 import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: Request) {
@@ -8,8 +9,15 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      if (data.user?.id) {
+        try {
+          await ensureProTrialForUser(supabase, data.user.id);
+        } catch {
+          /* trigger u bazi */
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

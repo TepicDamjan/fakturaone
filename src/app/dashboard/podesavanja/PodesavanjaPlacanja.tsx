@@ -179,7 +179,11 @@ export default function PodesavanjaPlacanja({ email, pretplata }: Props) {
             Računi će stizati na <span className="font-medium text-fcrna">{email}</span>
           </p>
           <p className="text-xs text-[#94A3B8] mt-2">
-            Online plaćanje karticom biće dostupno uskoro.
+            Plaćanje i fakture obrađuje Freemius. Upravljajte planom na stranici{" "}
+            <Link href="/dashboard/nadogradi" className="font-semibold text-fplava hover:text-blue-700">
+              Planovi i pretplata
+            </Link>
+            .
           </p>
         </div>
       </div>

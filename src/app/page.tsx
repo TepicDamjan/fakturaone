@@ -4,7 +4,7 @@ import Button from "@/app/components/Button";
 import Navbar from "@/app/components/Navbar";
 import FeatureCard from "@/app/components/FeatureCard";
 import PricingCard from "@/app/components/PricingCard";
-import { PLAN_DEFS, PLANS_ORDER } from "@/lib/plans";
+import { PLAN_DEFS, PLANS_ORDER, PRO_TRIAL_DAYS, PRO_TRIAL_LABEL } from "@/lib/plans";
 import AnimateIn from "@/app/components/landing/AnimateIn";
 import Image from "next/image";
 import { DEFAULT_DESCRIPTION, getSiteUrl, SITE_NAME } from "@/lib/site";
@@ -127,7 +127,7 @@ export default function LandingPage() {
                                 textColor="#05070A"
                                 className="landing-glow-btn w-full rounded-lg px-6 py-3 text-base font-semibold transition-transform duration-300 hover:scale-[1.03] sm:w-auto"
                             >
-                                Započnite besplatno
+                                Započnite — 14 dana besplatno
                             </Button>
                         </Link>
                         <Link
@@ -197,7 +197,7 @@ export default function LandingPage() {
                     <AnimateIn>
                         <h2 className="text-2xl font-bold sm:text-4xl">Transparentne cene</h2>
                         <p className="mx-auto mt-3 max-w-2xl text-slate-400 sm:mt-4 sm:text-lg">
-                            Izaberite paket koji najviše odgovara vašim potrebama.
+                            14 dana besplatnog Professional plana za sve nove korisnike. Bez kartice.
                         </p>
                     </AnimateIn>
 
@@ -209,14 +209,27 @@ export default function LandingPage() {
                                     ? { label: "Kontaktirajte nas", href: "#kontakt", variant: "outline" as const }
                                     : tier === "starter"
                                       ? { label: "Započnite besplatno", href: "/registracija", variant: "primary" as const }
-                                      : { label: `Izaberite ${plan.naziv}`, href: "/registracija", variant: "primary" as const };
+                                      : tier === "professional"
+                                        ? { label: `${PRO_TRIAL_LABEL}`, href: "/registracija", variant: "primary" as const }
+                                        : { label: `Izaberite ${plan.naziv}`, href: "/registracija", variant: "primary" as const };
 
                             return (
                                 <AnimateIn key={tier} delay={index * 120}>
                                     <PricingCard
                                         name={plan.naziv}
-                                        price={plan.cenaTekst}
-                                        period={plan.cenaMesecno != null ? "/mesečno" : undefined}
+                                        price={tier === "professional" ? "0€" : plan.cenaTekst}
+                                        period={
+                                            tier === "professional"
+                                                ? ` prvih ${PRO_TRIAL_DAYS} dana`
+                                                : plan.cenaMesecno != null
+                                                  ? "/mesečno"
+                                                  : undefined
+                                        }
+                                        subtitle={
+                                            tier === "professional"
+                                                ? `zatim ${plan.cenaTekst}/mesečno`
+                                                : undefined
+                                        }
                                         highlighted={plan.istaknuto}
                                         features={plan.features}
                                         ctaLabel={cta.label}

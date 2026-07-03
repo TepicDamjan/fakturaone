@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { isPasswordStrongEnough } from "@/lib/passwordStrength";
+import { ensureProTrialForUser } from "@/lib/pretplata.server";
+import { getSiteUrl } from "@/lib/site";
 import { createClient } from "@/utils/supabase/server";
 
 export type SignupState = {
@@ -54,10 +56,7 @@ export async function signup(
 
   const supabase = await createClient();
   const headersList = await headers();
-  const origin =
-    headersList.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000";
+  const origin = headersList.get("origin") ?? getSiteUrl();
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -73,12 +72,19 @@ export async function signup(
   }
 
   if (data.session) {
+    if (data.user?.id) {
+      try {
+        await ensureProTrialForUser(supabase, data.user.id);
+      } catch {
+        /* DB trigger takođe kreira pretplatu */
+      }
+    }
     revalidatePath("/dashboard");
     redirect("/izbor-firme");
   }
 
   return {
     success:
-      "Nalog je kreiran. Proverite email i potvrdite adresu pre prijave.",
+      "Nalog je kreiran. Proverite email i potvrdite adresu — dobijate 14 dana besplatnog Professional plana.",
   };
 }

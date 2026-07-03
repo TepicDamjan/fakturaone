@@ -49,8 +49,9 @@ export default function AuthMarketingPanel() {
           Pojednostavite fakturisanje već danas.
         </h2>
         <p className="mt-4 max-w-lg text-base text-slate-300 leading-relaxed">
-          Pridružite se profesionalcima koji koriste FakturaOne za brže naplate,
-          preglednije fakture i manje administrativnog posla.
+          Registrujte se i dobijate{" "}
+          <span className="font-semibold text-white">14 dana besplatnog Professional plana</span>{" "}
+          — pun pristup bez kartice.
         </p>
       </div>
 
