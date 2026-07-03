@@ -220,6 +220,45 @@ export async function ucitajKlijentiList() {
   return fetchKlijentiList(supabase);
 }
 
+/**
+ * Pretraga zajedničkog registra svih firmi u aplikaciji (sve korisnike).
+ * Koristi service-role klijent jer RLS ograničava firme na vlasnika.
+ * Vraća samo poslovne podatke firme, za automatsko popunjavanje forme klijenta.
+ */
+export async function pretraziRegistarFirmi(upit: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const q = upit.trim();
+  if (q.length < 2) return [];
+
+  const { createAdminClient } = await import("@/utils/supabase/admin");
+  const admin = createAdminClient();
+
+  // Escape % i _ za ilike; ukloni znakove koji lome PostgREST or() sintaksu
+  const ociscen = q.replace(/[,()]/g, " ").trim();
+  if (ociscen.length < 2) return [];
+  const pattern = `%${ociscen.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
+
+  const { data, error } = await admin
+    .from("firma")
+    .select(
+      "id, naziv, pib, maticni_broj, email, telefon, adresa, grad, postanski_broj"
+    )
+    .or(
+      `naziv.ilike.${pattern},pib.ilike.${pattern},maticni_broj.ilike.${pattern},email.ilike.${pattern},grad.ilike.${pattern}`
+    )
+    .order("naziv", { ascending: true })
+    .limit(10);
+
+  if (error) return [];
+
+  return (data ?? []).filter((f) => f.naziv?.trim());
+}
+
 export async function ucitajBrzaPretragaBazu() {
   const supabase = await createClient();
   const { fetchSviKlijentiKorisnika } = await import("@/lib/klijenti");

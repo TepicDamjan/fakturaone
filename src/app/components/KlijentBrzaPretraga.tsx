@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ucitajBrzaPretragaBazu } from "@/app/dashboard/klijenti/actions";
+import {
+  pretraziRegistarFirmi,
+  ucitajBrzaPretragaBazu,
+} from "@/app/dashboard/klijenti/actions";
 import {
   filtrirajBrzaPretragu,
+  spojiSaRegistrom,
   stavkaMeta,
   stavkaNaziv,
   type BrzaPretragaBaza,
   type BrzaPretragaStavka,
+  type FirmaZaPretragu,
 } from "@/lib/brzaPretraga";
 
 type KlijentBrzaPretragaProps = {
@@ -25,12 +30,13 @@ export default function KlijentBrzaPretraga({
   iskljuciKlijentId,
   odabraniNaziv,
   placeholder = "Pretraži klijente i firme...",
-  uputstvo = "Pronađite klijenta ili firmu u bazi da biste automatski popunili formu.",
+  uputstvo = "Pretražite svoje klijente i sve firme registrovane u aplikaciji — odabir automatski popunjava formu.",
 }: KlijentBrzaPretragaProps) {
   const [baza, setBaza] = useState<BrzaPretragaBaza>({ klijenti: [], firme: [] });
   const [upit, setUpit] = useState("");
   const [otvoren, setOtvoren] = useState(false);
   const [ucitava, setUcitava] = useState(true);
+  const [registar, setRegistar] = useState<FirmaZaPretragu[]>([]);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,14 +63,36 @@ export default function KlijentBrzaPretraga({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [otvoren]);
 
-  const filtrirani = useMemo(
-    () =>
-      filtrirajBrzaPretragu(baza, upit, {
-        iskljuciKlijentId,
-        limit: 10,
-      }),
-    [baza, upit, iskljuciKlijentId]
-  );
+  // Pretraga zajedničkog registra svih firmi u aplikaciji (debounce 300ms)
+  useEffect(() => {
+    const q = upit.trim();
+    if (q.length < 2) {
+      setRegistar([]);
+      return;
+    }
+    let aktivan = true;
+    const t = setTimeout(() => {
+      pretraziRegistarFirmi(q)
+        .then((rez) => {
+          if (aktivan) setRegistar(rez);
+        })
+        .catch(() => {
+          if (aktivan) setRegistar([]);
+        });
+    }, 300);
+    return () => {
+      aktivan = false;
+      clearTimeout(t);
+    };
+  }, [upit]);
+
+  const filtrirani = useMemo(() => {
+    const lokalni = filtrirajBrzaPretragu(baza, upit, {
+      iskljuciKlijentId,
+      limit: 10,
+    });
+    return spojiSaRegistrom(lokalni, registar, 10);
+  }, [baza, upit, iskljuciKlijentId, registar]);
 
   const prikaziListu = otvoren && upit.trim().length > 0;
 
@@ -122,7 +150,7 @@ export default function KlijentBrzaPretraga({
               <li className="px-3 py-2 text-sm text-[#64748B]">Učitavanje…</li>
             ) : filtrirani.length === 0 ? (
               <li className="px-3 py-2 text-sm text-[#64748B]">
-                Nema rezultata u vašoj bazi.
+                Nema rezultata u bazi.
               </li>
             ) : (
               filtrirani.map((stavka) => (
@@ -142,10 +170,16 @@ export default function KlijentBrzaPretraga({
                         className={`shrink-0 inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                           stavka.tip === "firma"
                             ? "bg-violet-100 text-violet-700"
-                            : "bg-emerald-100 text-emerald-700"
+                            : stavka.tip === "registar"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
                         }`}
                       >
-                        {stavka.tip === "firma" ? "Firma" : "Klijent"}
+                        {stavka.tip === "firma"
+                          ? "Firma"
+                          : stavka.tip === "registar"
+                            ? "Registar"
+                            : "Klijent"}
                       </span>
                     </span>
                     <span className="block text-xs text-[#64748B] mt-0.5 truncate">

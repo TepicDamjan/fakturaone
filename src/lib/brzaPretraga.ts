@@ -18,7 +18,8 @@ export type FirmaZaPretragu = Pick<
 
 export type BrzaPretragaStavka =
   | { tip: "klijent"; podaci: Klijent }
-  | { tip: "firma"; podaci: FirmaZaPretragu };
+  | { tip: "firma"; podaci: FirmaZaPretragu }
+  | { tip: "registar"; podaci: FirmaZaPretragu };
 
 export type BrzaPretragaBaza = {
   klijenti: Klijent[];
@@ -100,6 +101,32 @@ export function filtrirajBrzaPretragu(
 
 export function stavkaNaziv(stavka: BrzaPretragaStavka): string {
   return stavka.podaci.naziv;
+}
+
+/**
+ * Spaja lokalne rezultate (klijenti + vlastite firme) sa rezultatima iz
+ * zajedničkog registra svih firmi u aplikaciji. Registar dolazi na kraj,
+ * duplikati (isti PIB ili naziv) se preskaču.
+ */
+export function spojiSaRegistrom(
+  lokalne: BrzaPretragaStavka[],
+  registar: FirmaZaPretragu[],
+  limit = 10
+): BrzaPretragaStavka[] {
+  const vidjeni = new Set(
+    lokalne.map((s) => kljucEntiteta(s.podaci.naziv, s.podaci.pib))
+  );
+  const rezultat = [...lokalne];
+
+  for (const f of registar) {
+    if (rezultat.length >= limit) break;
+    const kljuc = kljucEntiteta(f.naziv, f.pib);
+    if (vidjeni.has(kljuc)) continue;
+    vidjeni.add(kljuc);
+    rezultat.push({ tip: "registar", podaci: f });
+  }
+
+  return rezultat.slice(0, limit);
 }
 
 export function stavkaToForma(stavka: BrzaPretragaStavka): KlijentForma {
