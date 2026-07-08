@@ -12,6 +12,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { sacuvajFakturu } from "@/app/dashboard/fakture/actions";
 import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
+import { ucitajProizvodiList } from "@/app/dashboard/proizvodi/actions";
+import type { Proizvod } from "@/lib/proizvodi";
 import StavkeFakture, { type Stavka } from "@/app/components/StavkeFakture";
 import OtpremnicaLogistika from "@/app/components/OtpremnicaLogistika";
 import PredracunSumaSidebar from "@/app/components/PredracunSumaSidebar";
@@ -84,6 +86,7 @@ function NovaFakturaForma() {
   );
   const [klijentId, setKlijentId] = useState("");
   const [klijenti, setKlijenti] = useState<Klijent[]>([]);
+  const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
   const [brojFakture, setBrojFakture] = useState("");
   const [referenca, setReferenca] = useState("");
   const [datumIzdavanja, setDatumIzdavanja] = useState("");
@@ -101,6 +104,9 @@ function NovaFakturaForma() {
     ucitajKlijentiList()
       .then(setKlijenti)
       .catch(() => setKlijenti([]));
+    ucitajProizvodiList()
+      .then(setProizvodi)
+      .catch(() => setProizvodi([]));
   }, []);
 
   const osnovica = useMemo(
@@ -335,6 +341,7 @@ function NovaFakturaForma() {
               onUpdateStavka={handleUpdateStavka}
               onRemoveStavka={handleRemoveStavka}
               tipDokumenta={tipDokumenta}
+              proizvodi={proizvodi}
               inGrid
             />
 

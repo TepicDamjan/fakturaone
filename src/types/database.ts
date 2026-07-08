@@ -299,6 +299,49 @@ export type Database = {
                     }
                 ];
             };
+            proizvodi: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    firma_id: string;
+                    naziv: string;
+                    opis: string | null;
+                    jedinica: string;
+                    cena: number;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    firma_id: string;
+                    naziv: string;
+                    opis?: string | null;
+                    jedinica?: string;
+                    cena?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    firma_id?: string;
+                    naziv?: string;
+                    opis?: string | null;
+                    jedinica?: string;
+                    cena?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "proizvodi_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             pretplate: {
                 Row: {
                     id: string;
