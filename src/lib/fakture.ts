@@ -26,6 +26,70 @@ export type FakturaSaStavkama = {
 
 type FaktureListaViewRow = Database["public"]["Views"]["fakture_lista"]["Row"];
 
+export type FaktureFilter = {
+  q?: string;
+  status?: FakturaStatus;
+  tip?: TipDokumenta;
+  /** Donja granica datuma izdavanja (YYYY-MM-DD). */
+  datumOd?: string;
+};
+
+export type FakturePage = {
+  items: FakturaListItem[];
+  ukupno: number;
+  strana: number;
+  poStrani: number;
+};
+
+export const FAKTURE_PO_STRANI = 10;
+
+function mapViewRows(rows: FaktureListaViewRow[]): FakturaListItem[] {
+  return rows
+    .filter((r) => r.id && r.broj && r.status)
+    .map((r) => ({
+      id: r.id as string,
+      broj: r.broj as string,
+      tipDokumenta: parseTipDokumenta(r.tip_dokumenta),
+      klijentNaziv: r.klijent_naziv ?? "",
+      klijentEmail: r.klijent_email ?? "",
+      datumIzdavanja: r.datum_izdavanja ?? "",
+      datumPlacanja: r.datum_placanja ?? "",
+      iznos: Number(r.iznos ?? 0),
+      status: r.status as FakturaStatus,
+    }));
+}
+
+function buildFaktureListaQuery(
+  supabase: SupabaseClient<Database>,
+  firmaId: string,
+  filter: FaktureFilter,
+  options: { count?: boolean } = {}
+) {
+  let query = options.count
+    ? supabase.from("fakture_lista").select("*", { count: "exact" })
+    : supabase.from("fakture_lista").select("*");
+
+  query = query.eq("firma_id", firmaId);
+
+  if (filter.status) query = query.eq("status", filter.status);
+  if (filter.tip) query = query.eq("tip_dokumenta", filter.tip);
+  if (filter.datumOd) query = query.gte("datum_izdavanja", filter.datumOd);
+
+  const q = (filter.q ?? "").trim();
+  if (q) {
+    // Escape % i _ za ilike; ukloni znakove koji lome PostgREST or() sintaksu
+    const ociscen = q.replace(/[,()]/g, " ").trim();
+    if (ociscen) {
+      const pattern = `%${ociscen.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
+      query = query.or(
+        `broj.ilike.${pattern},klijent_naziv.ilike.${pattern},klijent_email.ilike.${pattern}`
+      );
+    }
+  }
+
+  return query.order("datum_izdavanja", { ascending: false });
+}
+
 // Dospele fakture označava dnevni cron (/api/cron/oznaci-dospjele) i
 // trigger na insert/update, pa se ovde više ne poziva RPC pri čitanju.
 export async function fetchFaktureLista(
@@ -40,21 +104,55 @@ export async function fetchFaktureLista(
 
   if (error) throw error;
 
-  const rows = (data ?? []) as FaktureListaViewRow[];
+  return mapViewRows((data ?? []) as FaktureListaViewRow[]);
+}
 
-  return rows
-    .filter((r) => r.id && r.broj && r.status)
-    .map((r) => ({
-      id: r.id as string,
-      broj: r.broj as string,
-      tipDokumenta: parseTipDokumenta(r.tip_dokumenta),
-      klijentNaziv: r.klijent_naziv ?? "",
-      klijentEmail: r.klijent_email ?? "",
-      datumIzdavanja: r.datum_izdavanja ?? "",
-      datumPlacanja: r.datum_placanja ?? "",
-      iznos: Number(r.iznos ?? 0),
-      status: r.status as FakturaStatus,
-    }));
+/** Server-side filtrirana i paginirana lista dokumenata. */
+export async function fetchFakturePage(
+  supabase: SupabaseClient<Database>,
+  firmaId: string,
+  filter: FaktureFilter = {},
+  strana = 1,
+  poStrani = FAKTURE_PO_STRANI
+): Promise<FakturePage> {
+  const bezbednoPoStrani = Math.min(Math.max(1, poStrani), 100);
+  const bezbednaStrana = Math.max(1, strana);
+  const from = (bezbednaStrana - 1) * bezbednoPoStrani;
+  const to = from + bezbednoPoStrani - 1;
+
+  const { data, error, count } = await buildFaktureListaQuery(
+    supabase,
+    firmaId,
+    filter,
+    { count: true }
+  ).range(from, to);
+
+  if (error) throw error;
+
+  return {
+    items: mapViewRows((data ?? []) as FaktureListaViewRow[]),
+    ukupno: count ?? 0,
+    strana: bezbednaStrana,
+    poStrani: bezbednoPoStrani,
+  };
+}
+
+/** Filtrirana lista bez paginacije, za CSV izvoz (sa bezbednosnim limitom). */
+export async function fetchFaktureZaIzvoz(
+  supabase: SupabaseClient<Database>,
+  firmaId: string,
+  filter: FaktureFilter = {},
+  limit = 5000
+): Promise<FakturaListItem[]> {
+  const { data, error } = await buildFaktureListaQuery(
+    supabase,
+    firmaId,
+    filter
+  ).limit(limit);
+
+  if (error) throw error;
+
+  return mapViewRows((data ?? []) as FaktureListaViewRow[]);
 }
 
 export function initialsFromName(name: string): string {
