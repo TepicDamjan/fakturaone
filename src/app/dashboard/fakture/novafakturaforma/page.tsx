@@ -481,7 +481,6 @@ function DetaljiKartica({
   adresaDostave,
   onAdresaDostaveChange,
   tipMetaNaziv,
-  tipMetaPrefiks,
   tipMetaRokLabel,
 }: DetaljiKarticaProps) {
   const jeOtpremnica = tipDokumenta === "otpremnica";
@@ -571,7 +570,7 @@ function DetaljiKartica({
             type="text"
             value={brojFakture}
             onChange={(e) => onBrojChange(e.target.value)}
-            placeholder={`${tipMetaPrefiks}-2025-0001`}
+            placeholder="Ostavite prazno za automatski broj"
             className="w-full rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 px-3 py-2.5"
           />
         </Polje>

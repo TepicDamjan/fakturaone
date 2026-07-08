@@ -9,6 +9,34 @@ export type Json =
 export type Database = {
     public: {
         Tables: {
+            brojaci_dokumenata: {
+                Row: {
+                    firma_id: string;
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+                    godina: number;
+                    sledeci: number;
+                };
+                Insert: {
+                    firma_id: string;
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+                    godina: number;
+                    sledeci?: number;
+                };
+                Update: {
+                    firma_id?: string;
+                    tip_dokumenta?: "faktura" | "predracun" | "otpremnica";
+                    godina?: number;
+                    sledeci?: number;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "brojaci_dokumenata_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             klijenti: {
                 Row: {
                     id: string;
@@ -393,6 +421,13 @@ export type Database = {
             oznaci_dospjele_fakture_sve: {
                 Args: Record<PropertyKey, never>;
                 Returns: number;
+            };
+            sledeci_broj_dokumenta: {
+                Args: {
+                    p_firma_id: string;
+                    p_tip: "faktura" | "predracun" | "otpremnica";
+                };
+                Returns: string;
             };
             user_id_by_email: {
                 Args: { p_email: string };

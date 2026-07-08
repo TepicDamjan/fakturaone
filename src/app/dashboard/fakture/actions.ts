@@ -82,9 +82,9 @@ export async function sacuvajFakturu(
     return limitCheck;
   }
 
-  const broj = input.brojFakture.trim() || `INV-${Date.now()}`;
+  const rucniBroj = input.brojFakture.trim();
   const klijentRaw = input.klijentId.trim();
-  let klijent_id: string | null = klijentRaw || null;
+  const klijent_id: string | null = klijentRaw || null;
 
   if (klijent_id) {
     const { data: klijentOk, error: kErr } = await supabase
@@ -105,7 +105,6 @@ export async function sacuvajFakturu(
     user_id: user.id,
     firma_id: firmaId,
     klijent_id,
-    broj,
     referenca: emptyToNull(input.referenca),
     datum_izdavanja: emptyToNull(input.datumIzdavanja),
     datum_placanja: emptyToNull(input.datumPlacanja),
@@ -120,20 +119,63 @@ export async function sacuvajFakturu(
     vozac: emptyToNull(input.vozac ?? ""),
   };
 
-  const { data: faktura, error: fErr } = await supabase
-    .from("fakture")
-    .insert(fakturaRow)
-    .select("id")
-    .single();
+  let faktura: { id: string } | null = null;
 
-  if (fErr || !faktura) {
-    if (fErr?.code === "23505") {
+  if (rucniBroj) {
+    const { data, error: fErr } = await supabase
+      .from("fakture")
+      .insert({ ...fakturaRow, broj: rucniBroj })
+      .select("id")
+      .single();
+
+    if (fErr || !data) {
+      if (fErr?.code === "23505") {
+        return {
+          ok: false,
+          error: "Faktura sa tim brojem već postoji. Unesite drugi broj fakture.",
+        };
+      }
+      return { ok: false, error: fErr?.message ?? "Greška pri čuvanju fakture." };
+    }
+    faktura = data;
+  } else {
+    // Automatski sekvencijalni broj (npr. FAK-2026-0001). Ako se dodeljeni
+    // broj sudari sa ranije rucno unetim, uzima se sledeci iz brojaca.
+    const MAX_POKUSAJA = 5;
+    for (let pokusaj = 0; pokusaj < MAX_POKUSAJA; pokusaj++) {
+      const { data: broj, error: brojErr } = await supabase.rpc(
+        "sledeci_broj_dokumenta",
+        { p_firma_id: firmaId, p_tip: fakturaRow.tip_dokumenta }
+      );
+      if (brojErr || !broj) {
+        return {
+          ok: false,
+          error: "Nije moguće dodeliti broj dokumenta. Pokušajte ponovo.",
+        };
+      }
+
+      const { data, error: fErr } = await supabase
+        .from("fakture")
+        .insert({ ...fakturaRow, broj })
+        .select("id")
+        .single();
+
+      if (data) {
+        faktura = data;
+        break;
+      }
+      if (fErr?.code !== "23505") {
+        return { ok: false, error: fErr?.message ?? "Greška pri čuvanju fakture." };
+      }
+    }
+
+    if (!faktura) {
       return {
         ok: false,
-        error: "Faktura sa tim brojem već postoji. Unesite drugi broj fakture.",
+        error:
+          "Nije moguće dodeliti jedinstven broj dokumenta. Unesite broj ručno.",
       };
     }
-    return { ok: false, error: fErr?.message ?? "Greška pri čuvanju fakture." };
   }
 
   const fakturaId = faktura.id;
