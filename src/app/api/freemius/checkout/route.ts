@@ -22,6 +22,12 @@ export async function GET(request: Request) {
   const redirect = parseCheckoutRedirect(url.searchParams);
   const signatureOk = isFreemiusRedirectSignatureValid(currentUrl);
 
+  if (!signatureOk) {
+    console.warn("[freemius checkout] Nevalidan potpis redirect-a, sync odbijen:", redirect.license_id);
+    redirectBase.searchParams.set("greska", "nevalidan_potpis");
+    return NextResponse.redirect(redirectBase);
+  }
+
   if (!redirect.license_id) {
     redirectBase.searchParams.set("greska", "nedostaju_podataci");
     return NextResponse.redirect(redirectBase);
@@ -32,23 +38,23 @@ export async function GET(request: Request) {
     const license = await fetchFreemiusLicense(redirect.license_id);
 
     if (!license) {
-      redirectBase.searchParams.set("greska", signatureOk ? "sync" : "nevalidan_potpis");
+      redirectBase.searchParams.set("greska", "sync");
       return NextResponse.redirect(redirectBase);
     }
 
-    let email = redirect.email?.trim();
-    if (!email && license.user_id != null) {
+    // Email primarno iz Freemius API-ja; query parametar samo kao fallback
+    // (potpis je već verifikovan, pa je parametar zaštićen od izmene).
+    let email: string | undefined;
+    if (license.user_id != null) {
       email = (await fetchFreemiusUserEmail(license.user_id)) ?? undefined;
+    }
+    if (!email) {
+      email = redirect.email?.trim() || undefined;
     }
 
     if (!email) {
       redirectBase.searchParams.set("greska", "nedostaju_podataci");
       return NextResponse.redirect(redirectBase);
-    }
-
-    // Potpis ili pouzdana Freemius API provera licence
-    if (!signatureOk) {
-      console.warn("[freemius checkout] Potpis nije validan, sync preko API licence:", redirect.license_id);
     }
 
     const result = await syncPretplataFromFreemius(supabase, {
