@@ -390,6 +390,10 @@ export type Database = {
                 Args: Record<PropertyKey, never>;
                 Returns: number;
             };
+            oznaci_dospjele_fakture_sve: {
+                Args: Record<PropertyKey, never>;
+                Returns: number;
+            };
             user_id_by_email: {
                 Args: { p_email: string };
                 Returns: string | null;

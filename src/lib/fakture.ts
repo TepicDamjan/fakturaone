@@ -26,20 +26,12 @@ export type FakturaSaStavkama = {
 
 type FaktureListaViewRow = Database["public"]["Views"]["fakture_lista"]["Row"];
 
-/** Ažurira status na "kasni" za izdate fakture čiji je rok plaćanja prošao. */
-export async function oznaciDospjeleFakture(
-  supabase: SupabaseClient<Database>
-): Promise<void> {
-  const { error } = await supabase.rpc("oznaci_dospjele_fakture");
-  if (error) throw error;
-}
-
+// Dospele fakture označava dnevni cron (/api/cron/oznaci-dospjele) i
+// trigger na insert/update, pa se ovde više ne poziva RPC pri čitanju.
 export async function fetchFaktureLista(
   supabase: SupabaseClient<Database>,
   firmaId: string
 ): Promise<FakturaListItem[]> {
-  await oznaciDospjeleFakture(supabase);
-
   const { data, error } = await supabase
     .from("fakture_lista")
     .select("*")
@@ -77,8 +69,6 @@ export async function fetchFakturaSaStavkama(
   id: string,
   firmaId: string
 ): Promise<FakturaSaStavkama | null> {
-  await oznaciDospjeleFakture(supabase);
-
   const { data: faktura, error: fErr } = await supabase
     .from("fakture")
     .select("*")
