@@ -6,6 +6,11 @@ import { createClient } from "@/utils/supabase/server";
 import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
 import { proveriLimitDokumenta } from "@/lib/pretplata.server";
 import { parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
+import {
+  idSchema,
+  sacuvajFakturuSchema,
+  NEISPRAVNI_PODACI_GRESKA,
+} from "@/lib/validacija/fakture";
 
 type StavkaInput = {
   naziv: string;
@@ -52,6 +57,10 @@ function clampPopust(n: number): number {
 export async function sacuvajFakturu(
   input: SacuvajFakturuInput
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  if (!sacuvajFakturuSchema.safeParse(input).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -155,6 +164,10 @@ export async function promeniStatusFakture(
   fakturaId: string,
   status: Database["public"]["Enums"]["faktura_status"]
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!idSchema.safeParse(fakturaId).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -190,6 +203,10 @@ export async function promeniStatusFakture(
 export async function obrisiFakturu(
   fakturaId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!idSchema.safeParse(fakturaId).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

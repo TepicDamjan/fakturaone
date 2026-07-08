@@ -5,6 +5,8 @@ import { createClient } from "@/utils/supabase/server";
 import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
 import { proveriLimitKlijenata } from "@/lib/pretplata.server";
 import { greskaAkoKlijentPostojiUFirmi } from "@/lib/preduzeceUnique";
+import { sacuvajKlijentaSchema } from "@/lib/validacija/klijenti";
+import { idSchema, NEISPRAVNI_PODACI_GRESKA } from "@/lib/validacija/zajednicko";
 
 export type SacuvajKlijentaInput = {
   naziv: string;
@@ -25,6 +27,10 @@ function emptyToNull(s: string): string | null {
 export async function sacuvajKlijenta(
   input: SacuvajKlijentaInput
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!sacuvajKlijentaSchema.safeParse(input).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -96,6 +102,13 @@ export async function azurirajKlijenta(
   klijentId: string,
   input: SacuvajKlijentaInput
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (
+    !idSchema.safeParse(klijentId).success ||
+    !sacuvajKlijentaSchema.safeParse(input).success
+  ) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -165,6 +178,10 @@ export async function azurirajKlijenta(
 export async function obrisiKlijenta(
   klijentId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!idSchema.safeParse(klijentId).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
