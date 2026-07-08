@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   type FakturaListItem,
   type FakturaStatus,
   initialsFromName,
 } from "@/lib/fakture";
+import { DATUM_PRESET_DEFAULT, type DatumPreset } from "@/lib/faktureFilter";
 import FakturaAkcijeMeni from "@/app/components/FakturaAkcijeMeni";
 import {
   TIP_DOKUMENTA_META,
@@ -15,9 +16,14 @@ import {
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
+  ukupno: number;
+  strana: number;
+  poStrani: number;
+  q: string;
+  status: FakturaStatus | "all";
+  tip: TipDokumenta | "all";
+  datum: DatumPreset;
 };
-
-const PAGE_SIZE = 5;
 
 const STATUS_LABELS: Record<FakturaStatus, string> = {
   placeno: "Plaćeno",
@@ -69,24 +75,71 @@ function formatIznos(n: number) {
   return `${n.toLocaleString("bs-Latn-BA", { maximumFractionDigits: 0 })} BAM`;
 }
 
-type DatePreset = "7" | "30" | "90" | "all";
-
-function withinPreset(iso: string, preset: DatePreset): boolean {
-  if (preset === "all") return true;
-  const days = preset === "7" ? 7 : preset === "30" ? 30 : 90;
-  const issued = new Date(`${iso}T12:00:00`).getTime();
-  const cutoff = Date.now() - days * 86400000;
-  return issued >= cutoff;
+function buildQueryString(params: {
+  q: string;
+  status: FakturaStatus | "all";
+  tip: TipDokumenta | "all";
+  datum: DatumPreset;
+  strana: number;
+}): string {
+  const sp = new URLSearchParams();
+  if (params.q.trim()) sp.set("q", params.q.trim());
+  if (params.status !== "all") sp.set("status", params.status);
+  if (params.tip !== "all") sp.set("tip", params.tip);
+  if (params.datum !== DATUM_PRESET_DEFAULT) sp.set("datum", params.datum);
+  if (params.strana > 1) sp.set("strana", String(params.strana));
+  return sp.toString();
 }
 
-export default function FaktureLista({ fakture }: FaktureListaProps) {
+export default function FaktureLista({
+  fakture,
+  ukupno,
+  strana,
+  poStrani,
+  q,
+  status,
+  tip,
+  datum,
+}: FaktureListaProps) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [datePreset, setDatePreset] = useState<DatePreset>("30");
-  const [statusFilter, setStatusFilter] = useState<FakturaStatus | "all">("all");
-  const [tipFilter, setTipFilter] = useState<TipDokumenta | "all">("all");
-  const [page, setPage] = useState(1);
+  const [, startTransition] = useTransition();
+  const [search, setSearch] = useState(q);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const navigate = (next: {
+    q?: string;
+    status?: FakturaStatus | "all";
+    tip?: TipDokumenta | "all";
+    datum?: DatumPreset;
+    strana?: number;
+  }) => {
+    const qs = buildQueryString({
+      q: next.q ?? search,
+      status: next.status ?? status,
+      tip: next.tip ?? tip,
+      datum: next.datum ?? datum,
+      // Promena bilo kog filtera vraća na prvu stranu.
+      strana: next.strana ?? 1,
+    });
+    startTransition(() => {
+      router.replace(`/dashboard/fakture${qs ? `?${qs}` : ""}`);
+    });
+  };
+
+  const onSearchChange = (value: string) => {
+    setSearch(value);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      navigate({ q: value });
+    }, 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -101,37 +154,17 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [openMenuId]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return fakture.filter((f) => {
-      if (statusFilter !== "all" && f.status !== statusFilter) return false;
-      if (tipFilter !== "all" && f.tipDokumenta !== tipFilter) return false;
-      if (!withinPreset(f.datumIzdavanja, datePreset)) return false;
-      if (!q) return true;
-      const broj = f.broj.toLowerCase();
-      const naziv = f.klijentNaziv.toLowerCase();
-      const email = f.klijentEmail.toLowerCase();
-      return (
-        broj.includes(q) ||
-        naziv.includes(q) ||
-        email.includes(q) ||
-        `#${broj}`.includes(q)
-      );
-    });
-  }, [fakture, search, datePreset, statusFilter, tipFilter]);
+  const total = ukupno;
+  const totalPages = Math.max(1, Math.ceil(total / poStrani));
+  const safePage = Math.min(strana, totalPages);
+  const start = (safePage - 1) * poStrani;
 
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * PAGE_SIZE;
-  const slice = filtered.slice(start, start + PAGE_SIZE);
+  const izvozQs = buildQueryString({ q: search, status, tip, datum, strana: 1 });
+  const izvozHref = `/api/fakture/izvoz${izvozQs ? `?${izvozQs}` : ""}`;
 
   const resetFilters = () => {
     setSearch("");
-    setDatePreset("30");
-    setStatusFilter("all");
-    setTipFilter("all");
-    setPage(1);
+    navigate({ q: "", status: "all", tip: "all", datum: DATUM_PRESET_DEFAULT });
   };
 
   return (
@@ -153,10 +186,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                 <input
                   type="search"
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Traži po broju fakture ili klijentu..."
                   className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava focus:ring-2 focus:ring-[#137FEC]/15 transition-shadow"
                 />
@@ -174,11 +204,8 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                   </svg>
                 </span>
                 <select
-                  value={datePreset}
-                  onChange={(e) => {
-                    setDatePreset(e.target.value as DatePreset);
-                    setPage(1);
-                  }}
+                  value={datum}
+                  onChange={(e) => navigate({ datum: e.target.value as DatumPreset })}
                   className="w-full appearance-none pl-10 pr-9 py-2.5 rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava cursor-pointer"
                 >
                   <option value="7">Poslednjih 7 dana</option>
@@ -204,11 +231,10 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                   </svg>
                 </span>
                 <select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value as FakturaStatus | "all");
-                    setPage(1);
-                  }}
+                  value={status}
+                  onChange={(e) =>
+                    navigate({ status: e.target.value as FakturaStatus | "all" })
+                  }
                   className="w-full appearance-none pl-10 pr-9 py-2.5 rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava cursor-pointer"
                 >
                   <option value="all">Svi statusi</option>
@@ -241,11 +267,10 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
                   </svg>
                 </span>
                 <select
-                  value={tipFilter}
-                  onChange={(e) => {
-                    setTipFilter(e.target.value as TipDokumenta | "all");
-                    setPage(1);
-                  }}
+                  value={tip}
+                  onChange={(e) =>
+                    navigate({ tip: e.target.value as TipDokumenta | "all" })
+                  }
                   className="w-full appearance-none pl-10 pr-9 py-2.5 rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna outline-none focus:border-fplava cursor-pointer"
                 >
                   <option value="all">Svi tipovi</option>
@@ -261,22 +286,40 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors h-[42px] self-end xl:self-auto"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Filteri
-          </button>
+          <div className="flex gap-2 self-end xl:self-auto">
+            <a
+              href={izvozHref}
+              download
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors h-[42px]"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Izvezi CSV
+            </a>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors h-[42px]"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Filteri
+            </button>
+          </div>
         </div>
       </div>
 
@@ -308,7 +351,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {slice.map((f) => (
+            {fakture.map((f) => (
               <FakturaRow
                 key={f.id}
                 f={f}
@@ -340,7 +383,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
               Prikazano{" "}
               <span className="font-medium text-fcrna">{start + 1}</span> do{" "}
               <span className="font-medium text-fcrna">
-                {Math.min(start + PAGE_SIZE, total)}
+                {Math.min(start + fakture.length, total)}
               </span>{" "}
               od <span className="font-medium text-fcrna">{total}</span>{" "}
               rezultata
@@ -351,7 +394,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
           <button
             type="button"
             disabled={safePage <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => navigate({ strana: Math.max(1, safePage - 1) })}
             className="px-4 py-2 rounded-lg border border-ftsiva text-sm font-medium text-fcrna disabled:opacity-40 disabled:cursor-not-allowed hover:bg-fsiva transition-colors"
           >
             Prethodno
@@ -359,7 +402,7 @@ export default function FaktureLista({ fakture }: FaktureListaProps) {
           <button
             type="button"
             disabled={safePage >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => navigate({ strana: Math.min(totalPages, safePage + 1) })}
             className="px-4 py-2 rounded-lg border border-ftsiva text-sm font-medium text-fcrna disabled:opacity-40 disabled:cursor-not-allowed hover:bg-fsiva transition-colors"
           >
             Sledeće

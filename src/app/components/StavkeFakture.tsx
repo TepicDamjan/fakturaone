@@ -1,6 +1,9 @@
 "use client";
 
 import { metaZaTip, type TipDokumenta } from "@/lib/tipDokumenta";
+import { JEDINICE } from "@/lib/jedinice";
+import ProizvodBrzaPretraga from "@/app/components/ProizvodBrzaPretraga";
+import type { Proizvod } from "@/lib/proizvodi";
 
 export type Stavka = {
   id: string;
@@ -24,9 +27,9 @@ type StavkeFaktureProps = {
   tipDokumenta?: TipDokumenta;
   /** Kada je true, kartica se prikazuje bez vanjskih margina (za grid layout). */
   inGrid?: boolean;
+  /** Katalog proizvoda za brzi izbor stavki (opcionalno). */
+  proizvodi?: Proizvod[];
 };
-
-const JEDINICE = ["kom", "pak", "kg", "g", "l", "m", "m²", "rol", "h"];
 
 export default function StavkeFakture({
   stavke,
@@ -35,6 +38,7 @@ export default function StavkeFakture({
   onRemoveStavka,
   tipDokumenta = "faktura",
   inGrid = false,
+  proizvodi = [],
 }: StavkeFaktureProps) {
   const tipMeta = metaZaTip(tipDokumenta);
   const jeOtpremnica = tipDokumenta === "otpremnica";
@@ -192,12 +196,16 @@ export default function StavkeFakture({
                 className="grid grid-cols-12 gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 items-start hover:bg-gray-50/50 transition-colors"
               >
                 <div className="col-span-5 flex flex-col gap-1">
-                  <input
-                    type="text"
+                  <ProizvodBrzaPretraga
                     value={stavka.naziv}
-                    onChange={(e) =>
-                      onUpdateStavka(stavka.id, "naziv", e.target.value)
-                    }
+                    onChange={(v) => onUpdateStavka(stavka.id, "naziv", v)}
+                    onSelect={(p) => {
+                      onUpdateStavka(stavka.id, "naziv", p.naziv);
+                      onUpdateStavka(stavka.id, "opis", p.opis ?? "");
+                      onUpdateStavka(stavka.id, "cena", Number(p.cena));
+                      onUpdateStavka(stavka.id, "jedinica", p.jedinica);
+                    }}
+                    proizvodi={proizvodi}
                     placeholder="Naziv usluge/proizvoda"
                     className="text-fcrna font-medium text-sm bg-transparent border-none outline-none placeholder-gray-300 w-full"
                   />

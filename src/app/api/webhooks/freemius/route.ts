@@ -21,19 +21,21 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
 
   if (!freemiusServerReady()) {
-    return NextResponse.json({ received: true }, { status: 200 });
+    console.error("[freemius webhook] Freemius env promenljive nisu podešene.");
+    return NextResponse.json({ error: "nije_podeseno" }, { status: 503 });
   }
 
   const signature = request.headers.get("x-signature");
   if (!verifyFreemiusWebhookSignature(rawBody, signature)) {
-    return new NextResponse(null, { status: 200 });
+    console.warn("[freemius webhook] Nevalidan potpis webhook zahteva.");
+    return NextResponse.json({ error: "nevalidan_potpis" }, { status: 401 });
   }
 
   let event: FreemiusWebhookEvent;
   try {
     event = JSON.parse(rawBody) as FreemiusWebhookEvent;
   } catch {
-    return new NextResponse(null, { status: 200 });
+    return NextResponse.json({ error: "nevalidan_json" }, { status: 400 });
   }
 
   if (!LICENSE_EVENTS.has(event.type)) {
@@ -60,7 +62,9 @@ export async function POST(request: Request) {
       subscriptionId,
     });
   } catch (err) {
+    // Sync je idempotentan (upsert po user_id), pa je Freemius retry bezbedan.
     console.error("[freemius webhook]", event.type, err);
+    return NextResponse.json({ error: "sync" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true }, { status: 200 });

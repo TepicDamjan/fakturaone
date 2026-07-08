@@ -10,7 +10,10 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sacuvajFakturu } from "@/app/dashboard/fakture/actions";
+import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
+import { ucitajProizvodiList } from "@/app/dashboard/proizvodi/actions";
+import type { Proizvod } from "@/lib/proizvodi";
 import StavkeFakture, { type Stavka } from "@/app/components/StavkeFakture";
 import OtpremnicaLogistika from "@/app/components/OtpremnicaLogistika";
 import PredracunSumaSidebar from "@/app/components/PredracunSumaSidebar";
@@ -70,6 +73,7 @@ export default function NovaFakturaPage() {
 
 function NovaFakturaForma() {
   const router = useRouter();
+  const { prikaziToast } = useToast();
   const searchParams = useSearchParams();
   const tipDokumenta = parseTipDokumenta(searchParams.get("tip"));
   const tipMeta = metaZaTip(tipDokumenta);
@@ -82,6 +86,7 @@ function NovaFakturaForma() {
   );
   const [klijentId, setKlijentId] = useState("");
   const [klijenti, setKlijenti] = useState<Klijent[]>([]);
+  const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
   const [brojFakture, setBrojFakture] = useState("");
   const [referenca, setReferenca] = useState("");
   const [datumIzdavanja, setDatumIzdavanja] = useState("");
@@ -99,6 +104,9 @@ function NovaFakturaForma() {
     ucitajKlijentiList()
       .then(setKlijenti)
       .catch(() => setKlijenti([]));
+    ucitajProizvodiList()
+      .then(setProizvodi)
+      .catch(() => setProizvodi([]));
   }, []);
 
   const osnovica = useMemo(
@@ -186,6 +194,7 @@ function NovaFakturaForma() {
         setSaveError(rez.error);
         return;
       }
+      prikaziToast({ tip: "uspeh", poruka: "Nacrt je sačuvan." });
       router.push("/dashboard/fakture");
     });
   };
@@ -201,6 +210,12 @@ function NovaFakturaForma() {
         setSaveError(rez.error);
         return;
       }
+      const porukaUspeha = jeOtpremnica
+        ? "Otpremnica je uspešno sačuvana."
+        : tipDokumenta === "predracun"
+          ? "Predračun je uspešno izdat."
+          : "Faktura je uspešno izdata.";
+      prikaziToast({ tip: "uspeh", poruka: porukaUspeha });
       router.push("/dashboard/fakture");
     });
   };
@@ -326,6 +341,7 @@ function NovaFakturaForma() {
               onUpdateStavka={handleUpdateStavka}
               onRemoveStavka={handleRemoveStavka}
               tipDokumenta={tipDokumenta}
+              proizvodi={proizvodi}
               inGrid
             />
 
@@ -472,7 +488,6 @@ function DetaljiKartica({
   adresaDostave,
   onAdresaDostaveChange,
   tipMetaNaziv,
-  tipMetaPrefiks,
   tipMetaRokLabel,
 }: DetaljiKarticaProps) {
   const jeOtpremnica = tipDokumenta === "otpremnica";
@@ -562,7 +577,7 @@ function DetaljiKartica({
             type="text"
             value={brojFakture}
             onChange={(e) => onBrojChange(e.target.value)}
-            placeholder={`${tipMetaPrefiks}-2025-0001`}
+            placeholder="Ostavite prazno za automatski broj"
             className="w-full rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 px-3 py-2.5"
           />
         </Polje>

@@ -7,6 +7,11 @@ import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 import type { PodesavanjaFirme } from "@/lib/firma";
 import { greskaAkoFirmaPostoji } from "@/lib/preduzeceUnique";
 import { proveriLimitFirme } from "@/lib/pretplata.server";
+import {
+  bankovniRacuniSchema,
+  sacuvajFirmuSchema,
+} from "@/lib/validacija/podesavanja";
+import { NEISPRAVNI_PODACI_GRESKA } from "@/lib/validacija/zajednicko";
 
 const LOGO_BUCKET = "firma-logos";
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
@@ -220,6 +225,13 @@ export async function sacuvajPodesavanjaFirme(
   firma: SacuvajFirmuInput,
   racuni: BankovniRacunInput[]
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (
+    !sacuvajFirmuSchema.safeParse(firma).success ||
+    !bankovniRacuniSchema.safeParse(racuni).success
+  ) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
