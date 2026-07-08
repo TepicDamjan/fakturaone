@@ -6,6 +6,7 @@ import DashboardSidebar from "@/app/components/DashboardSidebar";
 import PlanUsageBanner from "@/app/components/PlanUsageBanner";
 import { DashboardNavContext } from "@/app/components/DashboardNavContext";
 import { shouldHideDashboardSidebar } from "@/lib/dashboardNav";
+import { ToastProvider } from "@/app/components/toast/ToastContext";
 import type { AktivnaFirmaPregled } from "@/app/components/DashboardSidebar";
 import type { PretplataPregled } from "@/lib/pretplata.types";
 
@@ -36,6 +37,7 @@ export default function DashboardShell({
   }, [mobileOpen]);
 
   return (
+    <ToastProvider>
     <DashboardNavContext.Provider
       value={{
         sidebarHidden,
@@ -59,5 +61,6 @@ export default function DashboardShell({
         </div>
       </div>
     </DashboardNavContext.Provider>
+    </ToastProvider>
   );
 }

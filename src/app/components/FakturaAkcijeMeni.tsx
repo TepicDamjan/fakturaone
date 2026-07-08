@@ -9,6 +9,7 @@ import { preuzmiDokumentPdf } from "@/lib/dokument/dokumentClient";
 import { dokumentPdfFilenameZa } from "@/lib/dokument/dokumentModel";
 import PosaljiDokumentModal from "@/app/components/PosaljiDokumentModal";
 import { metaZaTip, parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
+import { useToast } from "@/app/components/toast/ToastContext";
 
 export type FakturaAkcijeMeniProps = {
   fakturaId: string;
@@ -39,6 +40,7 @@ export default function FakturaAkcijeMeni({
 }: FakturaAkcijeMeniProps) {
   const tipDokumenta = parseTipDokumenta(tipRaw);
   const tipMeta = metaZaTip(tipDokumenta);
+  const { prikaziToast } = useToast();
   const [busy, setBusy] = useState(false);
   const [emailModal, setEmailModal] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -75,15 +77,19 @@ export default function FakturaAkcijeMeni({
   }, [menuOpen, syncMenuPosition]);
 
   const runAction = async (
-    fn: () => Promise<{ ok: true } | { ok: false; error: string }>
+    fn: () => Promise<{ ok: true } | { ok: false; error: string }>,
+    porukaUspeha?: string
   ) => {
     setBusy(true);
     try {
       const res = await fn();
       onCloseMenu();
       if (!res.ok) {
-        window.alert(res.error);
+        prikaziToast({ tip: "greska", poruka: res.error });
         return;
+      }
+      if (porukaUspeha) {
+        prikaziToast({ tip: "uspeh", poruka: porukaUspeha });
       }
       routerRefresh();
     } finally {
@@ -134,7 +140,7 @@ export default function FakturaAkcijeMeni({
               fakturaId,
               dokumentPdfFilenameZa(tipDokumenta, broj)
             );
-            if (!res.ok) window.alert(res.error);
+            if (!res.ok) prikaziToast({ tip: "greska", poruka: res.error });
           }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-50"
         >
@@ -191,7 +197,12 @@ export default function FakturaAkcijeMeni({
         <button
           type="button"
           role="menuitem"
-          onClick={() => runAction(() => promeniStatusFakture(fakturaId, "na_cekanju"))}
+          onClick={() =>
+            runAction(
+              () => promeniStatusFakture(fakturaId, "na_cekanju"),
+              "Status promenjen na „Na čekanju“."
+            )
+          }
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-orange-50/90 transition-colors"
         >
           <svg
@@ -215,7 +226,12 @@ export default function FakturaAkcijeMeni({
         <button
           type="button"
           role="menuitem"
-          onClick={() => runAction(() => promeniStatusFakture(fakturaId, "placeno"))}
+          onClick={() =>
+            runAction(
+              () => promeniStatusFakture(fakturaId, "placeno"),
+              "Status promenjen na „Plaćeno“."
+            )
+          }
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-emerald-50/80 transition-colors"
         >
           <svg
@@ -239,7 +255,12 @@ export default function FakturaAkcijeMeni({
         <button
           type="button"
           role="menuitem"
-          onClick={() => runAction(() => promeniStatusFakture(fakturaId, "kasni"))}
+          onClick={() =>
+            runAction(
+              () => promeniStatusFakture(fakturaId, "kasni"),
+              "Status promenjen na „Kasni“."
+            )
+          }
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-red-50/80 transition-colors"
         >
           <svg
@@ -274,7 +295,10 @@ export default function FakturaAkcijeMeni({
             ) {
               return;
             }
-            runAction(() => obrisiFakturu(fakturaId));
+            runAction(
+              () => obrisiFakturu(fakturaId),
+              `Dokument #${broj} je obrisan.`
+            );
           }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
         >

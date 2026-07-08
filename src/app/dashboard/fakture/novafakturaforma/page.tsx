@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sacuvajFakturu } from "@/app/dashboard/fakture/actions";
+import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
 import StavkeFakture, { type Stavka } from "@/app/components/StavkeFakture";
 import OtpremnicaLogistika from "@/app/components/OtpremnicaLogistika";
@@ -70,6 +71,7 @@ export default function NovaFakturaPage() {
 
 function NovaFakturaForma() {
   const router = useRouter();
+  const { prikaziToast } = useToast();
   const searchParams = useSearchParams();
   const tipDokumenta = parseTipDokumenta(searchParams.get("tip"));
   const tipMeta = metaZaTip(tipDokumenta);
@@ -186,6 +188,7 @@ function NovaFakturaForma() {
         setSaveError(rez.error);
         return;
       }
+      prikaziToast({ tip: "uspeh", poruka: "Nacrt je sačuvan." });
       router.push("/dashboard/fakture");
     });
   };
@@ -201,6 +204,12 @@ function NovaFakturaForma() {
         setSaveError(rez.error);
         return;
       }
+      const porukaUspeha = jeOtpremnica
+        ? "Otpremnica je uspešno sačuvana."
+        : tipDokumenta === "predracun"
+          ? "Predračun je uspešno izdat."
+          : "Faktura je uspešno izdata.";
+      prikaziToast({ tip: "uspeh", poruka: porukaUspeha });
       router.push("/dashboard/fakture");
     });
   };
