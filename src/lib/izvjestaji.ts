@@ -100,7 +100,7 @@ export function uPeriodu(
 }
 
 export function jeFinansijskaFaktura(f: FakturaListItem): boolean {
-  return f.tipDokumenta === "faktura";
+  return f.tipDokumenta === "faktura" || f.tipDokumenta === "kreditna_nota";
 }
 
 export function filtrirajZaPeriod(

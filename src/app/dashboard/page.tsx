@@ -31,6 +31,10 @@ function formatDashboardDate(iso: string): string {
 }
 
 function fakturaToInvoice(f: FakturaListItem): Invoice {
+  const djelimicno =
+    f.tipDokumenta === "faktura" &&
+    f.placenoIznos > 0 &&
+    f.status !== "placeno";
   return {
     id: f.id,
     displayBroj: `#${f.broj}`,
@@ -41,7 +45,10 @@ function fakturaToInvoice(f: FakturaListItem): Invoice {
     clientName: f.klijentNaziv || "—",
     date: formatDashboardDate(f.datumIzdavanja),
     amount: `${Math.round(f.iznos).toLocaleString("bs-Latn-BA")} BAM`,
-    status: STATUS_LABEL[f.status],
+    status: djelimicno ? "Djelimično" : STATUS_LABEL[f.status],
+    iznos: f.iznos,
+    placenoIznos: f.placenoIznos,
+    statusKod: f.status,
   };
 }
 

@@ -394,3 +394,44 @@ export async function sacuvajPodesavanjaFirme(
   revalidatePath("/dashboard/podesavanja");
   return { ok: true };
 }
+
+export async function sacuvajObavestenjaFirme(input: {
+  podsjetniciUkljuceni: boolean;
+  podsjetnikDanaPrije: number;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { sacuvajObavestenjaSchema } = await import(
+    "@/lib/validacija/podesavanja"
+  );
+  if (!sacuvajObavestenjaSchema.safeParse(input).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: "Morate biti ulogovani." };
+  }
+
+  const firmaId = await getAktivnaFirmaId();
+  if (!firmaId) {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
+  const { error } = await supabase
+    .from("firma")
+    .update({
+      podsjetnici_ukljuceni: input.podsjetniciUkljuceni,
+      podsjetnik_dana_prije: input.podsjetnikDanaPrije,
+    })
+    .eq("id", firmaId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/podesavanja");
+  return { ok: true };
+}

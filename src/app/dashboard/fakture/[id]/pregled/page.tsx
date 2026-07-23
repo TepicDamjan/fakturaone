@@ -1,22 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import DokumentPdfEmailAkcije from "@/app/components/DokumentPdfEmailAkcije";
 import {
   type FakturaSaStavkama,
   type FakturaStatus,
 } from "@/lib/fakture";
-import { ucitajFakturuSaStavkama } from "@/app/dashboard/fakture/actions";
+import {
+  konvertujPredracunUFakturu,
+  evidentirajPlacanje,
+  stornirajFakturu,
+  ucitajFakturuSaStavkama,
+} from "@/app/dashboard/fakture/actions";
 import {
   FakturaDetaljiPlacanja,
   FakturaIzdavalacKolona,
   FakturaLogoZaglavlje,
 } from "@/app/components/FakturaFirmaNaFakturi";
+import EvidentirajPlacanjeModal from "@/app/components/EvidentirajPlacanjeModal";
 import { formatKlijentAdresa } from "@/lib/klijenti";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
+import { useToast } from "@/app/components/toast/ToastContext";
+import { zaokruziNovac } from "@/lib/dokument/format";
 
 function formatIznos(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
@@ -67,6 +75,10 @@ const STATUS_BADGE: Record<FakturaStatus, string> = {
 export default function SacuvanaFakturaPregledPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
+  const router = useRouter();
+  const { prikaziToast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [placanjeModal, setPlacanjeModal] = useState(false);
 
   const [payload, setPayload] = useState<FakturaSaStavkama | null | undefined>(
     undefined
@@ -87,6 +99,27 @@ export default function SacuvanaFakturaPregledPage() {
   const brojFakture = f?.broj?.trim() || "—";
   const tipDokumenta = parseTipDokumenta(f?.tip_dokumenta);
   const tipMeta = metaZaTip(tipDokumenta);
+  const jePredracun = tipDokumenta === "predracun";
+  const mozeStorno = tipDokumenta === "faktura" && f?.status !== "nacrt";
+
+  const handleStorno = () => {
+    if (
+      !window.confirm(
+        `Kreirati kreditnu notu (storno) za fakturu #${brojFakture}? Originalna faktura ostaje sačuvana.`
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      const res = await stornirajFakturu(id);
+      if (!res.ok) {
+        prikaziToast({ tip: "greska", poruka: res.error });
+        return;
+      }
+      prikaziToast({ tip: "uspeh", poruka: "Kreditna nota je kreirana." });
+      router.push(`/dashboard/fakture/${res.id}/pregled`);
+    });
+  };
 
   const osnovica = useMemo(() => {
     if (!payload?.stavke?.length) return 0;
@@ -99,9 +132,48 @@ export default function SacuvanaFakturaPregledPage() {
   const pdvProcenat = f ? Number(f.pdv_procenat) : 17;
   const popust = f ? Number(f.popust) : 0;
   const pdvIznos = osnovica * (pdvProcenat / 100);
-  const ukupno = osnovica + pdvIznos - popust;
+  const ukupno = zaokruziNovac(osnovica + pdvIznos - popust);
+  const placenoIznos = f ? zaokruziNovac(Number(f.placeno_iznos ?? 0)) : 0;
+  const preostalo = zaokruziNovac(Math.max(0, ukupno - placenoIznos));
+  const mozeUplata =
+    tipDokumenta === "faktura" &&
+    f != null &&
+    f.status !== "nacrt" &&
+    f.status !== "placeno" &&
+    preostalo > 0.001;
 
   const primalac = payload?.klijent ?? null;
+
+  const reload = () => {
+    if (!id) return;
+    ucitajFakturuSaStavkama(id)
+      .then(setPayload)
+      .catch(() => setPayload(null));
+  };
+
+  const handleIzdajFakturu = () => {
+    if (
+      !window.confirm(
+        `Kreirati nacrt fakture od predračuna #${brojFakture}? Stavke i klijent će biti kopirani.`
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      const res = await konvertujPredracunUFakturu(id);
+      if (!res.ok) {
+        prikaziToast({ tip: "greska", poruka: res.error });
+        return;
+      }
+      prikaziToast({
+        tip: "uspeh",
+        poruka: res.vecPostojala
+          ? "Faktura od ovog predračuna već postoji."
+          : "Nacrt fakture je kreiran.",
+      });
+      router.push(`/dashboard/fakture/${res.id}/pregled`);
+    });
+  };
 
   if (payload === undefined) {
     return (
@@ -128,6 +200,7 @@ export default function SacuvanaFakturaPregledPage() {
   }
 
   const stavke = payload.stavke;
+  const izvor = payload.izvor;
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] pb-16 print:bg-white print:pb-0">
@@ -139,15 +212,38 @@ export default function SacuvanaFakturaPregledPage() {
                 {tipMeta.naziv} #{brojFakture}
               </h1>
               <span
-                className={`rounded-full px-3 py-0.5 text-sm font-semibold ${STATUS_BADGE[f.status]}`}
+                className={`rounded-full px-3 py-0.5 text-sm font-semibold ${
+                  tipDokumenta === "faktura" &&
+                  placenoIznos > 0 &&
+                  f.status !== "placeno"
+                    ? "bg-sky-50 text-sky-700 border border-sky-200"
+                    : STATUS_BADGE[f.status]
+                }`}
               >
-                {STATUS_LABELS[f.status]}
+                {tipDokumenta === "faktura" &&
+                placenoIznos > 0 &&
+                f.status !== "placeno"
+                  ? "Djelimično"
+                  : STATUS_LABELS[f.status]}
               </span>
             </div>
             <p className="mt-1 text-sm text-[#64748B]">
               Izdato {formatShortDate(f.datum_izdavanja)} • {tipMeta.rokLabel}{" "}
               {formatShortDate(f.datum_placanja)}
             </p>
+            {izvor ? (
+              <p className="mt-1 text-sm text-[#64748B]">
+                {tipDokumenta === "kreditna_nota"
+                  ? "Storno fakture "
+                  : "Nastala od predračuna "}
+                <Link
+                  href={`/dashboard/fakture/${izvor.id}/pregled`}
+                  className="font-medium text-fplava hover:underline"
+                >
+                  #{izvor.broj}
+                </Link>
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Link
@@ -165,6 +261,41 @@ export default function SacuvanaFakturaPregledPage() {
               </svg>
               Nazad
             </Link>
+            <Link
+              href={`/dashboard/fakture/novafakturaforma?id=${id}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors"
+            >
+              Izmijeni
+            </Link>
+            {jePredracun ? (
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleIzdajFakturu}
+                className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50"
+              >
+                {isPending ? "Kreiranje…" : "Izdaj fakturu"}
+              </button>
+            ) : null}
+            {mozeUplata ? (
+              <button
+                type="button"
+                onClick={() => setPlacanjeModal(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                Evidentiraj uplatu
+              </button>
+            ) : null}
+            {mozeStorno ? (
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleStorno}
+                className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
+              >
+                Storniraj
+              </button>
+            ) : null}
             <DokumentPdfEmailAkcije
               fakturaId={id}
               broj={brojFakture}
@@ -176,6 +307,27 @@ export default function SacuvanaFakturaPregledPage() {
           </div>
         </div>
       </header>
+
+      <EvidentirajPlacanjeModal
+        open={placanjeModal}
+        onClose={() => setPlacanjeModal(false)}
+        brojDokumenta={brojFakture}
+        ukupno={ukupno}
+        placenoIznos={placenoIznos}
+        onConfirm={async (uplata) => {
+          const res = await evidentirajPlacanje(id, uplata);
+          if (!res.ok) return res;
+          prikaziToast({
+            tip: "uspeh",
+            poruka:
+              res.preostalo <= 0.001
+                ? "Faktura je u potpunosti plaćena."
+                : `Uplata evidentirana. Preostalo: ${res.preostalo.toFixed(2)}.`,
+          });
+          reload();
+          return { ok: true as const };
+        }}
+      />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 mt-8 print:mt-0 print:max-w-none print:px-8">
         <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:border-0">
@@ -316,6 +468,22 @@ export default function SacuvanaFakturaPregledPage() {
                       {formatIznos(ukupno)} BAM
                     </span>
                   </div>
+                  {tipDokumenta === "faktura" && placenoIznos > 0 ? (
+                    <>
+                      <div className="flex justify-between gap-4 pt-2">
+                        <span className="text-[#64748B]">Plaćeno</span>
+                        <span className="tabular-nums font-medium text-emerald-700">
+                          {formatIznos(placenoIznos)} BAM
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-[#64748B]">Preostalo</span>
+                        <span className="tabular-nums font-semibold text-fcrna">
+                          {formatIznos(preostalo)} BAM
+                        </span>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
             ) : null}

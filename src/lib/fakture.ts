@@ -13,6 +13,7 @@ export type FakturaListItem = {
   datumIzdavanja: string;
   datumPlacanja: string;
   iznos: number;
+  placenoIznos: number;
   status: FakturaStatus;
 };
 
@@ -22,6 +23,8 @@ export type FakturaSaStavkama = {
   faktura: Database["public"]["Tables"]["fakture"]["Row"];
   stavke: StavkaFaktureRow[];
   klijent: Database["public"]["Tables"]["klijenti"]["Row"] | null;
+  /** Dokument od kojeg je nastao (npr. predračun → faktura). */
+  izvor: { id: string; broj: string } | null;
 };
 
 type FaktureListaViewRow = Database["public"]["Views"]["fakture_lista"]["Row"];
@@ -55,6 +58,7 @@ function mapViewRows(rows: FaktureListaViewRow[]): FakturaListItem[] {
       datumIzdavanja: r.datum_izdavanja ?? "",
       datumPlacanja: r.datum_placanja ?? "",
       iznos: Number(r.iznos ?? 0),
+      placenoIznos: Number(r.placeno_iznos ?? 0),
       status: r.status as FakturaStatus,
     }));
 }
@@ -199,9 +203,24 @@ export async function fetchFakturaSaStavkama(
     klijent = k as Database["public"]["Tables"]["klijenti"]["Row"] | null;
   }
 
+  let izvor: { id: string; broj: string } | null = null;
+  if (fRow.izvor_dokument_id) {
+    const { data: iz, error: izErr } = await supabase
+      .from("fakture")
+      .select("id, broj")
+      .eq("id", fRow.izvor_dokument_id)
+      .eq("firma_id", firmaId)
+      .maybeSingle();
+    if (izErr) throw izErr;
+    if (iz?.id && iz.broj) {
+      izvor = { id: iz.id, broj: iz.broj };
+    }
+  }
+
   return {
     faktura: fRow,
     stavke: (stavke ?? []) as StavkaFaktureRow[],
     klijent,
+    izvor,
   };
 }

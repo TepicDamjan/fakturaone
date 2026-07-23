@@ -15,7 +15,9 @@ type IzborTipaDokumentaModalProps = {
   defaultTip?: TipDokumenta;
 };
 
-const ICONS: Record<TipDokumenta, ReactNode> = {
+type TipZaKreiranje = (typeof TIPOVI_DOKUMENATA)[number];
+
+const ICONS: Record<TipZaKreiranje, ReactNode> = {
   faktura: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
@@ -72,7 +74,7 @@ const ICONS: Record<TipDokumenta, ReactNode> = {
   ),
 };
 
-const BG_ICON: Record<TipDokumenta, string> = {
+const BG_ICON: Record<TipZaKreiranje, string> = {
   faktura: "bg-blue-50",
   predracun: "bg-amber-50",
   otpremnica: "bg-emerald-50",

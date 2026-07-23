@@ -9,7 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { sacuvajFakturu } from "@/app/dashboard/fakture/actions";
+import { azurirajFakturu, sacuvajFakturu, ucitajFakturuSaStavkama } from "@/app/dashboard/fakture/actions";
 import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
 import { ucitajProizvodiList } from "@/app/dashboard/proizvodi/actions";
@@ -25,6 +25,7 @@ import {
   parseTipDokumenta,
   type TipDokumenta,
 } from "@/lib/tipDokumenta";
+import type { FakturaStatus } from "@/lib/fakture";
 
 const NACINI_TRANSPORTA = [
   "Kamion (Sopstveno vozilo)",
@@ -75,14 +76,20 @@ function NovaFakturaForma() {
   const router = useRouter();
   const { prikaziToast } = useToast();
   const searchParams = useSearchParams();
-  const tipDokumenta = parseTipDokumenta(searchParams.get("tip"));
+  const editId = (searchParams.get("id") ?? "").trim();
+  const jeIzmjena = Boolean(editId);
+  const tipFromQuery = parseTipDokumenta(searchParams.get("tip"));
+
+  const [tipDokumenta, setTipDokumenta] = useState<TipDokumenta>(tipFromQuery);
   const tipMeta = metaZaTip(tipDokumenta);
   const jeOtpremnica = tipDokumenta === "otpremnica";
 
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [ucitavanje, setUcitavanje] = useState(jeIzmjena);
+  const [postojeciStatus, setPostojeciStatus] = useState<FakturaStatus>("nacrt");
   const [stavke, setStavke] = useState<Stavka[]>(() =>
-    initialStavkeZaTip(tipDokumenta)
+    initialStavkeZaTip(tipFromQuery)
   );
   const [klijentId, setKlijentId] = useState("");
   const [klijenti, setKlijenti] = useState<Klijent[]>([]);
@@ -108,6 +115,61 @@ function NovaFakturaForma() {
       .then(setProizvodi)
       .catch(() => setProizvodi([]));
   }, []);
+
+  useEffect(() => {
+    if (!editId) {
+      setUcitavanje(false);
+      return;
+    }
+    let cancelled = false;
+    setUcitavanje(true);
+    ucitajFakturuSaStavkama(editId)
+      .then((payload) => {
+        if (cancelled) return;
+        if (!payload) {
+          setSaveError("Dokument nije pronađen ili vam ne pripada.");
+          setUcitavanje(false);
+          return;
+        }
+        const f = payload.faktura;
+        const tip = parseTipDokumenta(f.tip_dokumenta);
+        setTipDokumenta(tip);
+        setPostojeciStatus(f.status);
+        setKlijentId(f.klijent_id ?? "");
+        setBrojFakture(f.broj ?? "");
+        setReferenca(f.referenca ?? "");
+        setDatumIzdavanja(f.datum_izdavanja ?? "");
+        setDatumPlacanja(f.datum_placanja ?? "");
+        setNapomene(f.napomene ?? "");
+        setPdvProcenat(Number(f.pdv_procenat) || 0);
+        setPopust(Number(f.popust) || 0);
+        setNacinTransporta(f.nacin_transporta || NACINI_TRANSPORTA[0]);
+        setAdresaDostave(f.adresa_dostave ?? "");
+        setRegistracijaVozila(f.registracija_vozila ?? "");
+        setVozac(f.vozac ?? "");
+        setStavke(
+          payload.stavke.length > 0
+            ? payload.stavke.map((s) => ({
+                id: s.id,
+                naziv: s.naziv,
+                opis: s.opis ?? "",
+                kolicina: Number(s.kolicina),
+                cena: Number(s.cena),
+                jedinica: s.jedinica || "kom",
+              }))
+            : initialStavkeZaTip(tip)
+        );
+        setUcitavanje(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSaveError("Greška pri učitavanju dokumenta.");
+        setUcitavanje(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editId]);
 
   const osnovica = useMemo(
     () => stavke.reduce((sum, s) => sum + s.kolicina * s.cena, 0),
@@ -186,57 +248,90 @@ function NovaFakturaForma() {
   const handleSacuvajNacrt = () => {
     setSaveError(null);
     startTransition(async () => {
-      const rez = await sacuvajFakturu({
-        ...sacuvajPayload(),
-        status: "nacrt",
-      });
+      const rez = jeIzmjena
+        ? await azurirajFakturu(editId, {
+            ...sacuvajPayload(),
+            status: "nacrt",
+          })
+        : await sacuvajFakturu({
+            ...sacuvajPayload(),
+            status: "nacrt",
+          });
       if (!rez.ok) {
         setSaveError(rez.error);
         return;
       }
-      prikaziToast({ tip: "uspeh", poruka: "Nacrt je sačuvan." });
-      router.push("/dashboard/fakture");
+      prikaziToast({
+        tip: "uspeh",
+        poruka: jeIzmjena ? "Izmjene su sačuvane." : "Nacrt je sačuvan.",
+      });
+      router.push(jeIzmjena ? `/dashboard/fakture/${rez.id}/pregled` : "/dashboard/fakture");
     });
   };
 
   const handleIzdaj = () => {
     setSaveError(null);
     startTransition(async () => {
-      const rez = await sacuvajFakturu({
-        ...sacuvajPayload(),
-        status: "na_cekanju",
-      });
+      const status: FakturaStatus =
+        jeIzmjena && postojeciStatus !== "nacrt"
+          ? postojeciStatus
+          : "na_cekanju";
+      const rez = jeIzmjena
+        ? await azurirajFakturu(editId, {
+            ...sacuvajPayload(),
+            status,
+          })
+        : await sacuvajFakturu({
+            ...sacuvajPayload(),
+            status: "na_cekanju",
+          });
       if (!rez.ok) {
         setSaveError(rez.error);
         return;
       }
-      const porukaUspeha = jeOtpremnica
-        ? "Otpremnica je uspešno sačuvana."
-        : tipDokumenta === "predracun"
-          ? "Predračun je uspešno izdat."
-          : "Faktura je uspešno izdata.";
+      const porukaUspeha = jeIzmjena
+        ? "Izmjene su sačuvane."
+        : jeOtpremnica
+          ? "Otpremnica je uspešno sačuvana."
+          : tipDokumenta === "predracun"
+            ? "Predračun je uspešno izdat."
+            : "Faktura je uspešno izdata.";
       prikaziToast({ tip: "uspeh", poruka: porukaUspeha });
-      router.push("/dashboard/fakture");
+      router.push(jeIzmjena ? `/dashboard/fakture/${rez.id}/pregled` : "/dashboard/fakture");
     });
   };
 
-  const sacuvajLabela = jeOtpremnica
-    ? "Sačuvaj Otpremnicu"
-    : tipDokumenta === "predracun"
-      ? "Izdaj Predračun"
-      : "Izdaj Fakturu";
+  const sacuvajLabela = jeIzmjena
+    ? "Sačuvaj izmjene"
+    : jeOtpremnica
+      ? "Sačuvaj Otpremnicu"
+      : tipDokumenta === "predracun"
+        ? "Izdaj Predračun"
+        : "Izdaj Fakturu";
 
-  const naslov = jeOtpremnica
-    ? "Nova Otpremnica"
-    : tipDokumenta === "predracun"
-      ? "Kreiranje Predračuna"
-      : "Nova Faktura";
+  const naslov = jeIzmjena
+    ? `Izmjena — ${tipMeta.naziv}`
+    : jeOtpremnica
+      ? "Nova Otpremnica"
+      : tipDokumenta === "predracun"
+        ? "Kreiranje Predračuna"
+        : "Nova Faktura";
 
-  const podnaslov = jeOtpremnica
-    ? "Otpremnica koja prati isporuku robe ili usluga."
-    : tipDokumenta === "predracun"
-      ? "Popunite detalje za novi pro-forma dokument."
-      : "Popunite detalje ispod kako biste generisali novu fakturu.";
+  const podnaslov = jeIzmjena
+    ? `Uredite podatke dokumenta #${brojFakture || "…"}.`
+    : jeOtpremnica
+      ? "Otpremnica koja prati isporuku robe ili usluga."
+      : tipDokumenta === "predracun"
+        ? "Popunite detalje za novi pro-forma dokument."
+        : "Popunite detalje ispod kako biste generisali novu fakturu.";
+
+  if (ucitavanje) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-8">
+        <p className="text-[#64748B]">Učitavanje dokumenta…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12">
@@ -263,20 +358,26 @@ function NovaFakturaForma() {
           <div className="flex flex-wrap gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => router.push("/dashboard/fakture")}
+              onClick={() =>
+                router.push(
+                  jeIzmjena
+                    ? `/dashboard/fakture/${editId}/pregled`
+                    : "/dashboard/fakture"
+                )
+              }
               disabled={isPending}
               className="rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-50"
             >
               Otkaži
             </button>
-            {!jeOtpremnica ? (
+            {!jeOtpremnica && (!jeIzmjena || postojeciStatus === "nacrt") ? (
               <button
                 type="button"
                 onClick={handleSacuvajNacrt}
                 disabled={isPending}
                 className="rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-50"
               >
-                Sačuvaj kao nacrt
+                {jeIzmjena ? "Sačuvaj kao nacrt" : "Sačuvaj kao nacrt"}
               </button>
             ) : null}
             <button

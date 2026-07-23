@@ -2,15 +2,21 @@ import type { Database } from "@/types/database";
 
 export type TipDokumenta = Database["public"]["Enums"]["tip_dokumenta"];
 
-export const TIPOVI_DOKUMENATA: readonly TipDokumenta[] = [
+/** Tipovi koje korisnik bira pri kreiranju (bez kreditne note). */
+export const TIPOVI_DOKUMENATA = [
   "faktura",
   "predracun",
   "otpremnica",
-] as const;
+] as const satisfies readonly TipDokumenta[];
+
+export type TipDokumentaZaKreiranje = (typeof TIPOVI_DOKUMENATA)[number];
 
 export function isTipDokumenta(value: unknown): value is TipDokumenta {
   return (
-    value === "faktura" || value === "predracun" || value === "otpremnica"
+    value === "faktura" ||
+    value === "predracun" ||
+    value === "otpremnica" ||
+    value === "kreditna_nota"
   );
 }
 
@@ -61,6 +67,16 @@ export const TIP_DOKUMENTA_META: Record<TipDokumenta, TipDokumentaMeta> = {
     totalLabel: "Ukupna vrednost robe",
     defaultNapomena:
       "Potvrđujemo da je gore navedena roba/usluga isporučena u skladu sa narudžbinom.",
+  },
+  kreditna_nota: {
+    naziv: "Kreditna nota",
+    akuzativ: "kreditnu notu",
+    opis: "Storno ili umanjenje ranije izdate fakture.",
+    brojPrefiks: "KRE",
+    rokLabel: "Datum izdavanja",
+    totalLabel: "Iznos za umanjenje",
+    defaultNapomena:
+      "Ova kreditna nota stornira / umanjuje ranije izdatu fakturu.",
   },
 };
 

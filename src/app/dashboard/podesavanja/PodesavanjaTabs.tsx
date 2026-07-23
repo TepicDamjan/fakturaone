@@ -4,6 +4,7 @@ import { useState } from "react";
 import PodesavanjaFirmaForm from "@/app/dashboard/podesavanja/PodesavanjaFirmaForm";
 import PodesavanjaProfil from "@/app/dashboard/podesavanja/PodesavanjaProfil";
 import PodesavanjaPlacanja from "@/app/dashboard/podesavanja/PodesavanjaPlacanja";
+import PodesavanjaObavestenja from "@/app/dashboard/podesavanja/PodesavanjaObavestenja";
 import type { BankovniRacunRow, FirmaRow } from "@/lib/firma";
 import type { PretplataPregled } from "@/lib/pretplata.types";
 
@@ -22,10 +23,10 @@ type Props = {
   pretplata: PretplataPregled;
 };
 
-const TABS: { id: TabId; label: string; disabled?: boolean }[] = [
+const TABS: { id: TabId; label: string }[] = [
   { id: "profil", label: "Profil" },
   { id: "firma", label: "Firma" },
-  { id: "obavestenja", label: "Obaveštenja", disabled: true },
+  { id: "obavestenja", label: "Obaveštenja" },
   { id: "placanja", label: "Plaćanja" },
 ];
 
@@ -46,20 +47,14 @@ export default function PodesavanjaTabs({
             <button
               key={t.id}
               type="button"
-              disabled={t.disabled}
-              onClick={() => !t.disabled && setTab(t.id)}
+              onClick={() => setTab(t.id)}
               className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
                 active
                   ? "border-fplava text-fplava"
-                  : t.disabled
-                    ? "border-transparent text-[#94A3B8] cursor-not-allowed"
-                    : "border-transparent text-[#64748B] hover:text-fcrna"
+                  : "border-transparent text-[#64748B] hover:text-fcrna"
               }`}
             >
               {t.label}
-              {t.disabled ? (
-                <span className="ml-1.5 text-[10px] uppercase text-[#94A3B8]">uskoro</span>
-              ) : null}
             </button>
           );
         })}
@@ -87,7 +82,10 @@ export default function PodesavanjaTabs({
       ) : null}
 
       {tab === "obavestenja" ? (
-        <p className="text-[#64748B] text-sm">Ova sekcija će uskoro biti dostupna.</p>
+        <PodesavanjaObavestenja
+          initialFirma={initialFirma}
+          emailDostupan={pretplata.limits.emailSlanje}
+        />
       ) : null}
     </div>
   );

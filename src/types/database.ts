@@ -12,19 +12,19 @@ export type Database = {
             brojaci_dokumenata: {
                 Row: {
                     firma_id: string;
-                    tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
                     godina: number;
                     sledeci: number;
                 };
                 Insert: {
                     firma_id: string;
-                    tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
                     godina: number;
                     sledeci?: number;
                 };
                 Update: {
                     firma_id?: string;
-                    tip_dokumenta?: "faktura" | "predracun" | "otpremnica";
+                    tip_dokumenta?: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
                     godina?: number;
                     sledeci?: number;
                 };
@@ -117,6 +117,10 @@ export type Database = {
                     adresa_dostave: string | null;
                     registracija_vozila: string | null;
                     vozac: string | null;
+                    izvor_dokument_id: string | null;
+                    placeno_iznos: number;
+                    posljednji_podsjetnik_at: string | null;
+                    posljednji_podsjetnik_vrsta: string | null;
                     created_at: string;
                     updated_at: string;
                 };
@@ -138,6 +142,10 @@ export type Database = {
                     adresa_dostave?: string | null;
                     registracija_vozila?: string | null;
                     vozac?: string | null;
+                    izvor_dokument_id?: string | null;
+                    placeno_iznos?: number;
+                    posljednji_podsjetnik_at?: string | null;
+                    posljednji_podsjetnik_vrsta?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -159,6 +167,10 @@ export type Database = {
                     adresa_dostave?: string | null;
                     registracija_vozila?: string | null;
                     vozac?: string | null;
+                    izvor_dokument_id?: string | null;
+                    placeno_iznos?: number;
+                    posljednji_podsjetnik_at?: string | null;
+                    posljednji_podsjetnik_vrsta?: string | null;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -167,6 +179,12 @@ export type Database = {
                         foreignKeyName: "fakture_firma_id_fkey";
                         columns: ["firma_id"];
                         referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "fakture_izvor_dokument_id_fkey";
+                        columns: ["izvor_dokument_id"];
+                        referencedRelation: "fakture";
                         referencedColumns: ["id"];
                     },
                     {
@@ -199,6 +217,8 @@ export type Database = {
                     pdv_procenat: number;
                     rok_placanja_dana: number;
                     logo_url: string | null;
+                    podsjetnici_ukljuceni: boolean;
+                    podsjetnik_dana_prije: number;
                     created_at: string;
                     updated_at: string;
                 };
@@ -217,6 +237,8 @@ export type Database = {
                     pdv_procenat?: number;
                     rok_placanja_dana?: number;
                     logo_url?: string | null;
+                    podsjetnici_ukljuceni?: boolean;
+                    podsjetnik_dana_prije?: number;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -235,6 +257,8 @@ export type Database = {
                     pdv_procenat?: number;
                     rok_placanja_dana?: number;
                     logo_url?: string | null;
+                    podsjetnici_ukljuceni?: boolean;
+                    podsjetnik_dana_prije?: number;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -451,6 +475,7 @@ export type Database = {
                     datum_izdavanja: string | null;
                     datum_placanja: string | null;
                     status: Database["public"]["Enums"]["faktura_status"] | null;
+                    placeno_iznos: number | null;
                     iznos: number | null;
                 };
                 Relationships: [];
@@ -468,7 +493,7 @@ export type Database = {
             sledeci_broj_dokumenta: {
                 Args: {
                     p_firma_id: string;
-                    p_tip: "faktura" | "predracun" | "otpremnica";
+                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
                 };
                 Returns: string;
             };
@@ -479,7 +504,7 @@ export type Database = {
         };
         Enums: {
             faktura_status: "nacrt" | "na_cekanju" | "placeno" | "kasni";
-            tip_dokumenta: "faktura" | "predracun" | "otpremnica";
+            tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
             plan_tier: "starter" | "professional" | "business" | "enterprise";
             subscription_status: "trialing" | "active" | "past_due" | "canceled" | "expired";
         };

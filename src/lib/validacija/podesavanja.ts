@@ -22,3 +22,9 @@ export const bankovniRacunSchema = z.object({
 });
 
 export const bankovniRacuniSchema = z.array(bankovniRacunSchema).max(20);
+
+export const sacuvajObavestenjaSchema = z.object({
+  podsjetniciUkljuceni: z.boolean(),
+  podsjetnikDanaPrije: z.number().int().min(0).max(30),
+});
+

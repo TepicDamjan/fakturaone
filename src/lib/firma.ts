@@ -32,6 +32,8 @@ const DEFAULT_FIRMA = {
   pdv_procenat: 17,
   rok_placanja_dana: 15,
   logo_url: null as string | null,
+  podsjetnici_ukljuceni: true,
+  podsjetnik_dana_prije: 3,
 };
 
 export async function fetchFirmeLista(

@@ -19,19 +19,24 @@ export interface Invoice {
   clientName: string;
   date: string;
   amount: string;
-  status: "Plaćeno" | "Na čekanju" | "Kasni" | "Nacrt";
+  status: "Plaćeno" | "Na čekanju" | "Kasni" | "Nacrt" | "Djelimično";
+  iznos?: number;
+  placenoIznos?: number;
+  statusKod?: "placeno" | "na_cekanju" | "kasni" | "nacrt";
 }
 
 const TIP_BADGE_TABLE: Record<TipDokumenta, string> = {
   faktura: "bg-blue-50 text-blue-700 border border-blue-100",
   predracun: "bg-amber-50 text-amber-700 border border-amber-100",
   otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+  kreditna_nota: "bg-rose-50 text-rose-700 border border-rose-100",
 };
 
 const TIP_LABEL_TABLE: Record<TipDokumenta, string> = {
   faktura: "Faktura",
   predracun: "Predračun",
   otpremnica: "Otpremnica",
+  kreditna_nota: "Kreditna nota",
 };
 
 interface TableProps {
@@ -83,6 +88,8 @@ export default function Table({ invoices, footerSummary }: TableProps) {
         return "bg-[#FEE2E2] text-[#DC2626]";
       case "Nacrt":
         return "bg-[#F1F5F9] text-[#64748B]";
+      case "Djelimično":
+        return "bg-sky-50 text-sky-700";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -169,6 +176,9 @@ export default function Table({ invoices, footerSummary }: TableProps) {
                       broj={invoice.broj}
                       tipDokumenta={invoice.tipDokumenta}
                       klijentEmail={invoice.clientEmail}
+                      iznos={invoice.iznos}
+                      placenoIznos={invoice.placenoIznos}
+                      status={invoice.statusKod}
                       menuOpen={openMenuId === invoice.id}
                       onToggleMenu={() =>
                         setOpenMenuId((cur) => (cur === invoice.id ? null : invoice.id))

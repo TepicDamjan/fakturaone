@@ -5,6 +5,26 @@ export function formatIznos(amount: number): string {
   });
 }
 
+/** Zaokruživanje na 2 decimale (novac). */
+export function zaokruziNovac(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+}
+
+/** Ukupan iznos dokumenta: osnovica + PDV − popust. */
+export function izracunajUkupanIznos(
+  stavke: { kolicina: number; cena: number }[],
+  pdvProcenat: number,
+  popust: number
+): number {
+  const osnovica = stavke.reduce(
+    (s, x) => s + Number(x.kolicina) * Number(x.cena),
+    0
+  );
+  const pdv = osnovica * (Number(pdvProcenat) / 100);
+  return zaokruziNovac(osnovica + pdv - Number(popust || 0));
+}
+
 export function formatDokumentDatum(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(`${iso}T12:00:00`);

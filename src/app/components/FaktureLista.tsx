@@ -45,6 +45,7 @@ const TIP_BADGE: Record<TipDokumenta, string> = {
   faktura: "bg-blue-50 text-blue-700 border border-blue-100/80",
   predracun: "bg-amber-50 text-amber-700 border border-amber-100/80",
   otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100/80",
+  kreditna_nota: "bg-rose-50 text-rose-700 border border-rose-100/80",
 };
 
 const AVATAR_COLORS = [
@@ -277,6 +278,7 @@ export default function FaktureLista({
                   <option value="faktura">Faktura</option>
                   <option value="predracun">Predračun</option>
                   <option value="otpremnica">Otpremnica</option>
+                  <option value="kreditna_nota">Kreditna nota</option>
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -463,13 +465,26 @@ function FakturaRow({
         {formatTableDate(f.datumPlacanja)}
       </td>
       <td className="px-6 py-4 text-right font-bold text-fcrna tabular-nums whitespace-nowrap">
-        {formatIznos(f.iznos)}
+        <div className="flex flex-col items-end gap-0.5">
+          <span>{formatIznos(f.iznos)}</span>
+          {f.tipDokumenta === "faktura" &&
+          f.placenoIznos > 0 &&
+          f.status !== "placeno" ? (
+            <span className="text-[11px] font-medium text-emerald-600">
+              Plaćeno {formatIznos(f.placenoIznos)}
+            </span>
+          ) : null}
+        </div>
       </td>
       <td className="px-6 py-4">
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_BADGE[f.status]}`}
         >
-          {STATUS_LABELS[f.status]}
+          {f.tipDokumenta === "faktura" &&
+          f.placenoIznos > 0 &&
+          f.status !== "placeno"
+            ? "Djelimično"
+            : STATUS_LABELS[f.status]}
         </span>
       </td>
       <td className="px-2 py-4 text-right">
@@ -478,6 +493,9 @@ function FakturaRow({
           broj={f.broj}
           tipDokumenta={f.tipDokumenta}
           klijentEmail={f.klijentEmail}
+          iznos={f.iznos}
+          placenoIznos={f.placenoIznos}
+          status={f.status}
           menuOpen={menuOpen}
           onToggleMenu={onToggleMenu}
           onCloseMenu={onCloseMenu}
