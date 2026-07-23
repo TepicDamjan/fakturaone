@@ -39,10 +39,10 @@ const STATUS_LABELS: Record<FakturaStatus, string> = {
 };
 
 const STATUS_BADGE: Record<FakturaStatus, string> = {
-  placeno: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  na_cekanju: "bg-orange-50 text-orange-700 border border-orange-200",
-  kasni: "bg-red-50 text-red-700 border border-red-200",
-  nacrt: "bg-slate-100 text-slate-600 border border-slate-200",
+  placeno: "bg-emerald-50 text-emerald-800 ring-emerald-100",
+  na_cekanju: "bg-orange-50 text-orange-800 ring-orange-100",
+  kasni: "bg-red-50 text-red-800 ring-red-100",
+  nacrt: "bg-slate-100 text-slate-700 ring-slate-200",
 };
 
 type Props = {
@@ -156,55 +156,32 @@ export default function PregledDokumentaClient({
   const stavke = payload.stavke;
   const izvor = payload.izvor;
 
+  const statusLabel =
+    tipDokumenta === "faktura" &&
+    placenoIznos > 0 &&
+    f.status !== "placeno"
+      ? "Djelimično"
+      : STATUS_LABELS[f.status];
+
+  const statusClass =
+    tipDokumenta === "faktura" &&
+    placenoIznos > 0 &&
+    f.status !== "placeno"
+      ? "bg-sky-50 text-sky-800 ring-sky-100"
+      : STATUS_BADGE[f.status];
+
   return (
     <div className="min-h-screen bg-[#F1F5F9] pb-16 print:bg-white print:pb-0">
-      <header className="print:hidden border-b border-gray-200 bg-white sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-fcrna">
-                {tipMeta.naziv} #{brojFakture}
-              </h1>
-              <span
-                className={`rounded-full px-3 py-0.5 text-sm font-semibold ${
-                  tipDokumenta === "faktura" &&
-                  placenoIznos > 0 &&
-                  f.status !== "placeno"
-                    ? "bg-sky-50 text-sky-700 border border-sky-200"
-                    : STATUS_BADGE[f.status]
-                }`}
-              >
-                {tipDokumenta === "faktura" &&
-                placenoIznos > 0 &&
-                f.status !== "placeno"
-                  ? "Djelimično"
-                  : STATUS_LABELS[f.status]}
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-[#64748B]">
-              Izdato {formatDatumKratki(f.datum_izdavanja)} • {tipMeta.rokLabel}{" "}
-              {formatDatumKratki(f.datum_placanja)}
-            </p>
-            {izvor ? (
-              <p className="mt-1 text-sm text-[#64748B]">
-                {tipDokumenta === "kreditna_nota"
-                  ? "Storno fakture "
-                  : "Nastala od predračuna "}
-                <Link
-                  href={`/dashboard/fakture/${izvor.id}/pregled`}
-                  className="font-medium text-fplava hover:underline"
-                >
-                  #{izvor.broj}
-                </Link>
-              </p>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
+      <header className="print:hidden sticky top-0 z-10 border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          {/* Red 1: navigacija + identitet */}
+          <div className="flex items-center gap-3 py-3 border-b border-[#F1F5F9]">
             <Link
               href="/dashboard/fakture"
-              className="inline-flex items-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F8FAFC] hover:text-fcrna transition-colors"
+              aria-label="Nazad na listu dokumenata"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
                   d="M19 12H5M12 19l-7-7 7-7"
                   stroke="currentColor"
@@ -213,43 +190,86 @@ export default function PregledDokumentaClient({
                   strokeLinejoin="round"
                 />
               </svg>
-              Nazad
             </Link>
-            <Link
-              href={`/dashboard/fakture/novafakturaforma?id=${id}`}
-              className="inline-flex items-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors"
-            >
-              Izmijeni
-            </Link>
-            {jePredracun ? (
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleIzdajFakturu}
-                className="inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50"
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-lg sm:text-xl font-bold text-fcrna tracking-tight truncate">
+                  {tipMeta.naziv}{" "}
+                  <span className="text-[#64748B] font-semibold">#{brojFakture}</span>
+                </h1>
+                <span
+                  className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${statusClass}`}
+                >
+                  {statusLabel}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs sm:text-sm text-[#64748B] truncate">
+                Izdato {formatDatumKratki(f.datum_izdavanja)}
+                <span className="mx-1.5 text-[#CBD5E1]">·</span>
+                {tipMeta.rokLabel} {formatDatumKratki(f.datum_placanja)}
+                {izvor ? (
+                  <>
+                    <span className="mx-1.5 text-[#CBD5E1]">·</span>
+                    {tipDokumenta === "kreditna_nota"
+                      ? "Storno "
+                      : "Od predračuna "}
+                    <Link
+                      href={`/dashboard/fakture/${izvor.id}/pregled`}
+                      className="font-medium text-fplava hover:underline"
+                    >
+                      #{izvor.broj}
+                    </Link>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          </div>
+
+          {/* Red 2: akcije — primarne desno, kontekstualne lijevo */}
+          <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/dashboard/fakture/novafakturaforma?id=${id}`}
+                className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-[#475569] hover:bg-[#F8FAFC] hover:text-fcrna transition-colors"
               >
-                {isPending ? "Kreiranje…" : "Izdaj fakturu"}
-              </button>
-            ) : null}
-            {mozeUplata ? (
-              <button
-                type="button"
-                onClick={() => setPlacanjeModal(true)}
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
-              >
-                Evidentiraj uplatu
-              </button>
-            ) : null}
-            {mozeStorno ? (
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleStorno}
-                className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
-              >
-                Storniraj
-              </button>
-            ) : null}
+                Izmijeni
+              </Link>
+              {mozeUplata ? (
+                <button
+                  type="button"
+                  onClick={() => setPlacanjeModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                >
+                  Evidentiraj uplatu
+                  {preostalo > 0 ? (
+                    <span className="hidden sm:inline font-normal opacity-90">
+                      · {formatIznos(preostalo)} BAM
+                    </span>
+                  ) : null}
+                </button>
+              ) : null}
+              {jePredracun ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleIzdajFakturu}
+                  className="inline-flex items-center rounded-lg bg-fplava px-3 py-2 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50"
+                >
+                  {isPending ? "Kreiranje…" : "Izdaj fakturu"}
+                </button>
+              ) : null}
+              {mozeStorno ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleStorno}
+                  className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-50"
+                >
+                  Storniraj
+                </button>
+              ) : null}
+            </div>
+
             <DokumentPdfEmailAkcije
               fakturaId={id}
               broj={brojFakture}
@@ -257,6 +277,8 @@ export default function PregledDokumentaClient({
               primalacEmail={primalac?.email}
               showPrint
               onPrint={() => window.print()}
+              primaryClassName="inline-flex items-center gap-2 rounded-lg bg-fplava px-3.5 py-2 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50"
+              secondaryClassName="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2 text-sm font-medium text-fcrna hover:bg-[#F8FAFC] transition-colors disabled:opacity-40"
             />
           </div>
         </div>
@@ -283,7 +305,7 @@ export default function PregledDokumentaClient({
         }}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 mt-8 print:mt-0 print:max-w-none print:px-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8 print:mt-0 print:max-w-none print:px-8">
         <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:border-0">
           <div className="p-8 sm:p-10 print:p-6">
             <FakturaLogoZaglavlje

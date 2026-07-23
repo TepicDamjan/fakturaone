@@ -25,10 +25,10 @@ type Props = {
 };
 
 const DEFAULT_PRIMARY =
-  "inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center gap-2 rounded-lg bg-fplava px-3.5 py-2 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
 
 const DEFAULT_SECONDARY =
-  "inline-flex items-center gap-2 rounded-lg bg-fplava px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed";
+  "inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2 text-sm font-medium text-fcrna hover:bg-[#F8FAFC] transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
 export default function DokumentPdfEmailAkcije({
   fakturaId,
@@ -60,12 +60,12 @@ export default function DokumentPdfEmailAkcije({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
         {showPrint && onPrint ? (
           <button
             type="button"
             onClick={onPrint}
-            className="inline-flex items-center gap-2 rounded-lg border border-ftsiva bg-white px-4 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors print:hidden"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-2 text-sm font-medium text-[#475569] hover:bg-[#F8FAFC] hover:text-fcrna transition-colors print:hidden"
           >
             Štampaj
           </button>
@@ -76,7 +76,7 @@ export default function DokumentPdfEmailAkcije({
           disabled={pdfBusy}
           className={primaryClassName}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
               d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
               stroke="currentColor"
@@ -85,7 +85,7 @@ export default function DokumentPdfEmailAkcije({
               strokeLinejoin="round"
             />
           </svg>
-          {pdfBusy ? "Generisanje…" : "Preuzmi PDF"}
+          {pdfBusy ? "Generisanje…" : "PDF"}
         </button>
         <button
           type="button"
@@ -94,7 +94,7 @@ export default function DokumentPdfEmailAkcije({
           title={!email ? "Klijent nema email adresu" : undefined}
           className={secondaryClassName}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
               d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
               stroke="currentColor"
@@ -103,7 +103,7 @@ export default function DokumentPdfEmailAkcije({
               strokeLinejoin="round"
             />
           </svg>
-          Pošalji e-mail
+          E-mail
         </button>
       </div>
 
