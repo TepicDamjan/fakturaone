@@ -181,7 +181,12 @@ export async function fetchFakturaSaStavkama(
   if (fErr) throw fErr;
   if (!faktura) return null;
 
-  const fRow = faktura as Database["public"]["Tables"]["fakture"]["Row"];
+  const fRow = {
+    ...(faktura as Database["public"]["Tables"]["fakture"]["Row"]),
+    placeno_iznos: Number(
+      (faktura as { placeno_iznos?: number | null }).placeno_iznos ?? 0
+    ),
+  };
 
   const { data: stavke, error: sErr } = await supabase
     .from("stavke_fakture")
@@ -204,15 +209,16 @@ export async function fetchFakturaSaStavkama(
   }
 
   let izvor: { id: string; broj: string } | null = null;
-  if (fRow.izvor_dokument_id) {
+  const izvorId = (fRow as { izvor_dokument_id?: string | null }).izvor_dokument_id;
+  if (izvorId) {
     const { data: iz, error: izErr } = await supabase
       .from("fakture")
       .select("id, broj")
-      .eq("id", fRow.izvor_dokument_id)
+      .eq("id", izvorId)
       .eq("firma_id", firmaId)
       .maybeSingle();
-    if (izErr) throw izErr;
-    if (iz?.id && iz.broj) {
+    // Ne ruši cijeli pregled ako kolona/migracija još nije dostupna.
+    if (!izErr && iz?.id && iz.broj) {
       izvor = { id: iz.id, broj: iz.broj };
     }
   }
