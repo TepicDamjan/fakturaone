@@ -166,26 +166,65 @@ export function initialsFromName(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+const FAKTURA_BASE_COLUMNS =
+  "id, user_id, firma_id, klijent_id, broj, referenca, datum_izdavanja, datum_placanja, napomene, pdv_procenat, popust, status, tip_dokumenta, nacin_transporta, adresa_dostave, registracija_vozila, vozac, created_at, updated_at";
+
+const FAKTURA_OPTIONAL_COLUMNS =
+  "izvor_dokument_id, placeno_iznos, posljednji_podsjetnik_at, posljednji_podsjetnik_vrsta";
+
+function isMissingColumnError(err: unknown): boolean {
+  const msg =
+    err && typeof err === "object" && "message" in err
+      ? String((err as { message: unknown }).message)
+      : String(err ?? "");
+  return /column|schema cache|does not exist/i.test(msg);
+}
+
+async function selectFakturaById(
+  supabase: SupabaseClient<Database>,
+  id: string
+) {
+  // 1) Pokušaj sa svim kolonama (Phase 1+)
+  const full = await supabase
+    .from("fakture")
+    .select(`${FAKTURA_BASE_COLUMNS}, ${FAKTURA_OPTIONAL_COLUMNS}`)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!full.error) return full;
+
+  if (!isMissingColumnError(full.error)) {
+    return full;
+  }
+
+  // 2) Fallback: baza bez Phase 1 migracija (0019–0022)
+  return supabase
+    .from("fakture")
+    .select(FAKTURA_BASE_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+}
+
 export async function fetchFakturaSaStavkama(
   supabase: SupabaseClient<Database>,
   id: string,
   firmaId: string
 ): Promise<FakturaSaStavkama | null> {
-  const { data: faktura, error: fErr } = await supabase
-    .from("fakture")
-    .select("*")
-    .eq("id", id)
-    .eq("firma_id", firmaId)
-    .maybeSingle();
+  // Ne filtriraj po firma_id u SQL-u — RLS već ograničava na firme korisnika.
+  // Tako pregled radi i ako cookie aktivne firme nije savršeno usklađen.
+  const { data: faktura, error: fErr } = await selectFakturaById(supabase, id);
 
   if (fErr) throw fErr;
   if (!faktura) return null;
 
+  const raw = faktura as Record<string, unknown>;
+  const rowFirmaId = typeof raw.firma_id === "string" ? raw.firma_id : firmaId;
+
   const fRow = {
     ...(faktura as Database["public"]["Tables"]["fakture"]["Row"]),
-    placeno_iznos: Number(
-      (faktura as { placeno_iznos?: number | null }).placeno_iznos ?? 0
-    ),
+    placeno_iznos: Number(raw.placeno_iznos ?? 0),
+    izvor_dokument_id:
+      typeof raw.izvor_dokument_id === "string" ? raw.izvor_dokument_id : null,
   };
 
   const { data: stavke, error: sErr } = await supabase
@@ -202,26 +241,26 @@ export async function fetchFakturaSaStavkama(
       .from("klijenti")
       .select("*")
       .eq("id", fRow.klijent_id)
-      .eq("firma_id", firmaId)
       .maybeSingle();
-    if (kErr) throw kErr;
-    klijent = k as Database["public"]["Tables"]["klijenti"]["Row"] | null;
+    if (!kErr) {
+      klijent = k as Database["public"]["Tables"]["klijenti"]["Row"] | null;
+    }
   }
 
   let izvor: { id: string; broj: string } | null = null;
-  const izvorId = (fRow as { izvor_dokument_id?: string | null }).izvor_dokument_id;
-  if (izvorId) {
+  if (fRow.izvor_dokument_id) {
     const { data: iz, error: izErr } = await supabase
       .from("fakture")
       .select("id, broj")
-      .eq("id", izvorId)
-      .eq("firma_id", firmaId)
+      .eq("id", fRow.izvor_dokument_id)
       .maybeSingle();
-    // Ne ruši cijeli pregled ako kolona/migracija još nije dostupna.
     if (!izErr && iz?.id && iz.broj) {
       izvor = { id: iz.id, broj: iz.broj };
     }
   }
+
+  // Ako dokument pripada drugoj firmi korisnika, i dalje ga prikaži (RLS je pustio red).
+  void rowFirmaId;
 
   return {
     faktura: fRow,

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
+import { getAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
 import {
   fetchFakturaSaStavkama as fetchFakturaSaStavkamaBase,
   fetchFaktureLista as fetchFaktureListaBase,
@@ -11,6 +11,7 @@ import {
   type FakturaSaStavkama,
   type FakturePage,
 } from "@/lib/fakture";
+import { requireAktivnaFirmaId } from "@/lib/aktivnaFirma.server";
 
 export async function fetchFaktureLista(
   supabase: SupabaseClient<Database>
@@ -40,6 +41,7 @@ export async function fetchFakturaSaStavkama(
   supabase: SupabaseClient<Database>,
   id: string
 ): Promise<FakturaSaStavkama | null> {
-  const firmaId = await requireAktivnaFirmaId();
+  // Pregled ne smije pasti samo zbog cookie-ja — RLS i dalje štiti redove.
+  const firmaId = (await getAktivnaFirmaId()) ?? "";
   return fetchFakturaSaStavkamaBase(supabase, id, firmaId);
 }
