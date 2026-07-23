@@ -149,9 +149,23 @@ export type MesecniBucket = {
 };
 
 function mesecLabel(key: string): string {
-  const [y, mo] = key.split("-");
-  const d = new Date(`${y}-${mo}-01T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", { month: "short", year: "numeric" });
+  const [y, mo] = key.split("-").map(Number);
+  if (!y || !mo || mo < 1 || mo > 12) return key;
+  const kratki = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "maj",
+    "jun",
+    "jul",
+    "avg",
+    "sep",
+    "okt",
+    "nov",
+    "dec",
+  ] as const;
+  return `${kratki[mo - 1]} ${y}.`;
 }
 
 /** Prihod po mjesecu (samo plaćene fakture u periodu). */

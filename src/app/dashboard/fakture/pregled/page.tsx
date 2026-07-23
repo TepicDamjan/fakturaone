@@ -20,36 +20,12 @@ import {
 } from "@/app/components/FakturaFirmaNaFakturi";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
+import { formatDatumDugi, formatDatumKratki } from "@/lib/dokument/format";
 
 function formatIznos(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
-}
-
-function formatShortDate(iso: string) {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatLongDate(iso: string) {
-  if (!iso)
-    return new Date().toLocaleDateString("bs-Latn-BA", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
   });
 }
 
@@ -141,8 +117,8 @@ export default function FakturaPregledStranica() {
               </span>
             </div>
             <p className="mt-1 text-sm text-[#64748B]">
-              Kreirano {formatShortDate(data.datumIzdavanja)} •{" "}
-              {tipMeta.rokLabel} {formatShortDate(data.datumPlacanja)}
+              Kreirano {formatDatumKratki(data.datumIzdavanja)} •{" "}
+              {tipMeta.rokLabel} {formatDatumKratki(data.datumPlacanja)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -221,7 +197,7 @@ export default function FakturaPregledStranica() {
             <FakturaLogoZaglavlje
               izdavac={izdavac}
               brojFakture={brojFakture}
-              datumTekst={formatLongDate(data.datumIzdavanja)}
+              datumTekst={formatDatumDugi(data.datumIzdavanja)}
             />
 
             <div className="grid sm:grid-cols-2 gap-8 py-8">

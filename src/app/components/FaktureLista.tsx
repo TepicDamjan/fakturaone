@@ -13,6 +13,7 @@ import {
   TIP_DOKUMENTA_META,
   type TipDokumenta,
 } from "@/lib/tipDokumenta";
+import { formatDatumKratki } from "@/lib/dokument/format";
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
@@ -61,15 +62,6 @@ function hashColor(s: string): string {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-}
-
-function formatTableDate(iso: string) {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function formatIznos(n: number) {
@@ -459,10 +451,10 @@ function FakturaRow({
         </div>
       </td>
       <td className="px-6 py-4 text-[#64748B] whitespace-nowrap">
-        {formatTableDate(f.datumIzdavanja)}
+        {formatDatumKratki(f.datumIzdavanja)}
       </td>
       <td className="px-6 py-4 text-[#64748B] whitespace-nowrap">
-        {formatTableDate(f.datumPlacanja)}
+        {formatDatumKratki(f.datumPlacanja)}
       </td>
       <td className="px-6 py-4 text-right font-bold text-fcrna tabular-nums whitespace-nowrap">
         <div className="flex flex-col items-end gap-0.5">

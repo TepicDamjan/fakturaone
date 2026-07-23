@@ -25,14 +25,61 @@ export function izracunajUkupanIznos(
   return zaokruziNovac(osnovica + pdv - Number(popust || 0));
 }
 
+const MESECI_KRATKI = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "maj",
+  "jun",
+  "jul",
+  "avg",
+  "sep",
+  "okt",
+  "nov",
+  "dec",
+] as const;
+
+const MESECI_DUGI = [
+  "januar",
+  "februar",
+  "mart",
+  "april",
+  "maj",
+  "juni",
+  "juli",
+  "august",
+  "septembar",
+  "oktobar",
+  "novembar",
+  "decembar",
+] as const;
+
+/** Parse YYYY-MM-DD (or ISO) without timezone surprises. */
+export function parseIsoDatum(iso: string | null | undefined): Date | null {
+  if (!iso?.trim()) return null;
+  const day = iso.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const d = new Date(`${day}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Stable short date for SSR/CSR: "23. jul 2026." */
+export function formatDatumKratki(iso: string | null | undefined): string {
+  const d = parseIsoDatum(iso);
+  if (!d) return "—";
+  return `${d.getDate()}. ${MESECI_KRATKI[d.getMonth()]} ${d.getFullYear()}.`;
+}
+
+/** Stable long date for SSR/CSR: "23. juli 2026." */
+export function formatDatumDugi(iso: string | null | undefined): string {
+  const d = parseIsoDatum(iso);
+  if (!d) return "—";
+  return `${d.getDate()}. ${MESECI_DUGI[d.getMonth()]} ${d.getFullYear()}.`;
+}
+
 export function formatDokumentDatum(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDatumDugi(iso);
 }
 
 export function sanitizePdfFilename(broj: string): string {

@@ -24,37 +24,16 @@ import { formatKlijentAdresa } from "@/lib/klijenti";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
 import { useToast } from "@/app/components/toast/ToastContext";
-import { zaokruziNovac } from "@/lib/dokument/format";
+import {
+  formatDatumDugi,
+  formatDatumKratki,
+  zaokruziNovac,
+} from "@/lib/dokument/format";
 
 function formatIznos(amount: number) {
   return amount.toLocaleString("bs-Latn-BA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
-}
-
-function formatShortDate(iso: string | null) {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatLongDate(iso: string | null) {
-  if (!iso)
-    return new Date().toLocaleDateString("bs-Latn-BA", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
   });
 }
 
@@ -228,8 +207,8 @@ export default function SacuvanaFakturaPregledPage() {
               </span>
             </div>
             <p className="mt-1 text-sm text-[#64748B]">
-              Izdato {formatShortDate(f.datum_izdavanja)} • {tipMeta.rokLabel}{" "}
-              {formatShortDate(f.datum_placanja)}
+              Izdato {formatDatumKratki(f.datum_izdavanja)} • {tipMeta.rokLabel}{" "}
+              {formatDatumKratki(f.datum_placanja)}
             </p>
             {izvor ? (
               <p className="mt-1 text-sm text-[#64748B]">
@@ -335,7 +314,7 @@ export default function SacuvanaFakturaPregledPage() {
             <FakturaLogoZaglavlje
               izdavac={izdavac}
               brojFakture={brojFakture}
-              datumTekst={formatLongDate(f.datum_izdavanja)}
+              datumTekst={formatDatumDugi(f.datum_izdavanja)}
             />
 
             <div className="grid sm:grid-cols-2 gap-8 py-8">

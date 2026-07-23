@@ -3,20 +3,12 @@
 import Link from "next/link";
 import type { PretplataPregled } from "@/lib/pretplata.types";
 import { PLAN_DEFS } from "@/lib/plans";
+import { formatDatumDugi } from "@/lib/dokument/format";
 
 type Props = {
   email: string;
   pretplata: PretplataPregled;
 };
-
-function formatDatum(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 function statusLabel(pretplata: PretplataPregled): { text: string; active: boolean } {
   if (pretplata.isTrial) {
@@ -81,7 +73,7 @@ export default function PodesavanjaPlacanja({ email, pretplata }: Props) {
               <dt className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
                 {pretplata.isTrial ? "Probni period do" : "Sledeća naplata"}
               </dt>
-              <dd className="text-fcrna font-bold mt-1">{formatDatum(sledecaNaplata)}</dd>
+              <dd className="text-fcrna font-bold mt-1">{formatDatumDugi(sledecaNaplata)}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">Status</dt>
