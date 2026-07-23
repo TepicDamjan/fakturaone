@@ -235,6 +235,69 @@ export function neplaceneFakture(
     });
 }
 
+export type PdvPregled = {
+  osnovica: number;
+  pdvIznos: number;
+  popust: number;
+  ukupno: number;
+  /** PDV koji treba uplatiti (približno = pdvIznos za izlazne fakture). */
+  pdvZaUplatu: number;
+};
+
+/** Računa PDV iz ukupnog iznosa, stope i popusta. */
+export function izracunajPdvOdUkupnog(
+  ukupno: number,
+  pdvProcenat: number,
+  popust: number
+): { osnovica: number; pdvIznos: number } {
+  const faktor = 1 + Number(pdvProcenat) / 100;
+  const osnovica =
+    faktor > 0 ? (Number(ukupno) + Number(popust || 0)) / faktor : Number(ukupno);
+  const pdvIznos = osnovica * (Number(pdvProcenat) / 100);
+  return { osnovica, pdvIznos };
+}
+
+export type FakturaZaPdv = {
+  iznos: number;
+  pdvProcenat: number;
+  popust: number;
+  tipDokumenta: string;
+  status: FakturaStatus;
+  datumIzdavanja: string;
+};
+
+export function izracunajPdvPregled(
+  fakture: FakturaZaPdv[],
+  range: PeriodRange
+): PdvPregled {
+  let osnovica = 0;
+  let pdvIznos = 0;
+  let popust = 0;
+  let ukupno = 0;
+
+  for (const f of fakture) {
+    if (f.tipDokumenta !== "faktura" && f.tipDokumenta !== "kreditna_nota") {
+      continue;
+    }
+    if (f.status === "nacrt") continue;
+    if (!uPeriodu(f.datumIzdavanja, range)) continue;
+
+    const p = izracunajPdvOdUkupnog(f.iznos, f.pdvProcenat, f.popust);
+    osnovica += p.osnovica;
+    pdvIznos += p.pdvIznos;
+    popust += Number(f.popust) || 0;
+    ukupno += f.iznos;
+  }
+
+  return {
+    osnovica,
+    pdvIznos,
+    popust,
+    ukupno,
+    pdvZaUplatu: pdvIznos,
+  };
+}
+
 export type IzvjestajSnapshot = {
   range: PeriodRange;
   valuta: string;
@@ -242,23 +305,37 @@ export type IzvjestajSnapshot = {
   poMesecu: MesecniBucket[];
   topKlijenti: TopKlijentRed[];
   neplacene: FakturaListItem[];
+  pdv: PdvPregled;
 };
 
 export function buildIzvjestajSnapshot(
   sveFakture: FakturaListItem[],
   period: IzvjestajPeriod,
-  valuta = "BAM"
+  valuta = "BAM",
+  pdvUlaz: FakturaZaPdv[] = []
 ): IzvjestajSnapshot {
   const range = periodRange(period);
-  const uPeriodu = filtrirajZaPeriod(sveFakture, range);
+  const uPerioduF = filtrirajZaPeriod(sveFakture, range);
+  const pdvSource =
+    pdvUlaz.length > 0
+      ? pdvUlaz
+      : uPerioduF.map((f) => ({
+          iznos: f.iznos,
+          pdvProcenat: 17,
+          popust: 0,
+          tipDokumenta: f.tipDokumenta,
+          status: f.status,
+          datumIzdavanja: f.datumIzdavanja,
+        }));
 
   return {
     range,
     valuta,
-    kpi: izracunajKpi(uPeriodu),
-    poMesecu: prihodPoMesecu(uPeriodu, range),
-    topKlijenti: topKlijenti(uPeriodu),
-    neplacene: neplaceneFakture(uPeriodu),
+    kpi: izracunajKpi(uPerioduF),
+    poMesecu: prihodPoMesecu(uPerioduF, range),
+    topKlijenti: topKlijenti(uPerioduF),
+    neplacene: neplaceneFakture(uPerioduF),
+    pdv: izracunajPdvPregled(pdvSource, range),
   };
 }
 

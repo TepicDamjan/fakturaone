@@ -1,6 +1,7 @@
 import Link from "next/link";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import ProizvodiTabela from "@/app/components/ProizvodiTabela";
+import ProizvodiUvozDugme from "@/app/dashboard/proizvodi/ProizvodiUvozDugme";
 import { fetchProizvodiList } from "@/lib/proizvodi.server";
 import type { Proizvod } from "@/lib/proizvodi";
 import { createClient } from "@/utils/supabase/server";
@@ -21,6 +22,7 @@ export default async function Proizvodi() {
         subtitle="Vaš katalog za brže fakturisanje"
         rightContent={
           <>
+            <ProizvodiUvozDugme />
             <div className="hidden sm:block w-px h-6 bg-gray-200" />
             <Link
               href="/dashboard/proizvodi/novi"

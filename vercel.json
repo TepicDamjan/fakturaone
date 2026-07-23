@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/podsjetnici-placanja",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/ponavljajuce-fakture",
+      "schedule": "30 6 * * *"
     }
   ]
 }
