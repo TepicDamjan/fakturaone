@@ -27,15 +27,9 @@ import { useToast } from "@/app/components/toast/ToastContext";
 import {
   formatDatumDugi,
   formatDatumKratki,
+  formatIznos,
   zaokruziNovac,
 } from "@/lib/dokument/format";
-
-function formatIznos(amount: number) {
-  return amount.toLocaleString("bs-Latn-BA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 const STATUS_LABELS: Record<FakturaStatus, string> = {
   placeno: "Plaćeno",

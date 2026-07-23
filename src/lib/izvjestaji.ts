@@ -1,4 +1,5 @@
 import type { FakturaListItem, FakturaStatus } from "@/lib/fakture";
+import { formatIznosCijeli } from "@/lib/dokument/format";
 
 export type IzvjestajPeriod =
   | "ovaj_mjesec"
@@ -280,5 +281,5 @@ export function formatIzvjestajIznos(
   amount: number,
   valuta: string
 ): string {
-  return `${Math.round(amount).toLocaleString("bs-Latn-BA")} ${valuta}`;
+  return `${formatIznosCijeli(amount)} ${valuta}`;
 }

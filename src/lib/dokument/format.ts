@@ -1,8 +1,24 @@
-export function formatIznos(amount: number): string {
-  return amount.toLocaleString("bs-Latn-BA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+/**
+ * Stable money formatting for SSR/CSR (bs style): "1.234,56"
+ * Avoids toLocaleString ICU mismatches (e.g. Windows → "12.00" vs Node → "12,00").
+ */
+export function formatIznos(
+  amount: number,
+  fractionDigits: 0 | 2 = 2
+): string {
+  const n = Number.isFinite(amount) ? amount : 0;
+  const negative = n < 0;
+  const fixed = Math.abs(n).toFixed(fractionDigits);
+  const [intRaw, frac] = fixed.split(".");
+  const intPart = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const body =
+    fractionDigits === 0 ? intPart : `${intPart},${frac ?? "00"}`;
+  return negative ? `-${body}` : body;
+}
+
+/** Cijeli iznos bez decimala: "1.234" */
+export function formatIznosCijeli(amount: number): string {
+  return formatIznos(Math.round(amount), 0);
 }
 
 /** Zaokruživanje na 2 decimale (novac). */

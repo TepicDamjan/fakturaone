@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { initialsFromName, type FakturaStatus } from "@/lib/fakture";
-import { formatDatumKratki } from "@/lib/dokument/format";
+import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
 
 export type DashboardFakturaRow = {
   id: string;
@@ -326,7 +326,7 @@ export default function DashboardFaktureModal({
                         </td>
                       ) : null}
                       <td className="py-4 text-sm font-bold text-[#111827] text-right whitespace-nowrap">
-                        {Math.round(f.iznos).toLocaleString("bs-Latn-BA")} BAM
+                        {formatIznosCijeli(f.iznos)} BAM
                       </td>
                     </tr>
                   );

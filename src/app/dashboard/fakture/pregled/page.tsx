@@ -20,14 +20,7 @@ import {
 } from "@/app/components/FakturaFirmaNaFakturi";
 import { usePodesavanjaFirme } from "@/lib/usePodesavanjaFirme";
 import { metaZaTip, parseTipDokumenta } from "@/lib/tipDokumenta";
-import { formatDatumDugi, formatDatumKratki } from "@/lib/dokument/format";
-
-function formatIznos(amount: number) {
-  return amount.toLocaleString("bs-Latn-BA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
+import { formatDatumDugi, formatDatumKratki, formatIznos } from "@/lib/dokument/format";
 
 export default function FakturaPregledStranica() {
   const router = useRouter();

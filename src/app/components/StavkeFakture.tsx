@@ -1,6 +1,7 @@
 "use client";
 
 import { metaZaTip, type TipDokumenta } from "@/lib/tipDokumenta";
+import { formatIznos } from "@/lib/dokument/format";
 import { JEDINICE } from "@/lib/jedinice";
 import ProizvodBrzaPretraga from "@/app/components/ProizvodBrzaPretraga";
 import type { Proizvod } from "@/lib/proizvodi";
@@ -43,11 +44,7 @@ export default function StavkeFakture({
   const tipMeta = metaZaTip(tipDokumenta);
   const jeOtpremnica = tipDokumenta === "otpremnica";
 
-  const formatCurrency = (amount: number) =>
-    amount.toLocaleString("bs-Latn-BA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const formatCurrency = (amount: number) => formatIznos(amount);
 
   const wrapperClass = inGrid
     ? "bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"

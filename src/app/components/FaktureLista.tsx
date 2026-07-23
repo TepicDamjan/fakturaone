@@ -13,7 +13,7 @@ import {
   TIP_DOKUMENTA_META,
   type TipDokumenta,
 } from "@/lib/tipDokumenta";
-import { formatDatumKratki } from "@/lib/dokument/format";
+import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
@@ -65,7 +65,7 @@ function hashColor(s: string): string {
 }
 
 function formatIznos(n: number) {
-  return `${n.toLocaleString("bs-Latn-BA", { maximumFractionDigits: 0 })} BAM`;
+  return `${formatIznosCijeli(n)} BAM`;
 }
 
 function buildQueryString(params: {
