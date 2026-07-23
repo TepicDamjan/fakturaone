@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { metaZaTip, type TipDokumenta } from "@/lib/tipDokumenta";
+import { formatIznos } from "@/lib/dokument/format";
 
 type IznosSidebarProps = {
   osnovica: number;
@@ -13,10 +14,7 @@ type IznosSidebarProps = {
 };
 
 function formatBam(amount: number) {
-  return amount.toLocaleString("bs-Latn-BA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatIznos(amount);
 }
 
 const STATUS_PORUKA: Record<"faktura" | "predracun", string> = {

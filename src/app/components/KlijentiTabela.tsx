@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { obrisiKlijenta } from "@/app/dashboard/klijenti/actions";
 import type { KlijentSaFakturisano } from "@/lib/klijenti";
+import { formatIznosCijeli } from "@/lib/dokument/format";
 
 type KlijentiTabelaProps = {
   klijenti: KlijentSaFakturisano[];
 };
 
 function formatFakturisano(n: number) {
-  return `${Math.round(n).toLocaleString("bs-Latn-BA")} BAM`;
+  return `${formatIznosCijeli(n)} BAM`;
 }
 
 export default function KlijentiTabela({ klijenti }: KlijentiTabelaProps) {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { initialsFromName, type FakturaStatus } from "@/lib/fakture";
+import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
 
 export type DashboardFakturaRow = {
   id: string;
@@ -23,16 +24,6 @@ type DashboardFaktureModalProps = {
   fakture: DashboardFakturaRow[];
   onClose: () => void;
 };
-
-function formatModalDate(iso: string): string {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function daysLate(datumPlacanja: string): number {
   if (!datumPlacanja) return 0;
@@ -310,8 +301,8 @@ export default function DashboardFaktureModal({
                       </td>
                       <td className="py-4 text-sm text-[#6B7280] whitespace-nowrap">
                         {tip === "ukupno"
-                          ? formatModalDate(f.datumIzdavanja)
-                          : formatModalDate(f.datumPlacanja || f.datumIzdavanja)}
+                          ? formatDatumKratki(f.datumIzdavanja)
+                          : formatDatumKratki(f.datumPlacanja || f.datumIzdavanja)}
                       </td>
                       {tip === "ukupno" ? (
                         <td className="py-4">
@@ -335,7 +326,7 @@ export default function DashboardFaktureModal({
                         </td>
                       ) : null}
                       <td className="py-4 text-sm font-bold text-[#111827] text-right whitespace-nowrap">
-                        {Math.round(f.iznos).toLocaleString("bs-Latn-BA")} BAM
+                        {formatIznosCijeli(f.iznos)} BAM
                       </td>
                     </tr>
                   );

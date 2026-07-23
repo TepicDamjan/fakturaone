@@ -9,6 +9,7 @@ import {
   type FakturaListItem,
   type FakturaStatus,
 } from "@/lib/fakture";
+import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
 import { fetchFaktureLista } from "@/lib/fakture.server";
 import { fetchKlijentiList } from "@/lib/klijenti.server";
 import { createClient } from "@/utils/supabase/server";
@@ -19,16 +20,6 @@ const STATUS_LABEL: Record<FakturaStatus, Invoice["status"]> = {
   kasni: "Kasni",
   nacrt: "Nacrt",
 };
-
-function formatDashboardDate(iso: string): string {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function fakturaToInvoice(f: FakturaListItem): Invoice {
   const djelimicno =
@@ -43,8 +34,8 @@ function fakturaToInvoice(f: FakturaListItem): Invoice {
     clientEmail: f.klijentEmail,
     clientInitials: initialsFromName(f.klijentNaziv || "?"),
     clientName: f.klijentNaziv || "—",
-    date: formatDashboardDate(f.datumIzdavanja),
-    amount: `${Math.round(f.iznos).toLocaleString("bs-Latn-BA")} BAM`,
+    date: formatDatumKratki(f.datumIzdavanja),
+    amount: `${formatIznosCijeli(f.iznos)} BAM`,
     status: djelimicno ? "Djelimično" : STATUS_LABEL[f.status],
     iznos: f.iznos,
     placenoIznos: f.placenoIznos,
@@ -80,7 +71,7 @@ export default async function Dashboard() {
       ? "Nema faktura za prikaz."
       : `Lista prikazuje ${nedavne.length} od ukupno ${brojFaktura} faktura.`;
 
-  const ukupnoTekst = `${Math.round(ukupnoFakturisano).toLocaleString("bs-Latn-BA")} BAM`;
+  const ukupnoTekst = `${formatIznosCijeli(ukupnoFakturisano)} BAM`;
 
   const faktureZaModal: DashboardFakturaRow[] = fakture.map((f) => ({
     id: f.id,

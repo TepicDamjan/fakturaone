@@ -4,6 +4,7 @@ import { fetchFaktureZaIzvoz } from "@/lib/fakture.server";
 import { parseFaktureParams } from "@/lib/faktureFilter";
 import { TIP_DOKUMENTA_META } from "@/lib/tipDokumenta";
 import type { FakturaStatus } from "@/lib/fakture";
+import { formatIznos } from "@/lib/dokument/format";
 
 export const dynamic = "force-dynamic";
 
@@ -70,12 +71,7 @@ export async function GET(request: Request) {
       csvCelija(f.klijentEmail),
       csvCelija(f.datumIzdavanja),
       csvCelija(f.datumPlacanja),
-      csvCelija(
-        f.iznos.toLocaleString("bs-Latn-BA", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      ),
+      csvCelija(formatIznos(f.iznos)),
       csvCelija(STATUS_LABELS[f.status]),
     ].join(DELIMITER)
   );

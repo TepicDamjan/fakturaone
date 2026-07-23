@@ -26,6 +26,7 @@ import {
   type TipDokumenta,
 } from "@/lib/tipDokumenta";
 import type { FakturaStatus } from "@/lib/fakture";
+import { formatIznos } from "@/lib/dokument/format";
 
 const NACINI_TRANSPORTA = [
   "Kamion (Sopstveno vozilo)",
@@ -508,11 +509,9 @@ function NovaFakturaForma() {
                     Ukupna količina
                   </p>
                   <p className="text-fplava text-xl font-bold tabular-nums">
-                    {stavke
-                      .reduce((s, x) => s + (x.kolicina || 0), 0)
-                      .toLocaleString("bs-Latn-BA", {
-                        maximumFractionDigits: 2,
-                      })}
+                    {formatIznos(
+                      stavke.reduce((s, x) => s + (x.kolicina || 0), 0)
+                    )}
                   </p>
                 </div>
               </section>

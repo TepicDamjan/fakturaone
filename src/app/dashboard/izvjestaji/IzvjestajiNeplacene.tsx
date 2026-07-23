@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { FakturaListItem } from "@/lib/fakture";
+import { formatDatumKratki } from "@/lib/dokument/format";
 import { formatIzvjestajIznos } from "@/lib/izvjestaji";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -11,16 +12,6 @@ const STATUS_BADGE: Record<string, string> = {
   na_cekanju: "bg-orange-50 text-orange-700 border border-orange-100",
   kasni: "bg-red-50 text-red-700 border border-red-100",
 };
-
-function formatDatum(iso: string) {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("bs-Latn-BA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 type Props = {
   fakture: FakturaListItem[];
@@ -79,7 +70,7 @@ export default function IzvjestajiNeplacene({ fakture, valuta }: Props) {
                     {f.klijentNaziv || "—"}
                   </td>
                   <td className="px-6 py-4 text-[#64748B]">
-                    {formatDatum(f.datumPlacanja)}
+                    {formatDatumKratki(f.datumPlacanja)}
                   </td>
                   <td className="px-6 py-4">
                     <span

@@ -2,12 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Proizvod } from "@/lib/proizvodi";
+import { formatIznos } from "@/lib/dokument/format";
 
 function formatCena(n: number) {
-  return n.toLocaleString("bs-Latn-BA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatIznos(n);
 }
 
 /**

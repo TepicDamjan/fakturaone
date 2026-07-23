@@ -43,9 +43,7 @@ export default function IzvjestajiPrihodChart({ poMesecu, valuta }: Props) {
                 className="text-[10px] sm:text-xs font-semibold text-[#64748B] tabular-nums text-center truncate w-full"
                 title={formatIzvjestajIznos(b.iznos, valuta)}
               >
-                {b.iznos > 0
-                  ? Math.round(b.iznos).toLocaleString("bs-Latn-BA")
-                  : ""}
+                {b.iznos > 0 ? formatIzvjestajIznos(b.iznos, "").trim() : ""}
               </span>
               <div
                 className="w-full max-w-[48px] rounded-t-lg bg-[#137FEC]/90 transition-all"
