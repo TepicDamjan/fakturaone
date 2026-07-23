@@ -5,6 +5,7 @@ import IzvjestajiNeplacene from "@/app/dashboard/izvjestaji/IzvjestajiNeplacene"
 import IzvjestajiPlanGate from "@/app/dashboard/izvjestaji/IzvjestajiPlanGate";
 import IzvjestajiPrihodChart from "@/app/dashboard/izvjestaji/IzvjestajiPrihodChart";
 import IzvjestajiTopKlijenti from "@/app/dashboard/izvjestaji/IzvjestajiTopKlijenti";
+import IzvjestajiPdv from "@/app/dashboard/izvjestaji/IzvjestajiPdv";
 import { fetchIzvjestajSnapshot } from "@/lib/izvjestaji.server";
 import { parseIzvjestajPeriod } from "@/lib/izvjestaji";
 import { proveriPristupIzvestajima } from "@/lib/pretplata.server";
@@ -57,6 +58,8 @@ export default async function IzvjestajiPage({ searchParams }: PageProps) {
         />
 
         <IzvjestajiKpi kpi={snapshot.kpi} valuta={snapshot.valuta} />
+
+        <IzvjestajiPdv pdv={snapshot.pdv} valuta={snapshot.valuta} />
 
         <p className="text-sm text-[#64748B] mt-6 mb-4">
           Broj faktura u periodu:{" "}

@@ -208,7 +208,13 @@ function StavkeTable({ model }: { model: DokumentModel }) {
   );
 }
 
-export default function DokumentPdfDocument({ model }: { model: DokumentModel }) {
+export default function DokumentPdfDocument({
+  model,
+  qrDataUrl,
+}: {
+  model: DokumentModel;
+  qrDataUrl?: string | null;
+}) {
   const tipMeta = metaZaTip(model.tipDokumenta);
   const { osnovica, pdvIznos, ukupno } = izracunajDokumentIznose(model);
   const jeOtpremnica = model.tipDokumenta === "otpremnica";
@@ -343,6 +349,14 @@ export default function DokumentPdfDocument({ model }: { model: DokumentModel })
               <Text style={[styles.body, { marginTop: 4 }]}>
                 {tipMeta.rokLabel}: {formatDokumentDatum(model.datumPlacanja)}
               </Text>
+              {qrDataUrl ? (
+                <View style={{ marginTop: 10, alignItems: "flex-start" }}>
+                  <Image src={qrDataUrl} style={{ width: 72, height: 72 }} />
+                  <Text style={[styles.note, { marginTop: 4, fontSize: 8 }]}>
+                    Skenirajte za podatke o plaćanju
+                  </Text>
+                </View>
+              ) : null}
             </View>
           )}
           <View style={styles.footerCol}>

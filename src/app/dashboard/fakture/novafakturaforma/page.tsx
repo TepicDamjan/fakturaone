@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { azurirajFakturu, sacuvajFakturu, ucitajFakturuSaStavkama } from "@/app/dashboard/fakture/actions";
+import { ucitajSablon } from "@/app/dashboard/sabloni/actions";
 import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
 import { ucitajProizvodiList } from "@/app/dashboard/proizvodi/actions";
@@ -78,6 +79,7 @@ function NovaFakturaForma() {
   const { prikaziToast } = useToast();
   const searchParams = useSearchParams();
   const editId = (searchParams.get("id") ?? "").trim();
+  const sablonId = (searchParams.get("sablon") ?? "").trim();
   const jeIzmjena = Boolean(editId);
   const tipFromQuery = parseTipDokumenta(searchParams.get("tip"));
 
@@ -87,7 +89,7 @@ function NovaFakturaForma() {
 
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [ucitavanje, setUcitavanje] = useState(jeIzmjena);
+  const [ucitavanje, setUcitavanje] = useState(jeIzmjena || Boolean(sablonId));
   const [postojeciStatus, setPostojeciStatus] = useState<FakturaStatus>("nacrt");
   const [stavke, setStavke] = useState<Stavka[]>(() =>
     initialStavkeZaTip(tipFromQuery)
@@ -119,7 +121,7 @@ function NovaFakturaForma() {
 
   useEffect(() => {
     if (!editId) {
-      setUcitavanje(false);
+      if (!sablonId) setUcitavanje(false);
       return;
     }
     let cancelled = false;
@@ -171,6 +173,48 @@ function NovaFakturaForma() {
       cancelled = true;
     };
   }, [editId]);
+
+  useEffect(() => {
+    if (editId || !sablonId) return;
+    let cancelled = false;
+    setUcitavanje(true);
+    ucitajSablon(sablonId)
+      .then((sablon) => {
+        if (cancelled) return;
+        if (!sablon) {
+          setSaveError("Šablon nije pronađen.");
+          setUcitavanje(false);
+          return;
+        }
+        setTipDokumenta(sablon.tipDokumenta);
+        setKlijentId(sablon.klijentId);
+        setReferenca(sablon.referenca);
+        setNapomene(sablon.napomene);
+        setPdvProcenat(sablon.pdvProcenat);
+        setPopust(sablon.popust);
+        setStavke(
+          sablon.stavke.length > 0
+            ? sablon.stavke.map((s) => ({
+                id: crypto.randomUUID(),
+                naziv: s.naziv,
+                opis: s.opis,
+                kolicina: s.kolicina,
+                cena: s.cena,
+                jedinica: s.jedinica,
+              }))
+            : initialStavkeZaTip(sablon.tipDokumenta)
+        );
+        setUcitavanje(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSaveError("Greška pri učitavanju šablona.");
+        setUcitavanje(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, sablonId]);
 
   const osnovica = useMemo(
     () => stavke.reduce((sum, s) => sum + s.kolicina * s.cena, 0),

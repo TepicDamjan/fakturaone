@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Footer from "@/app/components/Footer";
 import SajtUIzradiBaner from "@/app/components/SajtUIzradiBaner";
+import PwaRegister from "@/app/components/PwaRegister";
 import { DEFAULT_DESCRIPTION, getSiteUrl, SITE_NAME } from "@/lib/site";
 
 const geistSans = Geist({
@@ -30,6 +31,19 @@ export const metadata: Metadata = {
     "program za fakture",
     "fakturaone",
   ],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: SITE_NAME,
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     locale: "sr_RS",
@@ -48,6 +62,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#137FEC",
 };
 
 export default function RootLayout({
@@ -66,6 +81,7 @@ export default function RootLayout({
         {showWipBanner ? <SajtUIzradiBaner /> : null}
         {children}
         <Footer />
+        <PwaRegister />
         <Analytics />
       </body>
     </html>

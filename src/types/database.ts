@@ -461,6 +461,128 @@ export type Database = {
                     }
                 ];
             };
+            dokument_sabloni: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    firma_id: string;
+                    naziv: string;
+                    tip_dokumenta: Database["public"]["Enums"]["tip_dokumenta"];
+                    klijent_id: string | null;
+                    referenca: string | null;
+                    napomene: string | null;
+                    pdv_procenat: number;
+                    popust: number;
+                    stavke: Json;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    firma_id: string;
+                    naziv: string;
+                    tip_dokumenta?: Database["public"]["Enums"]["tip_dokumenta"];
+                    klijent_id?: string | null;
+                    referenca?: string | null;
+                    napomene?: string | null;
+                    pdv_procenat?: number;
+                    popust?: number;
+                    stavke?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    firma_id?: string;
+                    naziv?: string;
+                    tip_dokumenta?: Database["public"]["Enums"]["tip_dokumenta"];
+                    klijent_id?: string | null;
+                    referenca?: string | null;
+                    napomene?: string | null;
+                    pdv_procenat?: number;
+                    popust?: number;
+                    stavke?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "dokument_sabloni_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            ponavljajuce_fakture: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    firma_id: string;
+                    klijent_id: string;
+                    naziv: string;
+                    referenca: string | null;
+                    napomene: string | null;
+                    pdv_procenat: number;
+                    popust: number;
+                    stavke: Json;
+                    frekvencija: string;
+                    rok_placanja_dana: number;
+                    sljedeci_datum: string;
+                    aktivan: boolean;
+                    zadnji_faktura_id: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    firma_id: string;
+                    klijent_id: string;
+                    naziv: string;
+                    referenca?: string | null;
+                    napomene?: string | null;
+                    pdv_procenat?: number;
+                    popust?: number;
+                    stavke?: Json;
+                    frekvencija: string;
+                    rok_placanja_dana?: number;
+                    sljedeci_datum: string;
+                    aktivan?: boolean;
+                    zadnji_faktura_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    firma_id?: string;
+                    klijent_id?: string;
+                    naziv?: string;
+                    referenca?: string | null;
+                    napomene?: string | null;
+                    pdv_procenat?: number;
+                    popust?: number;
+                    stavke?: Json;
+                    frekvencija?: string;
+                    rok_placanja_dana?: number;
+                    sljedeci_datum?: string;
+                    aktivan?: boolean;
+                    zadnji_faktura_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "ponavljajuce_fakture_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
         };
         Views: {
             fakture_lista: {
@@ -491,6 +613,13 @@ export type Database = {
                 Returns: number;
             };
             sledeci_broj_dokumenta: {
+                Args: {
+                    p_firma_id: string;
+                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                };
+                Returns: string;
+            };
+            sledeci_broj_dokumenta_servis: {
                 Args: {
                     p_firma_id: string;
                     p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";

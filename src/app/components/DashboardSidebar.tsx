@@ -192,6 +192,32 @@ function SidebarContent({
                         }
                     />
                     <NavItem
+                        href="/dashboard/sabloni"
+                        label="Šabloni"
+                        isActive={pathname.startsWith('/dashboard/sabloni')}
+                        onNavigate={onNavigate}
+                        icon={
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        }
+                    />
+                    <NavItem
+                        href="/dashboard/ponavljajuce"
+                        label="Ponavljajuće"
+                        isActive={pathname.startsWith('/dashboard/ponavljajuce')}
+                        onNavigate={onNavigate}
+                        icon={
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                <path d="M17 1l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M3 11V9a4 4 0 014-4h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M7 23l-4-4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M21 13v2a4 4 0 01-4 4H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        }
+                    />
+                    <NavItem
                         href="/dashboard/izvjestaji"
                         label="Izveštaji"
                         isActive={pathname.startsWith('/dashboard/izvjestaji')}
