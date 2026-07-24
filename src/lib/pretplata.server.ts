@@ -46,7 +46,17 @@ export function resolveEffectiveTier(row: PretplataRow): {
   }
 
   if (row.status === "active" || row.status === "past_due") {
-    return { tier: row.plan, isTrial: false, trialDaysLeft: null };
+    // Ručno dodeljen plan (bez Freemius veze) ističe po current_period_end.
+    // Freemius pretplatama istek i dalje upravlja webhook (menja status).
+    const manualGrantExpired =
+      row.freemius_license_id == null &&
+      row.freemius_subscription_id == null &&
+      row.current_period_end != null &&
+      new Date(row.current_period_end).getTime() <= now;
+
+    if (!manualGrantExpired) {
+      return { tier: row.plan, isTrial: false, trialDaysLeft: null };
+    }
   }
 
   return { tier: "starter", isTrial: false, trialDaysLeft: null };

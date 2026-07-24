@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 import { AKTIVNA_FIRMA_COOKIE, getAktivnaFirmaIdFromRequest } from '@/lib/aktivnaFirmaCookie'
+import { isAdminEmail } from '@/lib/adminEmails'
 
 function getSupabaseEnv() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
@@ -47,6 +48,21 @@ export async function updateSession(request: NextRequest) {
     const {
         data: { user },
     } = await supabase.auth.getUser()
+
+    // Admin panel — dostupan samo emailovima iz ADMIN_EMAILS (bez provere aktivne firme)
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+        if (!user) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            return NextResponse.redirect(url)
+        }
+        if (!isAdminEmail(user.email)) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/dashboard'
+            return NextResponse.redirect(url)
+        }
+        return supabaseResponse
+    }
 
     // Proveravamo da li je korisnik ulogovan a posećuje zaštićenu Dashboard rutu
     if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
