@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description:
         "Ubrzajte naplatu, pratite finansije i upravljajte klijentima sa lakoćom. Profesionalne fakture u nekoliko klikova.",
     openGraph: {
-        title: "Online fakturisanje za preduzeća u Srbiji | FakturaOne",
+        title: "Online fakturisanje za preduzeća | FakturaOne",
         description: DEFAULT_DESCRIPTION,
         url: getSiteUrl(),
     },
