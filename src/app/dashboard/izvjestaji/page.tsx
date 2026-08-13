@@ -6,14 +6,17 @@ import IzvjestajiPlanGate from "@/app/dashboard/izvjestaji/IzvjestajiPlanGate";
 import IzvjestajiPrihodChart from "@/app/dashboard/izvjestaji/IzvjestajiPrihodChart";
 import IzvjestajiTopKlijenti from "@/app/dashboard/izvjestaji/IzvjestajiTopKlijenti";
 import IzvjestajiPdv from "@/app/dashboard/izvjestaji/IzvjestajiPdv";
+import IzvjestajiAging from "@/app/dashboard/izvjestaji/IzvjestajiAging";
+import IzvjestajiKif from "@/app/dashboard/izvjestaji/IzvjestajiKif";
+import IzvjestajiExport from "@/app/dashboard/izvjestaji/IzvjestajiExport";
 import { fetchIzvjestajSnapshot } from "@/lib/izvjestaji.server";
-import { parseIzvjestajPeriod } from "@/lib/izvjestaji";
+import { formatIzvjestajIznos, parseIzvjestajPeriod } from "@/lib/izvjestaji";
 import { proveriPristupIzvestajima } from "@/lib/pretplata.server";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
 type PageProps = {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; od?: string; do?: string }>;
 };
 
 export default async function IzvjestajiPage({ searchParams }: PageProps) {
@@ -32,7 +35,7 @@ export default async function IzvjestajiPage({ searchParams }: PageProps) {
     return (
       <>
         <DashboardHeader
-          title="Izveštaji"
+          title="Izvještaji"
           subtitle="Finansijski pregled fakturisanja i naplate"
         />
         <IzvjestajiPlanGate pretplata={pristup.pregled} />
@@ -42,24 +45,47 @@ export default async function IzvjestajiPage({ searchParams }: PageProps) {
 
   const sp = await searchParams;
   const period = parseIzvjestajPeriod(sp.period);
-  const snapshot = await fetchIzvjestajSnapshot(sp.period);
+  const snapshot = await fetchIzvjestajSnapshot(sp.period, sp.od, sp.do);
 
   return (
     <>
       <DashboardHeader
-        title="Izveštaji"
+        title="Izvještaji"
         subtitle="Finansijski pregled fakturisanja i naplate"
+        rightContent={
+          <IzvjestajiExport period={period} od={sp.od} doo={sp.do} />
+        }
       />
 
       <main className="flex-1 p-6 sm:p-8 overflow-y-auto w-full max-w-[1600px] mx-auto">
         <IzvjestajiFilter
           aktivni={period}
           periodLabel={snapshot.range.label}
+          od={sp.od}
+          doo={sp.do}
         />
 
         <IzvjestajiKpi kpi={snapshot.kpi} valuta={snapshot.valuta} />
 
-        <IzvjestajiPdv pdv={snapshot.pdv} valuta={snapshot.valuta} />
+        <div className="mt-6">
+          <IzvjestajiPdv pdv={snapshot.pdv} valuta={snapshot.valuta} />
+        </div>
+
+        {snapshot.pdvPoStopi.length > 0 ? (
+          <p className="text-sm text-[#64748B] mt-3">
+            PDV po stopi:{" "}
+            {snapshot.pdvPoStopi
+              .map(
+                (s) =>
+                  `${s.stopa}% → ${formatIzvjestajIznos(s.pdvIznos, snapshot.valuta)}`
+              )
+              .join(" · ")}
+          </p>
+        ) : null}
+
+        <div className="mt-6">
+          <IzvjestajiAging buckets={snapshot.aging} valuta={snapshot.valuta} />
+        </div>
 
         <p className="text-sm text-[#64748B] mt-6 mb-4">
           Broj faktura u periodu:{" "}
@@ -88,6 +114,10 @@ export default async function IzvjestajiPage({ searchParams }: PageProps) {
             fakture={snapshot.neplacene}
             valuta={snapshot.valuta}
           />
+        </div>
+
+        <div className="mt-8">
+          <IzvjestajiKif redovi={snapshot.kif} valuta={snapshot.valuta} />
         </div>
       </main>
     </>

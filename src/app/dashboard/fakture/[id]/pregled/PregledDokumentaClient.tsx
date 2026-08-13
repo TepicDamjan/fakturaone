@@ -28,6 +28,8 @@ import {
   formatDatumDugi,
   formatDatumKratki,
   formatIznos,
+  formatIznosValuta,
+  izracunajIznoseDokumenta,
   zaokruziNovac,
 } from "@/lib/dokument/format";
 
@@ -61,7 +63,7 @@ export default function PregledDokumentaClient({
   const [placanjeModal, setPlacanjeModal] = useState(false);
 
   const [payload, setPayload] = useState<FakturaSaStavkama>(initial);
-  const { izdavac, bankovniRacun } = usePodesavanjaFirme();
+  const { izdavac, bankovniRacun, valuta } = usePodesavanjaFirme();
 
   useEffect(() => {
     setPayload(initial);
@@ -93,18 +95,19 @@ export default function PregledDokumentaClient({
     });
   };
 
-  const osnovica = useMemo(() => {
-    if (!payload.stavke?.length) return 0;
-    return payload.stavke.reduce(
-      (s, x) => s + Number(x.kolicina) * Number(x.cena),
-      0
-    );
-  }, [payload]);
-
   const pdvProcenat = f ? Number(f.pdv_procenat) : 17;
   const popust = f ? Number(f.popust) : 0;
-  const pdvIznos = osnovica * (pdvProcenat / 100);
-  const ukupno = zaokruziNovac(osnovica + pdvIznos - popust);
+  const { osnovica, pdvIznos, ukupno } = useMemo(() => {
+    return izracunajIznoseDokumenta(
+      (payload.stavke ?? []).map((s) => ({
+        kolicina: Number(s.kolicina),
+        cena: Number(s.cena),
+        pdvProcenat: s.pdv_procenat,
+      })),
+      pdvProcenat,
+      popust
+    );
+  }, [payload, pdvProcenat, popust]);
   const placenoIznos = f ? zaokruziNovac(Number(f.placeno_iznos ?? 0)) : 0;
   const preostalo = zaokruziNovac(Math.max(0, ukupno - placenoIznos));
   const mozeUplata =
@@ -228,12 +231,14 @@ export default function PregledDokumentaClient({
           {/* Red 2: akcije — primarne desno, kontekstualne lijevo */}
           <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
+              {f?.status === "nacrt" ? (
               <Link
                 href={`/dashboard/fakture/novafakturaforma?id=${id}`}
                 className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-[#475569] hover:bg-[#F8FAFC] hover:text-fcrna transition-colors"
               >
                 Izmijeni
               </Link>
+              ) : null}
               {mozeUplata ? (
                 <button
                   type="button"
@@ -243,7 +248,7 @@ export default function PregledDokumentaClient({
                   Evidentiraj uplatu
                   {preostalo > 0 ? (
                     <span className="hidden sm:inline font-normal opacity-90">
-                      · {formatIznos(preostalo)} BAM
+                      · {formatIznosValuta(preostalo, valuta)}
                     </span>
                   ) : null}
                 </button>
@@ -421,19 +426,19 @@ export default function PregledDokumentaClient({
                   <div className="flex justify-between gap-4">
                     <span className="text-[#64748B]">Međuzbir</span>
                     <span className="tabular-nums font-medium text-fcrna">
-                      {formatIznos(osnovica)} BAM
+                      {formatIznosValuta(osnovica, valuta)}
                     </span>
                   </div>
                   <div className="flex justify-between gap-4">
                     <span className="text-[#64748B]">PDV ({pdvProcenat}%)</span>
                     <span className="tabular-nums font-medium text-fcrna">
-                      {formatIznos(pdvIznos)} BAM
+                      {formatIznosValuta(pdvIznos, valuta)}
                     </span>
                   </div>
                   <div className="flex justify-between gap-4">
                     <span className="text-[#64748B]">Popust</span>
                     <span className="tabular-nums font-medium text-fcrna">
-                      -{formatIznos(popust)} BAM
+                      -{formatIznosValuta(popust, valuta)}
                     </span>
                   </div>
                   <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
@@ -441,7 +446,7 @@ export default function PregledDokumentaClient({
                       {tipMeta.totalLabel}
                     </span>
                     <span className="text-2xl font-bold text-fplava tabular-nums">
-                      {formatIznos(ukupno)} BAM
+                      {formatIznosValuta(ukupno, valuta)}
                     </span>
                   </div>
                   {tipDokumenta === "faktura" && placenoIznos > 0 ? (
@@ -449,13 +454,13 @@ export default function PregledDokumentaClient({
                       <div className="flex justify-between gap-4 pt-2">
                         <span className="text-[#64748B]">Plaćeno</span>
                         <span className="tabular-nums font-medium text-emerald-700">
-                          {formatIznos(placenoIznos)} BAM
+                          {formatIznosValuta(placenoIznos, valuta)}
                         </span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span className="text-[#64748B]">Preostalo</span>
                         <span className="tabular-nums font-semibold text-fcrna">
-                          {formatIznos(preostalo)} BAM
+                          {formatIznosValuta(preostalo, valuta)}
                         </span>
                       </div>
                     </>

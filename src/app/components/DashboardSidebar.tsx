@@ -219,7 +219,7 @@ function SidebarContent({
                     />
                     <NavItem
                         href="/dashboard/izvjestaji"
-                        label="Izveštaji"
+                        label="Izvještaji"
                         isActive={pathname.startsWith('/dashboard/izvjestaji')}
                         onNavigate={onNavigate}
                         icon={

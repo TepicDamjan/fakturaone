@@ -125,7 +125,7 @@ export default function FakturaPregled({
 
         <div className="bg-fsiva border-t border-ftsiva px-4 py-3 text-center">
           <p className="text-xs text-[#64748B]">
-            Iznosi su prikazani u BAM
+            Iznosi su prikazani u valuti preduzeća
           </p>
         </div>
       </div>

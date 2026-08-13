@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { obrisiKlijenta } from "@/app/dashboard/klijenti/actions";
 import type { KlijentSaFakturisano } from "@/lib/klijenti";
-import { formatIznosCijeli } from "@/lib/dokument/format";
+import { formatIznosValuta } from "@/lib/dokument/format";
 
 type KlijentiTabelaProps = {
   klijenti: KlijentSaFakturisano[];
+  valuta?: string;
 };
 
-function formatFakturisano(n: number) {
-  return `${formatIznosCijeli(n)} BAM`;
+function formatFakturisano(n: number, valuta: string) {
+  return formatIznosValuta(n, valuta, true);
 }
 
-export default function KlijentiTabela({ klijenti }: KlijentiTabelaProps) {
+export default function KlijentiTabela({ klijenti, valuta = "BAM" }: KlijentiTabelaProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -126,12 +127,19 @@ export default function KlijentiTabela({ klijenti }: KlijentiTabelaProps) {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((k) => (
                   <tr key={k.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-fcrna">{k.naziv}</td>
+                    <td className="px-6 py-4 font-semibold text-fcrna">
+                      <Link
+                        href={`/dashboard/klijenti/${k.id}`}
+                        className="hover:text-fplava hover:underline"
+                      >
+                        {k.naziv}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-[#64748B]">{k.email ?? "—"}</td>
                     <td className="px-6 py-4 text-[#64748B]">{k.grad ?? "—"}</td>
                     <td className="px-6 py-4 text-[#64748B] tabular-nums">{k.pib ?? "—"}</td>
                     <td className="px-6 py-4 text-right font-bold text-[#0F172A] tabular-nums whitespace-nowrap">
-                      {formatFakturisano(k.ukupnoFakturisano)}
+                      {formatFakturisano(k.ukupnoFakturisano, valuta)}
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="inline-flex items-center justify-end gap-1">

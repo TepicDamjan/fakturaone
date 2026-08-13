@@ -10,16 +10,18 @@ type IznosSidebarProps = {
   onPdvProcenatChange: (value: number) => void;
   popust: number;
   onPopustChange: (value: number) => void;
-  tipDokumenta?: Extract<TipDokumenta, "faktura" | "predracun">;
+  tipDokumenta?: Extract<TipDokumenta, "faktura" | "predracun" | "avansna">;
+  valuta?: string;
 };
 
-function formatBam(amount: number) {
-  return formatIznos(amount);
+function formatIznosVal(amount: number, valuta: string) {
+  return `${formatIznos(amount)} ${valuta}`;
 }
 
-const STATUS_PORUKA: Record<"faktura" | "predracun", string> = {
+const STATUS_PORUKA: Record<"faktura" | "predracun" | "avansna", string> = {
   faktura: "Faktura je spremna za slanje.",
   predracun: "Predračun je spreman za slanje.",
+  avansna: "Avansna faktura je spremna za slanje.",
 };
 
 export default function PredracunSumaSidebar({
@@ -29,6 +31,7 @@ export default function PredracunSumaSidebar({
   popust,
   onPopustChange,
   tipDokumenta = "predracun",
+  valuta = "BAM",
 }: IznosSidebarProps) {
   const [popustEdit, setPopustEdit] = useState(false);
   const pdvIznos = osnovica * (pdvProcenat / 100);
@@ -42,7 +45,7 @@ export default function PredracunSumaSidebar({
           <div className="flex justify-between items-center gap-4">
             <span className="text-[#64748B]">Međuzbir:</span>
             <span className="text-fcrna font-medium tabular-nums">
-              {formatBam(osnovica)} BAM
+              {formatIznosVal(osnovica, valuta)}
             </span>
           </div>
 
@@ -67,7 +70,7 @@ export default function PredracunSumaSidebar({
               <span className="text-[#64748B]">:</span>
             </div>
             <span className="text-fcrna font-medium tabular-nums">
-              {formatBam(pdvIznos)} BAM
+              {formatIznosVal(pdvIznos, valuta)}
             </span>
           </div>
 
@@ -98,14 +101,14 @@ export default function PredracunSumaSidebar({
               )}
             </div>
             <span className="text-fcrna font-medium tabular-nums">
-              -{formatBam(popust)} BAM
+              -{formatIznosVal(popust, valuta)}
             </span>
           </div>
 
           <div className="pt-3 border-t border-gray-100 flex justify-between items-end gap-4">
             <span className="text-fcrna font-bold">{tipMeta.totalLabel}:</span>
             <span className="text-fplava text-2xl font-bold tabular-nums tracking-tight">
-              {formatBam(ukupno)} BAM
+              {formatIznosVal(ukupno, valuta)}
             </span>
           </div>
         </div>

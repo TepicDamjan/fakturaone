@@ -14,6 +14,7 @@ import { ucitajSablon } from "@/app/dashboard/sabloni/actions";
 import { useToast } from "@/app/components/toast/ToastContext";
 import { ucitajKlijentiList } from "@/app/dashboard/klijenti/actions";
 import { ucitajProizvodiList } from "@/app/dashboard/proizvodi/actions";
+import { ucitajPodesavanjaFirme } from "@/app/dashboard/podesavanja/actions";
 import type { Proizvod } from "@/lib/proizvodi";
 import StavkeFakture, { type Stavka } from "@/app/components/StavkeFakture";
 import OtpremnicaLogistika from "@/app/components/OtpremnicaLogistika";
@@ -47,6 +48,7 @@ function initialStavkeZaTip(tip: TipDokumenta): Stavka[] {
         kolicina: 0,
         cena: 0,
         jedinica: "kom",
+        pdvProcenat: 17,
       },
     ];
   }
@@ -58,6 +60,7 @@ function initialStavkeZaTip(tip: TipDokumenta): Stavka[] {
       kolicina: 1,
       cena: 0,
       jedinica: "kom",
+      pdvProcenat: 17,
     },
   ];
 }
@@ -94,7 +97,9 @@ function NovaFakturaForma() {
   const [stavke, setStavke] = useState<Stavka[]>(() =>
     initialStavkeZaTip(tipFromQuery)
   );
-  const [klijentId, setKlijentId] = useState("");
+  const [klijentId, setKlijentId] = useState(
+    () => (searchParams.get("klijent") ?? "").trim()
+  );
   const [klijenti, setKlijenti] = useState<Klijent[]>([]);
   const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
   const [brojFakture, setBrojFakture] = useState("");
@@ -104,6 +109,9 @@ function NovaFakturaForma() {
   const [napomene, setNapomene] = useState("");
   const [pdvProcenat, setPdvProcenat] = useState(17);
   const [popust, setPopust] = useState(0);
+  const [valuta, setValuta] = useState("BAM");
+  const [pdvOslobodjenjeNapomena, setPdvOslobodjenjeNapomena] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [nacinTransporta, setNacinTransporta] = useState(NACINI_TRANSPORTA[0]);
   const [adresaDostave, setAdresaDostave] = useState("");
@@ -117,7 +125,20 @@ function NovaFakturaForma() {
     ucitajProizvodiList()
       .then(setProizvodi)
       .catch(() => setProizvodi([]));
-  }, []);
+    ucitajPodesavanjaFirme()
+      .then((p) => {
+        const v = p.firma?.valuta?.trim() || "BAM";
+        const pdv = Number(p.firma?.pdv_procenat);
+        setValuta(v);
+        if (!editId && !sablonId && Number.isFinite(pdv)) {
+          setPdvProcenat(pdv);
+          setStavke((prev) =>
+            prev.map((s) => ({ ...s, pdvProcenat: s.pdvProcenat ?? pdv }))
+          );
+        }
+      })
+      .catch(() => undefined);
+  }, [editId, sablonId]);
 
   useEffect(() => {
     if (!editId) {
@@ -146,6 +167,11 @@ function NovaFakturaForma() {
         setNapomene(f.napomene ?? "");
         setPdvProcenat(Number(f.pdv_procenat) || 0);
         setPopust(Number(f.popust) || 0);
+        setPdvOslobodjenjeNapomena(f.pdv_oslobodjenje_napomena ?? "");
+        if (f.status !== "nacrt") {
+          router.replace(`/dashboard/fakture/${editId}/pregled`);
+          return;
+        }
         setNacinTransporta(f.nacin_transporta || NACINI_TRANSPORTA[0]);
         setAdresaDostave(f.adresa_dostave ?? "");
         setRegistracijaVozila(f.registracija_vozila ?? "");
@@ -159,6 +185,7 @@ function NovaFakturaForma() {
                 kolicina: Number(s.kolicina),
                 cena: Number(s.cena),
                 jedinica: s.jedinica || "kom",
+                pdvProcenat: s.pdv_procenat,
               }))
             : initialStavkeZaTip(tip)
         );
@@ -231,6 +258,7 @@ function NovaFakturaForma() {
       kolicina: jeOtpremnica ? 0 : 1,
       cena: 0,
       jedinica: "kom",
+      pdvProcenat: pdvProcenat,
     };
     setStavke((prev) => [...prev, newStavka]);
   };
@@ -287,11 +315,14 @@ function NovaFakturaForma() {
       kolicina: s.kolicina,
       cena: jeOtpremnica ? 0 : s.cena,
       jedinica: s.jedinica,
+      pdvProcenat: s.pdvProcenat ?? pdvProcenat,
     })),
+    pdvOslobodjenjeNapomena,
   });
 
   const handleSacuvajNacrt = () => {
     setSaveError(null);
+    setFieldErrors({});
     startTransition(async () => {
       const rez = jeIzmjena
         ? await azurirajFakturu(editId, {
@@ -304,6 +335,7 @@ function NovaFakturaForma() {
           });
       if (!rez.ok) {
         setSaveError(rez.error);
+        if ("fields" in rez && rez.fields) setFieldErrors(rez.fields);
         return;
       }
       prikaziToast({
@@ -316,6 +348,7 @@ function NovaFakturaForma() {
 
   const handleIzdaj = () => {
     setSaveError(null);
+    setFieldErrors({});
     startTransition(async () => {
       const status: FakturaStatus =
         jeIzmjena && postojeciStatus !== "nacrt"
@@ -332,6 +365,7 @@ function NovaFakturaForma() {
           });
       if (!rez.ok) {
         setSaveError(rez.error);
+        if ("fields" in rez && rez.fields) setFieldErrors(rez.fields);
         return;
       }
       const porukaUspeha = jeIzmjena
@@ -339,8 +373,10 @@ function NovaFakturaForma() {
         : jeOtpremnica
           ? "Otpremnica je uspešno sačuvana."
           : tipDokumenta === "predracun"
-            ? "Predračun je uspešno izdat."
-            : "Faktura je uspešno izdata.";
+            ? "Predračun je uspješno izdat."
+            : tipDokumenta === "avansna"
+              ? "Avansna faktura je uspješno izdata."
+            : "Faktura je uspješno izdata.";
       prikaziToast({ tip: "uspeh", poruka: porukaUspeha });
       router.push(jeIzmjena ? `/dashboard/fakture/${rez.id}/pregled` : "/dashboard/fakture");
     });
@@ -352,6 +388,8 @@ function NovaFakturaForma() {
       ? "Sačuvaj Otpremnicu"
       : tipDokumenta === "predracun"
         ? "Izdaj Predračun"
+        : tipDokumenta === "avansna"
+          ? "Izdaj avansnu fakturu"
         : "Izdaj Fakturu";
 
   const naslov = jeIzmjena
@@ -360,6 +398,8 @@ function NovaFakturaForma() {
       ? "Nova Otpremnica"
       : tipDokumenta === "predracun"
         ? "Kreiranje Predračuna"
+        : tipDokumenta === "avansna"
+          ? "Nova avansna faktura"
         : "Nova Faktura";
 
   const podnaslov = jeIzmjena
@@ -453,6 +493,12 @@ function NovaFakturaForma() {
             className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
           >
             {saveError}
+            {fieldErrors.klijentId || fieldErrors.stavke ? (
+              <ul className="mt-2 list-disc pl-5 text-xs">
+                {fieldErrors.klijentId ? <li>{fieldErrors.klijentId}</li> : null}
+                {fieldErrors.stavke ? <li>{fieldErrors.stavke}</li> : null}
+              </ul>
+            ) : null}
           </div>
         ) : null}
 
@@ -488,6 +534,7 @@ function NovaFakturaForma() {
               onRemoveStavka={handleRemoveStavka}
               tipDokumenta={tipDokumenta}
               proizvodi={proizvodi}
+              defaultPdv={pdvProcenat}
               inGrid
             />
 
@@ -502,6 +549,16 @@ function NovaFakturaForma() {
                   rows={4}
                   placeholder="Unesite dodatne informacije, uslove plaćanja ili uputstva..."
                   className="w-full rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava focus:ring-2 focus:ring-fplava/15 px-3 py-2.5 resize-y min-h-[120px]"
+                />
+                <label className="block text-sm font-bold text-fcrna mt-4 mb-2">
+                  PDV oslobođenje (opciono)
+                </label>
+                <input
+                  type="text"
+                  value={pdvOslobodjenjeNapomena}
+                  onChange={(e) => setPdvOslobodjenjeNapomena(e.target.value)}
+                  placeholder="npr. Član 24. Zakona o PDV-u"
+                  className="w-full rounded-lg border border-ftsiva bg-fsiva text-sm text-fcrna placeholder:text-[#94A3B8] outline-none focus:border-fplava px-3 py-2"
                 />
                 {tipDokumenta === "predracun" ? (
                   <p className="mt-2 text-xs text-[#94A3B8] flex items-center gap-1.5">
@@ -581,8 +638,13 @@ function NovaFakturaForma() {
                 popust={popust}
                 onPopustChange={setPopust}
                 tipDokumenta={
-                  tipDokumenta === "predracun" ? "predracun" : "faktura"
+                  tipDokumenta === "predracun"
+                    ? "predracun"
+                    : tipDokumenta === "avansna"
+                      ? "avansna"
+                      : "faktura"
                 }
+                valuta={valuta}
               />
             )}
           </div>

@@ -260,25 +260,25 @@ export default function FakturaPregledStranica() {
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">Međuzbir</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    {formatIznos(osnovica)} BAM
+                    {formatIznos(osnovica)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">PDV ({pdvProcenat}%)</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    {formatIznos(pdvIznos)} BAM
+                    {formatIznos(pdvIznos)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-[#64748B]">Popust</span>
                   <span className="tabular-nums font-medium text-fcrna">
-                    -{formatIznos(popust)} BAM
+                    -{formatIznos(popust)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4 items-end pt-3 border-t border-gray-200">
                   <span className="text-fcrna font-semibold">{tipMeta.totalLabel}</span>
                   <span className="text-2xl font-bold text-fplava tabular-nums">
-                    {formatIznos(ukupno)} BAM
+                    {formatIznos(ukupno)}
                   </span>
                 </div>
               </div>

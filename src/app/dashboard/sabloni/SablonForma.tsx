@@ -211,7 +211,7 @@ export default function SablonForma({ initial, klijenti }: Props) {
           ))}
         </div>
         <p className="mt-2 text-sm text-[#64748B]">
-          Osnovica: {osnovica.toFixed(2)} BAM
+          Osnovica: {osnovica.toFixed(2)}
         </p>
       </div>
 

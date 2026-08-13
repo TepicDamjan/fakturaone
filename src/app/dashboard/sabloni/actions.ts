@@ -78,6 +78,9 @@ export type SacuvajPonavljajucuInput = {
   rokPlacanjaDana: number;
   sljedeciDatum: string;
   aktivan: boolean;
+  posaljiEmail?: boolean;
+  zavrsniDatum?: string;
+  maxPonavljanja?: number | null;
 };
 
 export async function ucitajSabloneList(): Promise<DokumentSablonListItem[]> {
@@ -282,6 +285,9 @@ export async function sacuvajPonavljajucu(
     rok_placanja_dana: input.rokPlacanjaDana,
     sljedeci_datum: input.sljedeciDatum,
     aktivan: input.aktivan,
+    posalji_email: input.posaljiEmail === true,
+    zavrsni_datum: input.zavrsniDatum?.trim() || null,
+    max_ponavljanja: input.maxPonavljanja ?? null,
   };
 
   if (id) {

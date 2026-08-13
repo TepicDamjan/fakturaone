@@ -10,6 +10,8 @@ import {
   obrisiFakturu,
   promeniStatusFakture,
   stornirajFakturu,
+  duplirajDokument,
+  konvertujAvansnuUFakturu,
 } from "@/app/dashboard/fakture/actions";
 import { posaljiFakturuEmail } from "@/app/dashboard/fakture/emailActions";
 import { preuzmiDokumentPdf } from "@/lib/dokument/dokumentClient";
@@ -56,6 +58,8 @@ export default function FakturaAkcijeMeni({
   const tipDokumenta = parseTipDokumenta(tipRaw);
   const tipMeta = metaZaTip(tipDokumenta);
   const jePredracun = tipDokumenta === "predracun";
+  const jeAvansna = tipDokumenta === "avansna";
+  const mozeIzmjena = status === "nacrt" || !status;
   const mozeStorno =
     tipDokumenta === "faktura" && status !== "nacrt";
   const mozeUplata =
@@ -152,6 +156,52 @@ export default function FakturaAkcijeMeni({
     }
   };
 
+  const handleAvansnaUFakturu = async () => {
+    if (
+      !window.confirm(
+        `Kreirati konačnu fakturu od avansa #${broj}? Avans će biti umanjen na novom dokumentu.`
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await konvertujAvansnuUFakturu(fakturaId);
+      onCloseMenu();
+      if (!res.ok) {
+        prikaziToast({ tip: "greska", poruka: res.error });
+        return;
+      }
+      prikaziToast({
+        tip: "uspeh",
+        poruka: res.vecPostojala
+          ? "Konačna faktura od ovog avansa već postoji."
+          : "Nacrt konačne fakture je kreiran.",
+      });
+      router.push(`/dashboard/fakture/${res.id}/pregled`);
+      routerRefresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDupliraj = async () => {
+    setBusy(true);
+    try {
+      const res = await duplirajDokument(fakturaId);
+      onCloseMenu();
+      if (!res.ok) {
+        prikaziToast({ tip: "greska", poruka: res.error });
+        return;
+      }
+      prikaziToast({ tip: "uspeh", poruka: "Dokument je kopiran kao nacrt." });
+      router.push(`/dashboard/fakture/novafakturaforma?id=${res.id}`);
+      routerRefresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleStorno = async () => {
     if (
       !window.confirm(
@@ -209,6 +259,7 @@ export default function FakturaAkcijeMeni({
           </svg>
           Pregledaj
         </Link>
+        {mozeIzmjena ? (
         <Link
           href={`/dashboard/fakture/novafakturaforma?id=${fakturaId}`}
           role="menuitem"
@@ -240,6 +291,27 @@ export default function FakturaAkcijeMeni({
           </svg>
           Izmijeni
         </Link>
+        ) : null}
+        <button
+          type="button"
+          role="menuitem"
+          disabled={busy}
+          onClick={() => void handleDupliraj()}
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fcrna hover:bg-fsiva transition-colors disabled:opacity-50"
+        >
+          <svg
+            className="shrink-0 text-[#64748B]"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          Dupliraj
+        </button>
         <button
           type="button"
           role="menuitem"
@@ -301,6 +373,21 @@ export default function FakturaAkcijeMeni({
           </svg>
           Pošalji
         </button>
+
+        {jeAvansna ? (
+          <>
+            <div className="my-1 h-px bg-gray-100" role="separator" />
+            <button
+              type="button"
+              role="menuitem"
+              disabled={busy}
+              onClick={() => void handleAvansnaUFakturu()}
+              className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm font-medium text-fplava hover:bg-sky-50 transition-colors disabled:opacity-50"
+            >
+              Izdaj konačnu fakturu
+            </button>
+          </>
+        ) : null}
 
         {jePredracun ? (
           <>

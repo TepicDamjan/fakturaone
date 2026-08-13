@@ -12,6 +12,7 @@ type DashboardStatKarticeProps = {
   brojPlacenih: number;
   brojKasnih: number;
   fakture: DashboardFakturaRow[];
+  valuta?: string;
 };
 
 export default function DashboardStatKartice({
@@ -19,6 +20,7 @@ export default function DashboardStatKartice({
   brojPlacenih,
   brojKasnih,
   fakture,
+  valuta = "BAM",
 }: DashboardStatKarticeProps) {
   const [modalTip, setModalTip] = useState<DashboardKarticaTip | null>(null);
 
@@ -97,6 +99,7 @@ export default function DashboardStatKartice({
         otvoren={modalTip !== null}
         tip={modalTip}
         fakture={fakture}
+        valuta={valuta}
         onClose={zatvori}
       />
     </>

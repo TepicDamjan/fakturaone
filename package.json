@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test src/lib/dokument/format.test.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",

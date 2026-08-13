@@ -123,6 +123,17 @@ const styles = StyleSheet.create({
   },
   logo: { width: 48, height: 48, marginRight: 10, objectFit: "contain" },
   brandRow: { flexDirection: "row", alignItems: "center", maxWidth: 240 },
+  watermark: {
+    position: "absolute",
+    top: 320,
+    left: 40,
+    right: 40,
+    textAlign: "center",
+    fontSize: 52,
+    color: "#CBD5E1",
+    opacity: 0.22,
+    transform: "rotate(-32deg)",
+  },
 });
 
 function StavkeTable({ model }: { model: DokumentModel }) {
@@ -211,18 +222,26 @@ function StavkeTable({ model }: { model: DokumentModel }) {
 export default function DokumentPdfDocument({
   model,
   qrDataUrl,
+  watermark = false,
 }: {
   model: DokumentModel;
   qrDataUrl?: string | null;
+  watermark?: boolean;
 }) {
   const tipMeta = metaZaTip(model.tipDokumenta);
-  const { osnovica, pdvIznos, ukupno } = izracunajDokumentIznose(model);
+  const { osnovica, pdvIznos, ukupno, poStopi } = izracunajDokumentIznose(model);
   const jeOtpremnica = model.tipDokumenta === "otpremnica";
   const racun = model.bankovniRacun;
+  const viseStopa = poStopi.length > 1;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {watermark ? (
+          <Text style={styles.watermark} fixed>
+            FakturaOne
+          </Text>
+        ) : null}
         <View style={styles.headerRow}>
           <View style={styles.brandRow}>
             {model.izdavac.logoUrl ? (
@@ -250,7 +269,12 @@ export default function DokumentPdfDocument({
               <Text style={styles.body}>{model.izdavac.adresa}</Text>
             ) : null}
             {model.izdavac.pib ? (
-              <Text style={styles.body}>PIB: {model.izdavac.pib}</Text>
+              <Text style={styles.body}>JIB/PIB: {model.izdavac.pib}</Text>
+            ) : null}
+            {model.izdavac.maticniBroj ? (
+              <Text style={styles.body}>
+                Matični broj: {model.izdavac.maticniBroj}
+              </Text>
             ) : null}
             {model.izdavac.email ? (
               <Text style={styles.body}>{model.izdavac.email}</Text>
@@ -263,6 +287,9 @@ export default function DokumentPdfDocument({
                 <Text style={styles.bold}>{model.primalac.naziv}</Text>
                 {model.primalac.adresa ? (
                   <Text style={styles.body}>{model.primalac.adresa}</Text>
+                ) : null}
+                {model.primalac.pib ? (
+                  <Text style={styles.body}>JIB/PIB: {model.primalac.pib}</Text>
                 ) : null}
                 {model.primalac.email ? (
                   <Text style={styles.body}>{model.primalac.email}</Text>
@@ -290,12 +317,23 @@ export default function DokumentPdfDocument({
                 {formatIznos(osnovica)} {model.valuta}
               </Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>PDV ({model.pdvProcenat}%)</Text>
-              <Text style={styles.totalValue}>
-                {formatIznos(pdvIznos)} {model.valuta}
-              </Text>
-            </View>
+            {viseStopa ? (
+              poStopi.map((s) => (
+                <View key={s.stopa} style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>PDV ({s.stopa}%)</Text>
+                  <Text style={styles.totalValue}>
+                    {formatIznos(s.pdvIznos)} {model.valuta}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>PDV ({model.pdvProcenat}%)</Text>
+                <Text style={styles.totalValue}>
+                  {formatIznos(pdvIznos)} {model.valuta}
+                </Text>
+              </View>
+            )}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Popust</Text>
               <Text style={styles.totalValue}>
@@ -362,6 +400,11 @@ export default function DokumentPdfDocument({
           <View style={styles.footerCol}>
             <Text style={styles.label}>Napomena</Text>
             <Text style={styles.note}>{model.napomene}</Text>
+            {model.pdvOslobodjenjeNapomena ? (
+              <Text style={[styles.note, { marginTop: 8 }]}>
+                PDV oslobođenje: {model.pdvOslobodjenjeNapomena}
+              </Text>
+            ) : null}
           </View>
         </View>
 

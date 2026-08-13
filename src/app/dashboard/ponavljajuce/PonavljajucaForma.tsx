@@ -27,6 +27,9 @@ type Props = {
     rokPlacanjaDana: number;
     sljedeciDatum: string;
     aktivan: boolean;
+    posaljiEmail?: boolean;
+    zavrsniDatum?: string;
+    maxPonavljanja?: number | null;
   };
 };
 
@@ -50,6 +53,11 @@ export default function PonavljajucaForma({ klijenti, initial }: Props) {
     initial?.sljedeciDatum ?? danasISO()
   );
   const [aktivan, setAktivan] = useState(initial?.aktivan ?? true);
+  const [posaljiEmail, setPosaljiEmail] = useState(initial?.posaljiEmail ?? false);
+  const [zavrsniDatum, setZavrsniDatum] = useState(initial?.zavrsniDatum ?? "");
+  const [maxPonavljanja, setMaxPonavljanja] = useState<number | "">(
+    initial?.maxPonavljanja ?? ""
+  );
   const [stavke, setStavke] = useState<SablonStavka[]>(
     initial?.stavke?.length
       ? initial.stavke
@@ -76,6 +84,9 @@ export default function PonavljajucaForma({ klijenti, initial }: Props) {
           rokPlacanjaDana,
           sljedeciDatum,
           aktivan,
+          posaljiEmail,
+          zavrsniDatum,
+          maxPonavljanja: maxPonavljanja === "" ? null : Number(maxPonavljanja),
         },
         initial?.id
       );
@@ -252,6 +263,35 @@ export default function PonavljajucaForma({ klijenti, initial }: Props) {
           <input
             value={referenca}
             onChange={(e) => setReferenca(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ftsiva px-3 py-2.5"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm font-medium text-fcrna sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={posaljiEmail}
+            onChange={(e) => setPosaljiEmail(e.target.checked)}
+          />
+          Pošalji klijentu email pri generisanju
+        </label>
+        <label className="block text-sm font-medium text-fcrna">
+          Završni datum (opciono)
+          <input
+            type="date"
+            value={zavrsniDatum}
+            onChange={(e) => setZavrsniDatum(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ftsiva px-3 py-2.5"
+          />
+        </label>
+        <label className="block text-sm font-medium text-fcrna">
+          Max. ponavljanja (opciono)
+          <input
+            type="number"
+            min={1}
+            value={maxPonavljanja}
+            onChange={(e) =>
+              setMaxPonavljanja(e.target.value === "" ? "" : Number(e.target.value))
+            }
             className="mt-1.5 w-full rounded-lg border border-ftsiva px-3 py-2.5"
           />
         </label>

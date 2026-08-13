@@ -4,15 +4,23 @@ import KlijentiTabela from "@/app/components/KlijentiTabela";
 import KlijentiUvozDugme from "@/app/dashboard/klijenti/KlijentiUvozDugme";
 import { fetchKlijentiSaFakturisano } from "@/lib/klijenti.server";
 import type { KlijentSaFakturisano } from "@/lib/klijenti";
+import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function Klijenti() {
   const supabase = await createClient();
   let klijenti: KlijentSaFakturisano[] = [];
+  let valuta = "BAM";
   try {
     klijenti = await fetchKlijentiSaFakturisano(supabase);
   } catch {
     klijenti = [];
+  }
+  try {
+    const { firma } = await fetchPodesavanjaFirme(supabase);
+    valuta = firma?.valuta?.trim() || "BAM";
+  } catch {
+    valuta = "BAM";
   }
 
   return (
@@ -41,7 +49,7 @@ export default async function Klijenti() {
       />
 
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">
-        <KlijentiTabela klijenti={klijenti} />
+        <KlijentiTabela klijenti={klijenti} valuta={valuta} />
       </main>
     </>
   );

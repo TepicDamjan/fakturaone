@@ -7,6 +7,7 @@ import {
   type PodesavanjaFirme,
 } from "@/lib/firma";
 import { formatKlijentAdresa } from "@/lib/klijenti";
+import { izracunajIznoseDokumenta, pdvPoStopama, type PdvPoStopi } from "@/lib/dokument/format";
 import { metaZaTip, parseTipDokumenta, type TipDokumenta } from "@/lib/tipDokumenta";
 
 export type DokumentStavka = {
@@ -15,12 +16,14 @@ export type DokumentStavka = {
   kolicina: number;
   cena: number;
   jedinica: string;
+  pdvProcenat: number;
 };
 
 export type DokumentPrimalac = {
   naziv: string;
   adresa: string | null;
   email: string | null;
+  pib: string | null;
 };
 
 export type DokumentModel = {
@@ -30,6 +33,7 @@ export type DokumentModel = {
   datumIzdavanja: string | null;
   datumPlacanja: string | null;
   napomene: string | null;
+  pdvOslobodjenjeNapomena: string | null;
   pdvProcenat: number;
   popust: number;
   valuta: string;
@@ -47,16 +51,19 @@ export type DokumentIznosi = {
   osnovica: number;
   pdvIznos: number;
   ukupno: number;
+  poStopi: PdvPoStopi[];
 };
 
 export function izracunajDokumentIznose(model: DokumentModel): DokumentIznosi {
-  const osnovica = model.stavke.reduce(
-    (s, x) => s + x.kolicina * x.cena,
-    0
+  const iznosi = izracunajIznoseDokumenta(
+    model.stavke,
+    model.pdvProcenat,
+    model.popust
   );
-  const pdvIznos = osnovica * (model.pdvProcenat / 100);
-  const ukupno = osnovica + pdvIznos - model.popust;
-  return { osnovica, pdvIznos, ukupno };
+  return {
+    ...iznosi,
+    poStopi: pdvPoStopama(model.stavke, model.pdvProcenat),
+  };
 }
 
 export function buildDokumentModel(
@@ -76,6 +83,7 @@ export function buildDokumentModel(
         naziv: k.naziv,
         adresa: formatKlijentAdresa(k) || null,
         email: k.email?.trim() || null,
+        pib: k.pib?.trim() || null,
       }
     : null;
 
@@ -86,6 +94,7 @@ export function buildDokumentModel(
     datumIzdavanja: f.datum_izdavanja,
     datumPlacanja: f.datum_placanja,
     napomene: f.napomene?.trim() || tipMeta.defaultNapomena,
+    pdvOslobodjenjeNapomena: f.pdv_oslobodjenje_napomena?.trim() || null,
     pdvProcenat: Number(f.pdv_procenat),
     popust: Number(f.popust),
     valuta,
@@ -98,6 +107,10 @@ export function buildDokumentModel(
       kolicina: Number(s.kolicina),
       cena: Number(s.cena),
       jedinica: s.jedinica?.trim() || "kom",
+      pdvProcenat:
+        s.pdv_procenat != null && Number.isFinite(Number(s.pdv_procenat))
+          ? Number(s.pdv_procenat)
+          : Number(f.pdv_procenat),
     })),
     nacinTransporta: f.nacin_transporta?.trim() || null,
     adresaDostave: f.adresa_dostave?.trim() || null,

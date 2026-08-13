@@ -27,7 +27,8 @@ export const metadata: Metadata = {
   keywords: [
     "fakturisanje",
     "online fakture",
-    "fakture Srbija",
+    "fakture BiH",
+    "fakture Bosna i Hercegovina",
     "program za fakture",
     "fakturaone",
   ],
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "sr_RS",
+    locale: "bs_BA",
     siteName: SITE_NAME,
     title: `${SITE_NAME} — moderno online fakturisanje`,
     description: DEFAULT_DESCRIPTION,
@@ -73,7 +74,7 @@ export default function RootLayout({
   const showWipBanner = process.env.NODE_ENV === "development";
 
   return (
-    <html lang="sr" suppressHydrationWarning>
+    <html lang="bs" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} bg-[#F8FAFC] antialiased${showWipBanner ? " pt-10" : ""}`}

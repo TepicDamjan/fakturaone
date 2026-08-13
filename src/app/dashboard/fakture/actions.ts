@@ -12,6 +12,7 @@ import {
   evidentirajPlacanjeSchema,
   NEISPRAVNI_PODACI_GRESKA,
 } from "@/lib/validacija/fakture";
+import { zodFieldErrors } from "@/lib/validacija/zajednicko";
 import { izracunajUkupanIznos, zaokruziNovac } from "@/lib/dokument/format";
 
 type StavkaInput = {
@@ -20,6 +21,7 @@ type StavkaInput = {
   kolicina: number;
   cena: number;
   jedinica?: string;
+  pdvProcenat?: number | null;
 };
 
 export type SacuvajFakturuInput = {
@@ -40,7 +42,36 @@ export type SacuvajFakturuInput = {
   vozac?: string;
   /** Dokument od kojeg nastaje ovaj (npr. predračun → faktura). */
   izvorDokumentId?: string;
+  pdvOslobodjenjeNapomena?: string;
 };
+
+export type SacuvajFakturuRezultat =
+  | { ok: true; id: string }
+  | { ok: false; error: string; fields?: Record<string, string> };
+
+function validirajIzdavanje(
+  input: SacuvajFakturuInput
+): { ok: true } | { ok: false; error: string; fields: Record<string, string> } {
+  if (input.status === "nacrt") return { ok: true };
+  const fields: Record<string, string> = {};
+  if (!input.klijentId.trim()) {
+    fields.klijentId = "Izaberite klijenta prije izdavanja.";
+  }
+  const imaStavku = input.stavke.some(
+    (s) => s.naziv.trim() && Number(s.kolicina) > 0
+  );
+  if (!imaStavku) {
+    fields.stavke = "Dodajte bar jednu stavku sa nazivom i količinom.";
+  }
+  if (Object.keys(fields).length > 0) {
+    return {
+      ok: false,
+      error: Object.values(fields)[0],
+      fields,
+    };
+  }
+  return { ok: true };
+}
 
 function emptyToNull(s: string): string | null {
   const t = s.trim();
@@ -77,10 +108,18 @@ function dodajDane(iso: string, dana: number): string {
 
 export async function sacuvajFakturu(
   input: SacuvajFakturuInput
-): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-  if (!sacuvajFakturuSchema.safeParse(input).success) {
-    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+): Promise<SacuvajFakturuRezultat> {
+  const parsed = sacuvajFakturuSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: NEISPRAVNI_PODACI_GRESKA,
+      fields: zodFieldErrors(parsed.error),
+    };
   }
+
+  const izdavanje = validirajIzdavanje(input);
+  if (!izdavanje.ok) return izdavanje;
 
   const supabase = await createClient();
   const {
@@ -152,6 +191,7 @@ export async function sacuvajFakturu(
     registracija_vozila: emptyToNull(input.registracijaVozila ?? ""),
     vozac: emptyToNull(input.vozac ?? ""),
     izvor_dokument_id: izvorDokumentId,
+    pdv_oslobodjenje_napomena: emptyToNull(input.pdvOslobodjenjeNapomena ?? ""),
   };
 
   let faktura: { id: string } | null = null;
@@ -222,6 +262,10 @@ export async function sacuvajFakturu(
     cena: s.cena,
     jedinica: (s.jedinica || "kom").trim() || "kom",
     redosled: i,
+    pdv_procenat:
+      s.pdvProcenat != null && Number.isFinite(Number(s.pdvProcenat))
+        ? Number(s.pdvProcenat)
+        : pdv,
   }));
 
   if (stavkeRows.length > 0) {
@@ -355,6 +399,16 @@ export async function stornirajFakturu(
     };
   }
 
+  const { data: vecStorno } = await supabase
+    .from("fakture")
+    .select("id")
+    .eq("izvor_dokument_id", fakturaId)
+    .eq("tip_dokumenta", "kreditna_nota")
+    .maybeSingle();
+  if (vecStorno?.id) {
+    return { ok: false, error: "Ova faktura je već stornirana." };
+  }
+
   if (src.stavke.length === 0) {
     return { ok: false, error: "Faktura nema stavki za storno." };
   }
@@ -379,6 +433,7 @@ export async function stornirajFakturu(
       kolicina: Number(s.kolicina),
       cena: -Math.abs(Number(s.cena)),
       jedinica: s.jedinica || "kom",
+      pdvProcenat: s.pdv_procenat,
     })),
     status: "na_cekanju",
     tipDokumenta: "kreditna_nota",
@@ -390,13 +445,20 @@ export async function stornirajFakturu(
 export async function azurirajFakturu(
   fakturaId: string,
   input: SacuvajFakturuInput
-): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-  if (
-    !idSchema.safeParse(fakturaId).success ||
-    !sacuvajFakturuSchema.safeParse(input).success
-  ) {
+): Promise<SacuvajFakturuRezultat> {
+  if (!idSchema.safeParse(fakturaId).success) {
     return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
   }
+  const parsed = sacuvajFakturuSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: NEISPRAVNI_PODACI_GRESKA,
+      fields: zodFieldErrors(parsed.error),
+    };
+  }
+  const izdavanje = validirajIzdavanje(input);
+  if (!izdavanje.ok) return izdavanje;
 
   const supabase = await createClient();
   const {
@@ -416,13 +478,21 @@ export async function azurirajFakturu(
 
   const { data: postojeca, error: loadErr } = await supabase
     .from("fakture")
-    .select("id, tip_dokumenta, broj")
+    .select("id, tip_dokumenta, broj, status")
     .eq("id", fakturaId)
     .eq("firma_id", firmaId)
     .maybeSingle();
 
   if (loadErr || !postojeca) {
     return { ok: false, error: "Dokument nije pronađen." };
+  }
+
+  if (postojeca.status !== "nacrt") {
+    return {
+      ok: false,
+      error:
+        "Izdat dokument se ne može mijenjati. Koristite storno ili kreditnu notu.",
+    };
   }
 
   const klijentRaw = input.klijentId.trim();
@@ -464,6 +534,7 @@ export async function azurirajFakturu(
       registracija_vozila:
         tip === "otpremnica" ? emptyToNull(input.registracijaVozila ?? "") : null,
       vozac: tip === "otpremnica" ? emptyToNull(input.vozac ?? "") : null,
+      pdv_oslobodjenje_napomena: emptyToNull(input.pdvOslobodjenjeNapomena ?? ""),
     })
     .eq("id", fakturaId)
     .eq("firma_id", firmaId);
@@ -495,6 +566,10 @@ export async function azurirajFakturu(
     cena: tip === "otpremnica" ? 0 : s.cena,
     jedinica: (s.jedinica || "kom").trim() || "kom",
     redosled: i,
+    pdv_procenat:
+      s.pdvProcenat != null && Number.isFinite(Number(s.pdvProcenat))
+        ? Number(s.pdvProcenat)
+        : pdv,
   }));
 
   if (stavkeRows.length > 0) {
@@ -569,12 +644,21 @@ export async function promeniStatusFakture(
 /** Dodaje uplatu na fakturu; status postaje placeno kad je dug zatvoren. */
 export async function evidentirajPlacanje(
   fakturaId: string,
-  iznos: number
+  iznos: number,
+  detalji?: { datum?: string; nacin?: string; napomena?: string }
 ): Promise<
   | { ok: true; placenoIznos: number; preostalo: number; status: string }
   | { ok: false; error: string }
 > {
-  if (!evidentirajPlacanjeSchema.safeParse({ fakturaId, iznos }).success) {
+  if (
+    !evidentirajPlacanjeSchema.safeParse({
+      fakturaId,
+      iznos,
+      datum: detalji?.datum,
+      nacin: detalji?.nacin,
+      napomena: detalji?.napomena,
+    }).success
+  ) {
     return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
   }
 
@@ -646,6 +730,16 @@ export async function evidentirajPlacanje(
     return { ok: false, error: error.message };
   }
 
+  await supabase.from("uplate").insert({
+    user_id: user.id,
+    firma_id: firmaId,
+    faktura_id: fakturaId,
+    iznos: uplata,
+    datum: detalji?.datum?.trim() || danasISO(),
+    nacin: detalji?.nacin?.trim() || "ostalo",
+    napomena: emptyToNull(detalji?.napomena ?? ""),
+  });
+
   revalidatePath("/dashboard/fakture");
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/fakture/${fakturaId}/pregled`);
@@ -655,6 +749,166 @@ export async function evidentirajPlacanje(
     preostalo,
     status: noviStatus,
   };
+}
+
+export async function ucitajUplateFakture(
+  fakturaId: string
+): Promise<{ id: string; iznos: number; datum: string; nacin: string; napomena: string | null }[]> {
+  if (!idSchema.safeParse(fakturaId).success) return [];
+  const supabase = await createClient();
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return [];
+  }
+  const { data } = await supabase
+    .from("uplate")
+    .select("id, iznos, datum, nacin, napomena")
+    .eq("faktura_id", fakturaId)
+    .eq("firma_id", firmaId)
+    .order("datum", { ascending: true })
+    .order("created_at", { ascending: true });
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    iznos: Number(r.iznos),
+    datum: r.datum,
+    nacin: r.nacin,
+    napomena: r.napomena,
+  }));
+}
+
+/** Kopira dokument kao novi nacrt (isti klijent i stavke, novi broj i datum). */
+export async function duplirajDokument(
+  fakturaId: string
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  if (!idSchema.safeParse(fakturaId).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Morate biti ulogovani." };
+
+  const { fetchFakturaSaStavkama } = await import("@/lib/fakture.server");
+  const src = await fetchFakturaSaStavkama(supabase, fakturaId);
+  if (!src) return { ok: false, error: "Dokument nije pronađen." };
+
+  const tip = parseTipDokumenta(src.faktura.tip_dokumenta);
+  const noviTip: TipDokumenta =
+    tip === "kreditna_nota" ? "faktura" : tip;
+
+  const danas = danasISO();
+  return sacuvajFakturu({
+    klijentId: src.faktura.klijent_id ?? "",
+    brojFakture: "",
+    referenca: src.faktura.referenca ?? "",
+    datumIzdavanja: danas,
+    datumPlacanja: src.faktura.datum_placanja
+      ? dodajDane(danas, 15)
+      : "",
+    napomene: src.faktura.napomene ?? "",
+    pdvProcenat: Number(src.faktura.pdv_procenat),
+    popust: Math.abs(Number(src.faktura.popust)),
+    stavke: src.stavke.map((s) => ({
+      naziv: s.naziv,
+      opis: s.opis ?? "",
+      kolicina: Number(s.kolicina),
+      cena: Math.abs(Number(s.cena)),
+      jedinica: s.jedinica || "kom",
+      pdvProcenat: s.pdv_procenat,
+    })),
+    status: "nacrt",
+    tipDokumenta: noviTip,
+    nacinTransporta: src.faktura.nacin_transporta ?? "",
+    adresaDostave: src.faktura.adresa_dostave ?? "",
+    registracijaVozila: src.faktura.registracija_vozila ?? "",
+    vozac: src.faktura.vozac ?? "",
+    pdvOslobodjenjeNapomena: src.faktura.pdv_oslobodjenje_napomena ?? "",
+  });
+}
+
+/** Avansna → konačna faktura, sa stavkom umanjenja avansa. */
+export async function konvertujAvansnuUFakturu(
+  avansnaId: string
+): Promise<
+  | { ok: true; id: string; vecPostojala?: boolean }
+  | { ok: false; error: string }
+> {
+  if (!idSchema.safeParse(avansnaId).success) {
+    return { ok: false, error: NEISPRAVNI_PODACI_GRESKA };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Morate biti ulogovani." };
+
+  let firmaId: string;
+  try {
+    firmaId = await requireAktivnaFirmaId();
+  } catch {
+    return { ok: false, error: "Nije izabrano preduzeće." };
+  }
+
+  const { fetchFakturaSaStavkama } = await import("@/lib/fakture.server");
+  const src = await fetchFakturaSaStavkama(supabase, avansnaId);
+  if (!src || src.faktura.tip_dokumenta !== "avansna") {
+    return { ok: false, error: "Avansna faktura nije pronađena." };
+  }
+
+  const { data: postojeca } = await supabase
+    .from("fakture")
+    .select("id")
+    .eq("izvor_dokument_id", avansnaId)
+    .eq("tip_dokumenta", "faktura")
+    .eq("firma_id", firmaId)
+    .maybeSingle();
+  if (postojeca?.id) {
+    return { ok: true, id: postojeca.id, vecPostojala: true };
+  }
+
+  const avansIznos = izracunajUkupanIznos(
+    src.stavke,
+    Number(src.faktura.pdv_procenat),
+    Number(src.faktura.popust)
+  );
+
+  const danas = danasISO();
+  return sacuvajFakturu({
+    klijentId: src.faktura.klijent_id ?? "",
+    brojFakture: "",
+    referenca: `Konačna faktura po avansu ${src.faktura.broj}`,
+    datumIzdavanja: danas,
+    datumPlacanja: dodajDane(danas, 15),
+    napomene: src.faktura.napomene ?? "",
+    pdvProcenat: Number(src.faktura.pdv_procenat),
+    popust: 0,
+    stavke: [
+      ...src.stavke.map((s) => ({
+        naziv: s.naziv,
+        opis: s.opis ?? "",
+        kolicina: Number(s.kolicina),
+        cena: Number(s.cena),
+        jedinica: s.jedinica || "kom",
+        pdvProcenat: s.pdv_procenat,
+      })),
+      {
+        naziv: `Umanjenje avansa ${src.faktura.broj}`,
+        opis: "Avans već fakturisan",
+        kolicina: 1,
+        cena: -Math.abs(avansIznos),
+        jedinica: "kom",
+        pdvProcenat: 0,
+      },
+    ],
+    status: "nacrt",
+    tipDokumenta: "faktura",
+    izvorDokumentId: avansnaId,
+  });
 }
 
 export async function obrisiFakturu(

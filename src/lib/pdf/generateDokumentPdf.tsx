@@ -4,11 +4,16 @@ import type { DokumentModel } from "@/lib/dokument/dokumentModel";
 import { generatePaymentQrDataUrl } from "@/lib/pdf/paymentQr";
 
 export async function generateDokumentPdf(
-  model: DokumentModel
+  model: DokumentModel,
+  options: { watermark?: boolean } = {}
 ): Promise<Buffer> {
   const qrDataUrl = await generatePaymentQrDataUrl(model);
   const buffer = await renderToBuffer(
-    <DokumentPdfDocument model={model} qrDataUrl={qrDataUrl} />
+    <DokumentPdfDocument
+      model={model}
+      qrDataUrl={qrDataUrl}
+      watermark={options.watermark === true}
+    />
   );
   return Buffer.from(buffer);
 }

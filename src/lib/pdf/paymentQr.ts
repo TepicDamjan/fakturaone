@@ -3,9 +3,13 @@ import { zaokruziNovac } from "@/lib/dokument/format";
 import type { DokumentModel } from "@/lib/dokument/dokumentModel";
 import { izracunajDokumentIznose } from "@/lib/dokument/dokumentModel";
 
+function samoCifre(s: string): string {
+  return s.replace(/\D/g, "");
+}
+
 /**
- * Jednostavan EPC / payment payload za QR na PDF-u.
- * Format: tekst sa bankovnim računom, iznosom i pozivom na broj.
+ * IPS-stil platni nalog (regionalni format koji banke prepoznaju).
+ * BAM/RSD → IPS; EUR → EPC/SEPA SCT.
  */
 export function buildPaymentQrPayload(model: DokumentModel): string | null {
   const racun = model.bankovniRacun?.broj_racuna?.trim();
@@ -13,21 +17,44 @@ export function buildPaymentQrPayload(model: DokumentModel): string | null {
   if (model.tipDokumenta === "otpremnica") return null;
 
   const { ukupno } = izracunajDokumentIznose(model);
-  const iznos = zaokruziNovac(ukupno);
+  const iznos = zaokruziNovac(Math.abs(ukupno));
+  if (iznos <= 0) return null;
+
   const primalac =
     model.bankovniRacun?.na_ime?.trim() || model.izdavac.naziv || "";
+  const valuta = (model.valuta || "BAM").toUpperCase();
+  const svrha = `Uplata ${model.broj}`.slice(0, 35);
+  const poziv = model.broj.replace(/\s+/g, "").slice(0, 25);
 
-  // Kompatibilan tekstualni payload (skenirati mobilnim bankingom / ručno)
+  if (valuta === "EUR") {
+    const iban = racun.replace(/\s+/g, "").toUpperCase();
+    return [
+      "BCD",
+      "002",
+      "1",
+      "SCT",
+      (model.bankovniRacun?.swift || "").trim().toUpperCase(),
+      primalac.slice(0, 70),
+      iban,
+      `EUR${iznos.toFixed(2)}`,
+      "",
+      poziv,
+      svrha,
+    ].join("\n");
+  }
+
+  const racunCist = samoCifre(racun) || racun.replace(/\s+/g, "");
   return [
-    "FAKTURAONE PLACANJE",
-    `Primalac: ${primalac}`,
-    `Racun: ${racun}`,
-    `Iznos: ${iznos.toFixed(2)} ${model.valuta}`,
-    `Poziv na broj: ${model.broj}`,
-    model.datumPlacanja ? `Rok: ${model.datumPlacanja}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+    "K:PR",
+    "V:01",
+    "C:1",
+    `R:${racunCist}`,
+    `N:${primalac.slice(0, 70)}`,
+    `I:${valuta}${iznos.toFixed(2)}`,
+    "SF:221",
+    `S:${svrha}`,
+    `RO:${poziv}`,
+  ].join("|");
 }
 
 export async function generatePaymentQrDataUrl(

@@ -10,7 +10,13 @@ const stavkaSablonSchema = z.object({
 
 export const sacuvajSablonSchema = z.object({
   naziv: z.string().trim().min(1).max(200),
-  tipDokumenta: z.enum(["faktura", "predracun", "otpremnica", "kreditna_nota"]),
+  tipDokumenta: z.enum([
+    "faktura",
+    "predracun",
+    "otpremnica",
+    "kreditna_nota",
+    "avansna",
+  ]),
   klijentId: z.union([z.literal(""), z.uuid()]),
   referenca: z.string().max(500),
   napomene: z.string().max(2000),
@@ -31,4 +37,7 @@ export const sacuvajPonavljajucuSchema = z.object({
   rokPlacanjaDana: z.number().int().min(0).max(365),
   sljedeciDatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   aktivan: z.boolean(),
+  posaljiEmail: z.boolean().optional(),
+  zavrsniDatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).optional(),
+  maxPonavljanja: z.number().int().min(1).max(999).nullable().optional(),
 });

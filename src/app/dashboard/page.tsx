@@ -9,9 +9,10 @@ import {
   type FakturaListItem,
   type FakturaStatus,
 } from "@/lib/fakture";
-import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
+import { formatDatumKratki, formatIznosValuta } from "@/lib/dokument/format";
 import { fetchFaktureLista } from "@/lib/fakture.server";
 import { fetchKlijentiList } from "@/lib/klijenti.server";
+import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 import { createClient } from "@/utils/supabase/server";
 
 const STATUS_LABEL: Record<FakturaStatus, Invoice["status"]> = {
@@ -21,7 +22,7 @@ const STATUS_LABEL: Record<FakturaStatus, Invoice["status"]> = {
   nacrt: "Nacrt",
 };
 
-function fakturaToInvoice(f: FakturaListItem): Invoice {
+function fakturaToInvoice(f: FakturaListItem, valuta: string): Invoice {
   const djelimicno =
     f.tipDokumenta === "faktura" &&
     f.placenoIznos > 0 &&
@@ -35,7 +36,7 @@ function fakturaToInvoice(f: FakturaListItem): Invoice {
     clientInitials: initialsFromName(f.klijentNaziv || "?"),
     clientName: f.klijentNaziv || "—",
     date: formatDatumKratki(f.datumIzdavanja),
-    amount: `${formatIznosCijeli(f.iznos)} BAM`,
+    amount: formatIznosValuta(f.iznos, valuta, true),
     status: djelimicno ? "Djelimično" : STATUS_LABEL[f.status],
     iznos: f.iznos,
     placenoIznos: f.placenoIznos,
@@ -48,10 +49,17 @@ export default async function Dashboard() {
 
   let fakture: FakturaListItem[] = [];
   let klijentCount = 0;
+  let valuta = "BAM";
   try {
     fakture = await fetchFaktureLista(supabase);
   } catch {
     fakture = [];
+  }
+  try {
+    const { firma } = await fetchPodesavanjaFirme(supabase);
+    valuta = firma?.valuta?.trim() || "BAM";
+  } catch {
+    valuta = "BAM";
   }
   try {
     const klijenti = await fetchKlijentiList(supabase);
@@ -65,13 +73,13 @@ export default async function Dashboard() {
   const brojKasnih = fakture.filter((f) => f.status === "kasni").length;
   const brojFaktura = fakture.length;
 
-  const nedavne = fakture.slice(0, 5).map(fakturaToInvoice);
+  const nedavne = fakture.slice(0, 5).map((f) => fakturaToInvoice(f, valuta));
   const footerSummary =
     brojFaktura === 0
       ? "Nema faktura za prikaz."
       : `Lista prikazuje ${nedavne.length} od ukupno ${brojFaktura} faktura.`;
 
-  const ukupnoTekst = `${formatIznosCijeli(ukupnoFakturisano)} BAM`;
+  const ukupnoTekst = formatIznosValuta(ukupnoFakturisano, valuta, true);
 
   const faktureZaModal: DashboardFakturaRow[] = fakture.map((f) => ({
     id: f.id,
@@ -116,6 +124,7 @@ export default async function Dashboard() {
           brojPlacenih={brojPlacenih}
           brojKasnih={brojKasnih}
           fakture={faktureZaModal}
+          valuta={valuta}
         />
 
         <div className="flex flex-col mt-8 w-full">

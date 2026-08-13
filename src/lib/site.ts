@@ -1,7 +1,7 @@
 export const SITE_NAME = "FakturaOne";
 
 export const DEFAULT_DESCRIPTION =
-  "Kreirajte i šaljite profesionalne fakture, pratite klijente i prihode. Jednostavno online fakturisanje na srpskom.";
+  "Kreirajte i šaljite profesionalne fakture, pratite klijente i prihode. Jednostavno online fakturisanje za preduzeća u Bosni i Hercegovini.";
 
 /** Kanonički URL za metadata (Open Graph, canonical). Postavi u produkciji. */
 export function getSiteUrl(): string {

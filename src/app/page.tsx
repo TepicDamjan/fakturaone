@@ -10,11 +10,11 @@ import Image from "next/image";
 import { DEFAULT_DESCRIPTION, getSiteUrl, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-    title: "Online fakturisanje za preduzeća u Srbiji",
+    title: "Online fakturisanje za preduzeća u Bosni i Hercegovini",
     description:
         "Ubrzajte naplatu, pratite finansije i upravljajte klijentima sa lakoćom. Profesionalne fakture u nekoliko klikova.",
     openGraph: {
-        title: "Online fakturisanje za preduzeća u Srbiji | FakturaOne",
+        title: "Online fakturisanje za preduzeća u BiH | FakturaOne",
         description: DEFAULT_DESCRIPTION,
         url: getSiteUrl(),
     },
@@ -37,7 +37,7 @@ const jsonLd = {
             offers: {
                 "@type": "Offer",
                 price: "0",
-                priceCurrency: "RSD",
+                priceCurrency: "BAM",
                 description: "Besplatan starter paket",
             },
         },
@@ -82,8 +82,8 @@ const features = [
         ),
     },
     {
-        title: "Mobilna aplikacija",
-        description: "Pristupite fakturama i klijentima sa bilo kog uređaja, bilo kada.",
+        title: "Sa svakog uređaja",
+        description: "Pristupite fakturama i klijentima sa telefona, tableta ili računara — u pregledniku ili kao PWA.",
         icon: (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" strokeWidth="1.75" />
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
                 <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-0 pt-12 text-center sm:px-6 sm:pt-16 md:pt-20">
                     <h1 className="landing-reveal landing-reveal-delay-1 max-w-4xl text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                        Moderno rešenje za vaše{" "}
+                        Moderno rješenje za vaše{" "}
                         <span className="text-[#00E5FF] landing-glow-text">fakturisanje</span>
                     </h1>
                     <p className="landing-reveal landing-reveal-delay-2 mt-5 max-w-2xl text-base leading-relaxed text-slate-400 sm:mt-6 sm:text-lg">
@@ -134,7 +134,7 @@ export default function LandingPage() {
                             href="#pricing"
                             className="inline-flex w-full items-center justify-center rounded-lg border border-slate-600 px-6 py-3 text-base font-semibold text-white transition-all duration-300 hover:scale-[1.03] hover:border-[#00E5FF]/50 hover:bg-white/5 sm:w-auto"
                         >
-                            Pogledajte cene
+                            Pogledajte cijene
                         </Link>
                     </div>
 
@@ -173,7 +173,7 @@ export default function LandingPage() {
                     <AnimateIn>
                         <h2 className="text-2xl font-bold sm:text-4xl">Sve što vam je potrebno</h2>
                         <p className="mx-auto mt-3 max-w-2xl text-slate-400 sm:mt-4 sm:text-lg">
-                            Kompletno rešenje za vođenje vašeg poslovanja.
+                            Kompletno rješenje za vođenje vašeg poslovanja.
                         </p>
                     </AnimateIn>
 
@@ -195,7 +195,7 @@ export default function LandingPage() {
             <section id="pricing" className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
                 <div className="mx-auto max-w-6xl text-center">
                     <AnimateIn>
-                        <h2 className="text-2xl font-bold sm:text-4xl">Transparentne cene</h2>
+                        <h2 className="text-2xl font-bold sm:text-4xl">Transparentne cijene</h2>
                         <p className="mx-auto mt-3 max-w-2xl text-slate-400 sm:mt-4 sm:text-lg">
                             14 dana besplatnog Professional plana za sve nove korisnike. Bez kartice.
                         </p>

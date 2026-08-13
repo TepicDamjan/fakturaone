@@ -27,18 +27,89 @@ export function zaokruziNovac(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+export function formatIznosValuta(
+  amount: number,
+  valuta: string,
+  cijeli = false
+): string {
+  const iznos = cijeli ? formatIznosCijeli(amount) : formatIznos(amount);
+  return `${iznos} ${valuta?.trim() || "BAM"}`;
+}
+
+export type StavkaZaIznos = {
+  kolicina: number;
+  cena: number;
+  pdvProcenat?: number | null;
+};
+
+export type IznosiDokumenta = {
+  osnovica: number;
+  pdvIznos: number;
+  ukupno: number;
+};
+
+export type PdvPoStopi = {
+  stopa: number;
+  osnovica: number;
+  pdvIznos: number;
+};
+
+/** Iznosi dokumenta: PDV po stavci ako je zadan, inače default stopa. */
+export function izracunajIznoseDokumenta(
+  stavke: StavkaZaIznos[],
+  defaultPdv: number,
+  popust: number
+): IznosiDokumenta {
+  let osnovica = 0;
+  let pdvIznos = 0;
+  for (const s of stavke) {
+    const line = Number(s.kolicina) * Number(s.cena);
+    const stopa =
+      s.pdvProcenat != null && Number.isFinite(Number(s.pdvProcenat))
+        ? Number(s.pdvProcenat)
+        : Number(defaultPdv) || 0;
+    osnovica += line;
+    pdvIznos += line * (stopa / 100);
+  }
+  return {
+    osnovica: zaokruziNovac(osnovica),
+    pdvIznos: zaokruziNovac(pdvIznos),
+    ukupno: zaokruziNovac(osnovica + pdvIznos - Number(popust || 0)),
+  };
+}
+
+export function pdvPoStopama(
+  stavke: StavkaZaIznos[],
+  defaultPdv: number
+): PdvPoStopi[] {
+  const map = new Map<number, { osnovica: number; pdvIznos: number }>();
+  for (const s of stavke) {
+    const line = Number(s.kolicina) * Number(s.cena);
+    const stopa =
+      s.pdvProcenat != null && Number.isFinite(Number(s.pdvProcenat))
+        ? Number(s.pdvProcenat)
+        : Number(defaultPdv) || 0;
+    const cur = map.get(stopa) ?? { osnovica: 0, pdvIznos: 0 };
+    cur.osnovica += line;
+    cur.pdvIznos += line * (stopa / 100);
+    map.set(stopa, cur);
+  }
+  return [...map.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([stopa, v]) => ({
+      stopa,
+      osnovica: zaokruziNovac(v.osnovica),
+      pdvIznos: zaokruziNovac(v.pdvIznos),
+    }));
+}
+
 /** Ukupan iznos dokumenta: osnovica + PDV − popust. */
 export function izracunajUkupanIznos(
-  stavke: { kolicina: number; cena: number }[],
+  stavke: StavkaZaIznos[],
   pdvProcenat: number,
   popust: number
 ): number {
-  const osnovica = stavke.reduce(
-    (s, x) => s + Number(x.kolicina) * Number(x.cena),
-    0
-  );
-  const pdv = osnovica * (Number(pdvProcenat) / 100);
-  return zaokruziNovac(osnovica + pdv - Number(popust || 0));
+  return izracunajIznoseDokumenta(stavke, pdvProcenat, popust).ukupno;
 }
 
 const MESECI_KRATKI = [

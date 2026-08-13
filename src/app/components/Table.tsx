@@ -30,6 +30,7 @@ const TIP_BADGE_TABLE: Record<TipDokumenta, string> = {
   predracun: "bg-amber-50 text-amber-700 border border-amber-100",
   otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100",
   kreditna_nota: "bg-rose-50 text-rose-700 border border-rose-100",
+  avansna: "bg-cyan-50 text-cyan-700 border border-cyan-100",
 };
 
 const TIP_LABEL_TABLE: Record<TipDokumenta, string> = {
@@ -37,6 +38,7 @@ const TIP_LABEL_TABLE: Record<TipDokumenta, string> = {
   predracun: "Predračun",
   otpremnica: "Otpremnica",
   kreditna_nota: "Kreditna nota",
+  avansna: "Avansna",
 };
 
 interface TableProps {

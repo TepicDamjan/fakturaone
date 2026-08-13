@@ -49,6 +49,9 @@ export default async function IzmenaPonavljajucePage({ params }: Props) {
             rokPlacanjaDana: Number(data.rok_placanja_dana),
             sljedeciDatum: data.sljedeci_datum,
             aktivan: data.aktivan,
+            posaljiEmail: data.posalji_email,
+            zavrsniDatum: data.zavrsni_datum ?? "",
+            maxPonavljanja: data.max_ponavljanja,
           }}
         />
       </main>

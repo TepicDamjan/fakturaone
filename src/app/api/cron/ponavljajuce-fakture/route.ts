@@ -46,7 +46,27 @@ export async function GET(request: Request) {
   let kreirano = 0;
   let greske = 0;
 
+  let poslato = 0;
+
   for (const r of rasporedi ?? []) {
+    if (r.zavrsni_datum && r.zavrsni_datum < danas) {
+      await supabase
+        .from("ponavljajuce_fakture")
+        .update({ aktivan: false })
+        .eq("id", r.id);
+      continue;
+    }
+    if (
+      r.max_ponavljanja != null &&
+      Number(r.broj_generisanih ?? 0) >= Number(r.max_ponavljanja)
+    ) {
+      await supabase
+        .from("ponavljajuce_fakture")
+        .update({ aktivan: false })
+        .eq("id", r.id);
+      continue;
+    }
+
     const stavke = parseStavkeJson(r.stavke);
     if (stavke.length === 0) {
       greske += 1;
@@ -117,16 +137,58 @@ export async function GET(request: Request) {
       sljedeci = dodajFrekvenciju(sljedeci, frekvencija);
     }
 
+    const brojGenerisanih = Number(r.broj_generisanih ?? 0) + 1;
+    const istekMax =
+      r.max_ponavljanja != null && brojGenerisanih >= Number(r.max_ponavljanja);
+    const istekDatum = Boolean(r.zavrsni_datum && sljedeci > r.zavrsni_datum);
+
     await supabase
       .from("ponavljajuce_fakture")
       .update({
         sljedeci_datum: sljedeci,
         zadnji_faktura_id: faktura.id,
+        broj_generisanih: brojGenerisanih,
+        aktivan: !(istekMax || istekDatum),
       })
       .eq("id", r.id);
+
+    if (r.posalji_email) {
+      try {
+        const { posaljiDokumentEmail } = await import(
+          "@/lib/email/posaljiDokumentEmail"
+        );
+        const { fetchFakturaSaStavkama } = await import("@/lib/fakture");
+        const { buildDokumentModel } = await import("@/lib/dokument/dokumentModel");
+        const payload = await fetchFakturaSaStavkama(
+          supabase,
+          faktura.id,
+          r.firma_id
+        );
+        if (payload) {
+          const { data: firma } = await supabase
+            .from("firma")
+            .select("*")
+            .eq("id", r.firma_id)
+            .maybeSingle();
+          const { data: racuni } = await supabase
+            .from("bankovni_racuni")
+            .select("*")
+            .eq("firma_id", r.firma_id)
+            .order("je_podrazumevani", { ascending: false });
+          const model = buildDokumentModel(payload, {
+            firma: firma ?? null,
+            racuni: racuni ?? [],
+          });
+          const sent = await posaljiDokumentEmail(model);
+          if (sent.ok) poslato += 1;
+        }
+      } catch (e) {
+        console.error("[cron ponavljajuce] email", r.id, e);
+      }
+    }
 
     kreirano += 1;
   }
 
-  return NextResponse.json({ kreirano, greske });
+  return NextResponse.json({ kreirano, greske, poslato });
 }

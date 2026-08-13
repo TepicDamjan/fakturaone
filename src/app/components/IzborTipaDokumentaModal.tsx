@@ -72,12 +72,24 @@ const ICONS: Record<TipZaKreiranje, ReactNode> = {
       />
     </svg>
   ),
+  avansna: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"
+        stroke="#06B6D4"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 };
 
 const BG_ICON: Record<TipZaKreiranje, string> = {
   faktura: "bg-blue-50",
   predracun: "bg-amber-50",
   otpremnica: "bg-emerald-50",
+  avansna: "bg-cyan-50",
 };
 
 export default function IzborTipaDokumentaModal({

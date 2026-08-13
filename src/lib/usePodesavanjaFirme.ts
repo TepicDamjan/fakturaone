@@ -24,5 +24,7 @@ export function usePodesavanjaFirme() {
     [podesavanja]
   );
 
-  return { podesavanja, izdavac, bankovniRacun };
+  const valuta = podesavanja?.firma?.valuta?.trim() || "BAM";
+
+  return { podesavanja, izdavac, bankovniRacun, valuta };
 }

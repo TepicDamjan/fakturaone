@@ -6,6 +6,7 @@ export type TipDokumenta = Database["public"]["Enums"]["tip_dokumenta"];
 export const TIPOVI_DOKUMENATA = [
   "faktura",
   "predracun",
+  "avansna",
   "otpremnica",
 ] as const satisfies readonly TipDokumenta[];
 
@@ -16,8 +17,13 @@ export function isTipDokumenta(value: unknown): value is TipDokumenta {
     value === "faktura" ||
     value === "predracun" ||
     value === "otpremnica" ||
-    value === "kreditna_nota"
+    value === "kreditna_nota" ||
+    value === "avansna"
   );
+}
+
+export function jeFinansijskiDokument(tip: TipDokumenta): boolean {
+  return tip === "faktura" || tip === "kreditna_nota" || tip === "avansna";
 }
 
 export type TipDokumentaMeta = {
@@ -27,7 +33,7 @@ export type TipDokumentaMeta = {
   akuzativ: string;
   /** Kratak opis prikazan u modalu izbora. */
   opis: string;
-  /** Prefiks za default broj dokumenta (INV-, PRO-, OTP-). */
+  /** Prefiks za default broj dokumenta (FAK-, PRE-, OTP-, AVA-, KRE-). */
   brojPrefiks: string;
   /** Label za rok / datum koji se prikazuje u zaglavlju pregleda. */
   rokLabel: string;
@@ -42,7 +48,7 @@ export const TIP_DOKUMENTA_META: Record<TipDokumenta, TipDokumentaMeta> = {
     naziv: "Faktura",
     akuzativ: "fakturu",
     opis: "Kreirajte standardnu fakturu za vaše klijente.",
-    brojPrefiks: "INV",
+    brojPrefiks: "FAK",
     rokLabel: "Rok plaćanja",
     totalLabel: "Ukupno za uplatu",
     defaultNapomena:
@@ -52,7 +58,7 @@ export const TIP_DOKUMENTA_META: Record<TipDokumenta, TipDokumentaMeta> = {
     naziv: "Predračun",
     akuzativ: "predračun",
     opis: "Pošaljite ponudu ili predračun pre finalne prodaje.",
-    brojPrefiks: "PRO",
+    brojPrefiks: "PRE",
     rokLabel: "Važi do",
     totalLabel: "Ukupan iznos ponude",
     defaultNapomena:
@@ -67,6 +73,16 @@ export const TIP_DOKUMENTA_META: Record<TipDokumenta, TipDokumentaMeta> = {
     totalLabel: "Ukupna vrednost robe",
     defaultNapomena:
       "Potvrđujemo da je gore navedena roba/usluga isporučena u skladu sa narudžbinom.",
+  },
+  avansna: {
+    naziv: "Avansna faktura",
+    akuzativ: "avansnu fakturu",
+    opis: "Faktura za avans / depozit prije konačne isporuke.",
+    brojPrefiks: "AVA",
+    rokLabel: "Rok plaćanja",
+    totalLabel: "Ukupno za uplatu",
+    defaultNapomena:
+      "Ovo je avansna faktura. Konačna faktura biće izdata po isporuci.",
   },
   kreditna_nota: {
     naziv: "Kreditna nota",

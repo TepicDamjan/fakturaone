@@ -13,6 +13,7 @@ const stavkaSchema = z.object({
   /** Negativno dozvoljeno za kreditne note (storno). */
   cena: z.number().finite().min(-1e9).max(1e9),
   jedinica: z.string().max(20).optional(),
+  pdvProcenat: z.number().finite().min(0).max(100).optional().nullable(),
 });
 
 export const sacuvajFakturuSchema = z.object({
@@ -26,17 +27,27 @@ export const sacuvajFakturuSchema = z.object({
   popust: z.number().finite().min(-1e9).max(1e9),
   stavke: z.array(stavkaSchema).max(200),
   status: z.enum(["nacrt", "na_cekanju", "placeno", "kasni"]),
-  tipDokumenta: z.enum(["faktura", "predracun", "otpremnica", "kreditna_nota"]),
+  tipDokumenta: z.enum([
+    "faktura",
+    "predracun",
+    "otpremnica",
+    "kreditna_nota",
+    "avansna",
+  ]),
   nacinTransporta: z.string().max(200).optional(),
   adresaDostave: z.string().max(500).optional(),
   registracijaVozila: z.string().max(50).optional(),
   vozac: z.string().max(100).optional(),
   izvorDokumentId: z.uuid().optional(),
+  pdvOslobodjenjeNapomena: z.string().max(500).optional(),
 });
 
 export const evidentirajPlacanjeSchema = z.object({
   fakturaId: z.uuid(),
   iznos: z.number().finite().positive().max(1e9),
+  datum: datumSchema.optional(),
+  nacin: z.string().max(50).optional(),
+  napomena: z.string().max(500).optional(),
 });
 
 export { idSchema, NEISPRAVNI_PODACI_GRESKA } from "@/lib/validacija/zajednicko";

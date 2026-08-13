@@ -1,17 +1,20 @@
 import type { FakturaListItem, FakturaStatus } from "@/lib/fakture";
 import { formatIznosCijeli } from "@/lib/dokument/format";
+import { jeFinansijskiDokument } from "@/lib/tipDokumenta";
 
 export type IzvjestajPeriod =
   | "ovaj_mjesec"
   | "prosli_mjesec"
   | "zadnjih_6"
-  | "ova_godina";
+  | "ova_godina"
+  | "prilagodjen";
 
 export const IZVJESTAJ_PERIODI: { id: IzvjestajPeriod; label: string }[] = [
   { id: "ovaj_mjesec", label: "Ovaj mjesec" },
   { id: "prosli_mjesec", label: "Prošli mjesec" },
   { id: "zadnjih_6", label: "Zadnjih 6 mjeseci" },
   { id: "ova_godina", label: "Ova godina" },
+  { id: "prilagodjen", label: "Od–do" },
 ];
 
 export function parseIzvjestajPeriod(
@@ -21,7 +24,8 @@ export function parseIzvjestajPeriod(
     value === "ovaj_mjesec" ||
     value === "prosli_mjesec" ||
     value === "zadnjih_6" ||
-    value === "ova_godina"
+    value === "ova_godina" ||
+    value === "prilagodjen"
   ) {
     return value;
   }
@@ -44,7 +48,19 @@ export type PeriodRange = {
   end: string;
 };
 
-export function periodRange(period: IzvjestajPeriod, today = new Date()): PeriodRange {
+export function periodRange(
+  period: IzvjestajPeriod,
+  today = new Date(),
+  custom?: { start?: string; end?: string }
+): PeriodRange {
+  if (period === "prilagodjen" && custom?.start && custom?.end) {
+    return {
+      period,
+      label: `${custom.start} – ${custom.end}`,
+      start: custom.start,
+      end: custom.end,
+    };
+  }
   const y = today.getFullYear();
   const m = today.getMonth();
 
@@ -101,7 +117,7 @@ export function uPeriodu(
 }
 
 export function jeFinansijskaFaktura(f: FakturaListItem): boolean {
-  return f.tipDokumenta === "faktura" || f.tipDokumenta === "kreditna_nota";
+  return jeFinansijskiDokument(f.tipDokumenta);
 }
 
 export function filtrirajZaPeriod(
@@ -313,6 +329,95 @@ export function izracunajPdvPregled(
   };
 }
 
+export type AgingBucketId = "tekuce" | "d30" | "d60" | "d90";
+
+export type AgingBucket = {
+  id: AgingBucketId;
+  label: string;
+  iznos: number;
+  broj: number;
+};
+
+export function starenjePotrazivanja(
+  fakture: FakturaListItem[],
+  today = new Date()
+): AgingBucket[] {
+  const todayIso = toIsoDateLocal(today);
+  const buckets: Record<AgingBucketId, AgingBucket> = {
+    tekuce: { id: "tekuce", label: "Nije dospjelo", iznos: 0, broj: 0 },
+    d30: { id: "d30", label: "1–30 dana", iznos: 0, broj: 0 },
+    d60: { id: "d60", label: "31–60 dana", iznos: 0, broj: 0 },
+    d90: { id: "d90", label: "61+ dana", iznos: 0, broj: 0 },
+  };
+
+  const open = fakture.filter(
+    (f) =>
+      jeFinansijskaFaktura(f) &&
+      (f.status === "na_cekanju" || f.status === "kasni")
+  );
+
+  for (const f of open) {
+    const due = (f.datumPlacanja || f.datumIzdavanja || "").slice(0, 10);
+    const preostalo = Math.max(0, f.iznos - (f.placenoIznos || 0));
+    if (preostalo <= 0) continue;
+    let id: AgingBucketId = "tekuce";
+    if (due && due < todayIso) {
+      const days = Math.floor(
+        (new Date(`${todayIso}T12:00:00`).getTime() -
+          new Date(`${due}T12:00:00`).getTime()) /
+          86400000
+      );
+      if (days <= 30) id = "d30";
+      else if (days <= 60) id = "d60";
+      else id = "d90";
+    }
+    buckets[id].iznos += preostalo;
+    buckets[id].broj += 1;
+  }
+
+  return [buckets.tekuce, buckets.d30, buckets.d60, buckets.d90];
+}
+
+export type KifRed = {
+  id: string;
+  datum: string;
+  broj: string;
+  klijent: string;
+  jib: string;
+  osnovica: number;
+  pdvIznos: number;
+  ukupno: number;
+  pdvProcenat: number;
+};
+
+export type FakturisanoVsNaplaceno = {
+  key: string;
+  label: string;
+  fakturisano: number;
+  naplaceno: number;
+};
+
+export function fakturisanoVsNaplaceno(
+  fakture: FakturaListItem[],
+  range: PeriodRange
+): FakturisanoVsNaplaceno[] {
+  const prihod = prihodPoMesecu(fakture, range);
+  const map = new Map(prihod.map((p) => [p.key, { ...p, fakturisano: 0, naplaceno: p.iznos }]));
+  for (const f of fakture) {
+    if (!jeFinansijskaFaktura(f) || f.status === "nacrt") continue;
+    const d = f.datumIzdavanja?.slice(0, 7);
+    if (!d || !map.has(d)) continue;
+    const cur = map.get(d)!;
+    cur.fakturisano += f.iznos;
+  }
+  return [...map.values()].map((v) => ({
+    key: v.key,
+    label: v.label,
+    fakturisano: v.fakturisano,
+    naplaceno: v.naplaceno,
+  }));
+}
+
 export type IzvjestajSnapshot = {
   range: PeriodRange;
   valuta: string;
@@ -321,15 +426,21 @@ export type IzvjestajSnapshot = {
   topKlijenti: TopKlijentRed[];
   neplacene: FakturaListItem[];
   pdv: PdvPregled;
+  aging: AgingBucket[];
+  kif: KifRed[];
+  vsNaplaceno: FakturisanoVsNaplaceno[];
+  pdvPoStopi: { stopa: number; osnovica: number; pdvIznos: number }[];
 };
 
 export function buildIzvjestajSnapshot(
   sveFakture: FakturaListItem[],
   period: IzvjestajPeriod,
   valuta = "BAM",
-  pdvUlaz: FakturaZaPdv[] = []
+  pdvUlaz: FakturaZaPdv[] = [],
+  custom?: { start?: string; end?: string },
+  kifUlaz: KifRed[] = []
 ): IzvjestajSnapshot {
-  const range = periodRange(period);
+  const range = periodRange(period, new Date(), custom);
   const uPerioduF = filtrirajZaPeriod(sveFakture, range);
   const pdvSource =
     pdvUlaz.length > 0
@@ -343,6 +454,17 @@ export function buildIzvjestajSnapshot(
           datumIzdavanja: f.datumIzdavanja,
         }));
 
+  const pdvPoStopiMap = new Map<number, { osnovica: number; pdvIznos: number }>();
+  for (const f of pdvSource) {
+    if (f.status === "nacrt") continue;
+    if (!uPeriodu(f.datumIzdavanja, range)) continue;
+    const p = izracunajPdvOdUkupnog(f.iznos, f.pdvProcenat, f.popust);
+    const cur = pdvPoStopiMap.get(f.pdvProcenat) ?? { osnovica: 0, pdvIznos: 0 };
+    cur.osnovica += p.osnovica;
+    cur.pdvIznos += p.pdvIznos;
+    pdvPoStopiMap.set(f.pdvProcenat, cur);
+  }
+
   return {
     range,
     valuta,
@@ -351,6 +473,12 @@ export function buildIzvjestajSnapshot(
     topKlijenti: topKlijenti(uPerioduF),
     neplacene: neplaceneFakture(uPerioduF),
     pdv: izracunajPdvPregled(pdvSource, range),
+    aging: starenjePotrazivanja(sveFakture),
+    kif: kifUlaz.filter((r) => uPeriodu(r.datum, range)),
+    vsNaplaceno: fakturisanoVsNaplaceno(uPerioduF, range),
+    pdvPoStopi: [...pdvPoStopiMap.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([stopa, v]) => ({ stopa, ...v })),
   };
 }
 

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { ucitajDokumentModel } from "@/lib/dokument/ucitajDokument";
 import { dokumentPdfFilename } from "@/lib/dokument/dokumentModel";
 import { generateDokumentPdf } from "@/lib/pdf/generateDokumentPdf";
+import { createClient } from "@/utils/supabase/server";
+import { fetchPretplataPregled } from "@/lib/pretplata.server";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,8 +19,22 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: loaded.error }, { status: loaded.status });
   }
 
+  let watermark = false;
   try {
-    const pdf = await generateDokumentPdf(loaded.model);
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const pregled = await fetchPretplataPregled(supabase, user.id);
+      watermark = pregled.limits.pdfWatermark;
+    }
+  } catch {
+    watermark = false;
+  }
+
+  try {
+    const pdf = await generateDokumentPdf(loaded.model, { watermark });
     const filename = dokumentPdfFilename(loaded.model);
 
     return new NextResponse(new Uint8Array(pdf), {

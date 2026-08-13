@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { initialsFromName, type FakturaStatus } from "@/lib/fakture";
-import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
+import { formatDatumKratki, formatIznosValuta } from "@/lib/dokument/format";
 
 export type DashboardFakturaRow = {
   id: string;
@@ -22,6 +22,7 @@ type DashboardFaktureModalProps = {
   otvoren: boolean;
   tip: DashboardKarticaTip | null;
   fakture: DashboardFakturaRow[];
+  valuta?: string;
   onClose: () => void;
 };
 
@@ -135,6 +136,7 @@ export default function DashboardFaktureModal({
   otvoren,
   tip,
   fakture,
+  valuta = "BAM",
   onClose,
 }: DashboardFaktureModalProps) {
   const rows = useMemo(() => {
@@ -326,7 +328,7 @@ export default function DashboardFaktureModal({
                         </td>
                       ) : null}
                       <td className="py-4 text-sm font-bold text-[#111827] text-right whitespace-nowrap">
-                        {formatIznosCijeli(f.iznos)} BAM
+                        {formatIznosValuta(f.iznos, valuta, true)}
                       </td>
                     </tr>
                   );

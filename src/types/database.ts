@@ -12,19 +12,19 @@ export type Database = {
             brojaci_dokumenata: {
                 Row: {
                     firma_id: string;
-                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
                     godina: number;
                     sledeci: number;
                 };
                 Insert: {
                     firma_id: string;
-                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                    tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
                     godina: number;
                     sledeci?: number;
                 };
                 Update: {
                     firma_id?: string;
-                    tip_dokumenta?: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                    tip_dokumenta?: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
                     godina?: number;
                     sledeci?: number;
                 };
@@ -118,6 +118,7 @@ export type Database = {
                     registracija_vozila: string | null;
                     vozac: string | null;
                     izvor_dokument_id: string | null;
+                    pdv_oslobodjenje_napomena: string | null;
                     placeno_iznos: number;
                     posljednji_podsjetnik_at: string | null;
                     posljednji_podsjetnik_vrsta: string | null;
@@ -143,6 +144,7 @@ export type Database = {
                     registracija_vozila?: string | null;
                     vozac?: string | null;
                     izvor_dokument_id?: string | null;
+                    pdv_oslobodjenje_napomena?: string | null;
                     placeno_iznos?: number;
                     posljednji_podsjetnik_at?: string | null;
                     posljednji_podsjetnik_vrsta?: string | null;
@@ -168,6 +170,7 @@ export type Database = {
                     registracija_vozila?: string | null;
                     vozac?: string | null;
                     izvor_dokument_id?: string | null;
+                    pdv_oslobodjenje_napomena?: string | null;
                     placeno_iznos?: number;
                     posljednji_podsjetnik_at?: string | null;
                     posljednji_podsjetnik_vrsta?: string | null;
@@ -428,6 +431,7 @@ export type Database = {
                     cena: number;
                     jedinica: string;
                     redosled: number;
+                    pdv_procenat: number | null;
                     created_at: string;
                 };
                 Insert: {
@@ -439,6 +443,7 @@ export type Database = {
                     cena?: number;
                     jedinica?: string;
                     redosled?: number;
+                    pdv_procenat?: number | null;
                     created_at?: string;
                 };
                 Update: {
@@ -450,6 +455,7 @@ export type Database = {
                     cena?: number;
                     jedinica?: string;
                     redosled?: number;
+                    pdv_procenat?: number | null;
                     created_at?: string;
                 };
                 Relationships: [
@@ -533,6 +539,10 @@ export type Database = {
                     sljedeci_datum: string;
                     aktivan: boolean;
                     zadnji_faktura_id: string | null;
+                    posalji_email: boolean;
+                    zavrsni_datum: string | null;
+                    max_ponavljanja: number | null;
+                    broj_generisanih: number;
                     created_at: string;
                     updated_at: string;
                 };
@@ -552,6 +562,10 @@ export type Database = {
                     sljedeci_datum: string;
                     aktivan?: boolean;
                     zadnji_faktura_id?: string | null;
+                    posalji_email?: boolean;
+                    zavrsni_datum?: string | null;
+                    max_ponavljanja?: number | null;
+                    broj_generisanih?: number;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -571,12 +585,65 @@ export type Database = {
                     sljedeci_datum?: string;
                     aktivan?: boolean;
                     zadnji_faktura_id?: string | null;
+                    posalji_email?: boolean;
+                    zavrsni_datum?: string | null;
+                    max_ponavljanja?: number | null;
+                    broj_generisanih?: number;
                     created_at?: string;
                     updated_at?: string;
                 };
                 Relationships: [
                     {
                         foreignKeyName: "ponavljajuce_fakture_firma_id_fkey";
+                        columns: ["firma_id"];
+                        referencedRelation: "firma";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            uplate: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    firma_id: string;
+                    faktura_id: string;
+                    iznos: number;
+                    datum: string;
+                    nacin: string;
+                    napomena: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    firma_id: string;
+                    faktura_id: string;
+                    iznos: number;
+                    datum?: string;
+                    nacin?: string;
+                    napomena?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    firma_id?: string;
+                    faktura_id?: string;
+                    iznos?: number;
+                    datum?: string;
+                    nacin?: string;
+                    napomena?: string | null;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "uplate_faktura_id_fkey";
+                        columns: ["faktura_id"];
+                        referencedRelation: "fakture";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "uplate_firma_id_fkey";
                         columns: ["firma_id"];
                         referencedRelation: "firma";
                         referencedColumns: ["id"];
@@ -615,14 +682,14 @@ export type Database = {
             sledeci_broj_dokumenta: {
                 Args: {
                     p_firma_id: string;
-                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
                 };
                 Returns: string;
             };
             sledeci_broj_dokumenta_servis: {
                 Args: {
                     p_firma_id: string;
-                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+                    p_tip: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
                 };
                 Returns: string;
             };
@@ -633,7 +700,7 @@ export type Database = {
         };
         Enums: {
             faktura_status: "nacrt" | "na_cekanju" | "placeno" | "kasni";
-            tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota";
+            tip_dokumenta: "faktura" | "predracun" | "otpremnica" | "kreditna_nota" | "avansna";
             plan_tier: "starter" | "professional" | "business" | "enterprise";
             subscription_status: "trialing" | "active" | "past_due" | "canceled" | "expired";
         };

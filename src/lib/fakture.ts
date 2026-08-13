@@ -170,7 +170,7 @@ const FAKTURA_BASE_COLUMNS =
   "id, user_id, firma_id, klijent_id, broj, referenca, datum_izdavanja, datum_placanja, napomene, pdv_procenat, popust, status, tip_dokumenta, nacin_transporta, adresa_dostave, registracija_vozila, vozac, created_at, updated_at";
 
 const FAKTURA_OPTIONAL_COLUMNS =
-  "izvor_dokument_id, placeno_iznos, posljednji_podsjetnik_at, posljednji_podsjetnik_vrsta";
+  "izvor_dokument_id, placeno_iznos, posljednji_podsjetnik_at, posljednji_podsjetnik_vrsta, pdv_oslobodjenje_napomena";
 
 function isMissingColumnError(err: unknown): boolean {
   const msg =
@@ -225,6 +225,10 @@ export async function fetchFakturaSaStavkama(
     placeno_iznos: Number(raw.placeno_iznos ?? 0),
     izvor_dokument_id:
       typeof raw.izvor_dokument_id === "string" ? raw.izvor_dokument_id : null,
+    pdv_oslobodjenje_napomena:
+      typeof raw.pdv_oslobodjenje_napomena === "string"
+        ? raw.pdv_oslobodjenje_napomena
+        : null,
   };
 
   const { data: stavke, error: sErr } = await supabase

@@ -13,7 +13,7 @@ import {
   TIP_DOKUMENTA_META,
   type TipDokumenta,
 } from "@/lib/tipDokumenta";
-import { formatDatumKratki, formatIznosCijeli } from "@/lib/dokument/format";
+import { formatDatumKratki, formatIznosValuta } from "@/lib/dokument/format";
 
 type FaktureListaProps = {
   fakture: FakturaListItem[];
@@ -24,6 +24,7 @@ type FaktureListaProps = {
   status: FakturaStatus | "all";
   tip: TipDokumenta | "all";
   datum: DatumPreset;
+  valuta?: string;
 };
 
 const STATUS_LABELS: Record<FakturaStatus, string> = {
@@ -47,6 +48,7 @@ const TIP_BADGE: Record<TipDokumenta, string> = {
   predracun: "bg-amber-50 text-amber-700 border border-amber-100/80",
   otpremnica: "bg-emerald-50 text-emerald-700 border border-emerald-100/80",
   kreditna_nota: "bg-rose-50 text-rose-700 border border-rose-100/80",
+  avansna: "bg-cyan-50 text-cyan-700 border border-cyan-100/80",
 };
 
 const AVATAR_COLORS = [
@@ -64,8 +66,8 @@ function hashColor(s: string): string {
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
-function formatIznos(n: number) {
-  return `${formatIznosCijeli(n)} BAM`;
+function formatIznos(n: number, valuta: string) {
+  return formatIznosValuta(n, valuta, true);
 }
 
 function buildQueryString(params: {
@@ -93,6 +95,7 @@ export default function FaktureLista({
   status,
   tip,
   datum,
+  valuta = "BAM",
 }: FaktureListaProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -271,6 +274,7 @@ export default function FaktureLista({
                   <option value="predracun">Predračun</option>
                   <option value="otpremnica">Otpremnica</option>
                   <option value="kreditna_nota">Kreditna nota</option>
+                  <option value="avansna">Avansna</option>
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -355,6 +359,7 @@ export default function FaktureLista({
                 }
                 onCloseMenu={() => setOpenMenuId(null)}
                 routerRefresh={() => router.refresh()}
+                valuta={valuta}
               />
             ))}
           </tbody>
@@ -413,12 +418,14 @@ function FakturaRow({
   onToggleMenu,
   onCloseMenu,
   routerRefresh,
+  valuta,
 }: {
   f: FakturaListItem;
   menuOpen: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
   routerRefresh: () => void;
+  valuta: string;
 }) {
   const initials = initialsFromName(f.klijentNaziv);
   const avatarBg = hashColor(f.klijentNaziv);
@@ -458,12 +465,12 @@ function FakturaRow({
       </td>
       <td className="px-6 py-4 text-right font-bold text-fcrna tabular-nums whitespace-nowrap">
         <div className="flex flex-col items-end gap-0.5">
-          <span>{formatIznos(f.iznos)}</span>
+          <span>{formatIznos(f.iznos, valuta)}</span>
           {f.tipDokumenta === "faktura" &&
           f.placenoIznos > 0 &&
           f.status !== "placeno" ? (
             <span className="text-[11px] font-medium text-emerald-600">
-              Plaćeno {formatIznos(f.placenoIznos)}
+              Plaćeno {formatIznos(f.placenoIznos, valuta)}
             </span>
           ) : null}
         </div>

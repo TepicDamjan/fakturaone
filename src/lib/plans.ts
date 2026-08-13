@@ -111,8 +111,8 @@ export const PLAN_DEFS: Record<PlanTier, PlanDef> = {
     opis: "Prilagođeno rešenje za veće organizacije.",
     features: [
       "Neograničeno preduzeća",
-      "Timski pristup",
-      "API integracije",
+      "Sve iz Business paketa",
+      "Prioritetna podrška",
       "Posvećen account manager",
       "SLA i enterprise podrška",
     ],

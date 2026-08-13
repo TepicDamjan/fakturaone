@@ -14,6 +14,8 @@ export type Stavka = {
   cena: number;
   /** Jedinica mere (kom, kg, l, rol…) — default "kom" ako nije zadata. */
   jedinica?: string;
+  /** PDV po stavci; ako nije zadan, koristi se stopa dokumenta. */
+  pdvProcenat?: number | null;
 };
 
 type StavkeFaktureProps = {
@@ -30,6 +32,7 @@ type StavkeFaktureProps = {
   inGrid?: boolean;
   /** Katalog proizvoda za brzi izbor stavki (opcionalno). */
   proizvodi?: Proizvod[];
+  defaultPdv?: number;
 };
 
 export default function StavkeFakture({
@@ -40,6 +43,7 @@ export default function StavkeFakture({
   tipDokumenta = "faktura",
   inGrid = false,
   proizvodi = [],
+  defaultPdv = 17,
 }: StavkeFaktureProps) {
   const tipMeta = metaZaTip(tipDokumenta);
   const jeOtpremnica = tipDokumenta === "otpremnica";
@@ -88,14 +92,17 @@ export default function StavkeFakture({
             </div>
           ) : (
             <div className="grid grid-cols-12 gap-3 px-4 sm:px-6 py-3 border-b border-gray-100 bg-fsiva/40">
-              <span className="col-span-5 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+              <span className="col-span-4 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
                 Opis usluge / proizvoda
               </span>
               <span className="col-span-2 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider text-center">
                 Količina
               </span>
               <span className="col-span-2 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider text-center">
-                Cena
+                Cijena
+              </span>
+              <span className="col-span-1 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider text-center">
+                PDV
               </span>
               <span className="col-span-2 text-[11px] font-semibold text-[#64748B] uppercase tracking-wider text-right">
                 Ukupno
@@ -192,7 +199,7 @@ export default function StavkeFakture({
                 key={stavka.id}
                 className="grid grid-cols-12 gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 items-start hover:bg-gray-50/50 transition-colors"
               >
-                <div className="col-span-5 flex flex-col gap-1">
+                <div className="col-span-4 flex flex-col gap-1">
                   <ProizvodBrzaPretraga
                     value={stavka.naziv}
                     onChange={(v) => onUpdateStavka(stavka.id, "naziv", v)}
@@ -243,6 +250,22 @@ export default function StavkeFakture({
                     }
                     className="text-fcrna bg-transparent border-none outline-none w-full text-center"
                   />
+                </div>
+                <div className="col-span-1 flex items-start justify-center pt-0.5">
+                  <select
+                    value={stavka.pdvProcenat ?? defaultPdv}
+                    onChange={(e) =>
+                      onUpdateStavka(
+                        stavka.id,
+                        "pdvProcenat",
+                        Number(e.target.value)
+                      )
+                    }
+                    className="w-full appearance-none rounded-md bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold px-1 py-1 outline-none cursor-pointer text-center"
+                  >
+                    <option value={0}>0%</option>
+                    <option value={17}>17%</option>
+                  </select>
                 </div>
                 <div className="col-span-2 flex items-start justify-end pt-0.5">
                   <span className="text-fcrna font-bold text-sm">

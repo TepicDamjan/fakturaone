@@ -4,6 +4,7 @@ import KreirajDokumentDugme from "@/app/components/KreirajDokumentDugme";
 import { createClient } from "@/utils/supabase/server";
 import { fetchFakturePage } from "@/lib/fakture.server";
 import { parseFaktureParams } from "@/lib/faktureFilter";
+import { fetchPodesavanjaFirme } from "@/lib/firma.server";
 
 export default async function Fakture({
   searchParams,
@@ -13,6 +14,13 @@ export default async function Fakture({
   const params = parseFaktureParams(await searchParams);
   const supabase = await createClient();
   const page = await fetchFakturePage(supabase, params.filter, params.strana);
+  let valuta = "BAM";
+  try {
+    const { firma } = await fetchPodesavanjaFirme(supabase);
+    valuta = firma?.valuta?.trim() || "BAM";
+  } catch {
+    valuta = "BAM";
+  }
 
   return (
     <>
@@ -32,6 +40,7 @@ export default async function Fakture({
           status={params.status}
           tip={params.tip}
           datum={params.datum}
+          valuta={valuta}
         />
       </main>
     </>
