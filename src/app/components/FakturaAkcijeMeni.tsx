@@ -74,17 +74,35 @@ export default function FakturaAkcijeMeni({
   const [emailModal, setEmailModal] = useState(false);
   const [placanjeModal, setPlacanjeModal] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
   const MENU_WIDTH = 220;
+  const MENU_GAP = 8;
+  const VIEWPORT_MARGIN = 8;
 
   const syncMenuPosition = useCallback(() => {
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
     let left = r.right - MENU_WIDTH;
-    left = Math.min(Math.max(8, left), vw - MENU_WIDTH - 8);
-    setMenuPos({ top: r.bottom + 8, left });
+    left = Math.min(Math.max(VIEWPORT_MARGIN, left), vw - MENU_WIDTH - VIEWPORT_MARGIN);
+
+    const visinaMenija = menuRef.current?.scrollHeight ?? 0;
+    const prostorIspod = vh - r.bottom - MENU_GAP - VIEWPORT_MARGIN;
+    const prostorIznad = r.top - MENU_GAP - VIEWPORT_MARGIN;
+
+    if (visinaMenija <= prostorIspod || prostorIspod >= prostorIznad) {
+      setMenuPos({ top: r.bottom + MENU_GAP, left, maxHeight: Math.max(prostorIspod, 120) });
+    } else {
+      setMenuPos({ bottom: vh - r.top + MENU_GAP, left, maxHeight: Math.max(prostorIznad, 120) });
+    }
   }, []);
 
   useLayoutEffect(() => {
@@ -227,12 +245,22 @@ export default function FakturaAkcijeMeni({
   };
 
   const dropdown =
-    menuOpen && menuPos ? (
+    menuOpen ? (
       <div
+        ref={menuRef}
         data-faktura-dropdown={fakturaId}
         role="menu"
-        className="fixed z-[10050] min-w-[220px] rounded-xl bg-white py-1 shadow-xl ring-1 ring-black/[0.08] text-left"
-        style={{ top: menuPos.top, left: menuPos.left }}
+        className="fixed z-[10050] min-w-[220px] overflow-y-auto overscroll-contain rounded-xl bg-white py-1 shadow-xl ring-1 ring-black/[0.08] text-left"
+        style={
+          menuPos
+            ? {
+                top: menuPos.top,
+                bottom: menuPos.bottom,
+                left: menuPos.left,
+                maxHeight: menuPos.maxHeight,
+              }
+            : { top: 0, left: 0, visibility: "hidden" }
+        }
       >
         <Link
           href={`/dashboard/fakture/${fakturaId}/pregled`}
